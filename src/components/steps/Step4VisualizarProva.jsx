@@ -129,59 +129,59 @@ export default function Step4VisualizarProva() {
       {/* Visualização da Prova */}
       {viewMode === 'prova' && (
         <div className="bg-white rounded-xl shadow-lg prova-container" id="prova-print">
-          {/* Cabeçalho da Prova */}
-          <table className="w-full border-collapse border border-black">
+          {/* Cabeçalho da Prova - Compacto */}
+          <table className="w-full border-collapse border border-black text-sm">
             <tbody>
               <tr>
-                <td rowSpan="7" className="border border-black p-4 w-48 text-center align-middle">
+                <td rowSpan="7" className="border border-black p-2 w-36 text-center align-middle">
                   <img 
                     src="/senai.png" 
                     alt="SENAI" 
-                    className="w-full max-w-[150px] mx-auto mb-2"
+                    className="w-full max-w-[100px] mx-auto mb-1"
                   />
-                  <p className="font-bold text-sm">Serviço Nacional de</p>
-                  <p className="font-bold text-sm">Aprendizagem Industrial</p>
-                  <p className="text-sm">Santa Catarina</p>
+                  <p className="font-bold text-xs">Serviço Nacional de</p>
+                  <p className="font-bold text-xs">Aprendizagem Industrial</p>
+                  <p className="text-xs">Santa Catarina</p>
                 </td>
-                <td className="border border-black p-3 text-center font-bold text-lg">
+                <td className="border border-black p-2 text-center font-bold text-base">
                   AVALIAÇÃO OBJETIVA
                 </td>
-                <td rowSpan="7" className="border border-black p-3 w-24 text-center font-bold align-middle">
+                <td rowSpan="7" className="border border-black p-2 w-24 text-center font-bold align-middle text-sm">
                   Desempenho
                 </td>
               </tr>
               <tr>
-                <td className="border border-black p-2">
+                <td className="border border-black py-1 px-2">
                   <strong>Data:</strong>{' '}
                   <span className="text-blue-600 italic">{prova.data}</span>
                 </td>
               </tr>
               <tr>
-                <td className="border border-black p-2">
+                <td className="border border-black py-1 px-2">
                   <strong>Docente:</strong>{' '}
                   <span className="text-blue-600 italic">{prova.docente}</span>
                 </td>
               </tr>
               <tr>
-                <td className="border border-black p-2">
+                <td className="border border-black py-1 px-2">
                   <strong>Curso Técnico em:</strong>{' '}
                   <span className="text-blue-600 font-bold italic">{prova.curso}</span>
                 </td>
               </tr>
               <tr>
-                <td className="border border-black p-2">
+                <td className="border border-black py-1 px-2">
                   <strong>Unidade Curricular:</strong>{' '}
                   <span className="text-blue-600 font-bold italic">{prova.unidade_curricular}</span>
                 </td>
               </tr>
               <tr>
-                <td className="border border-black p-2">
+                <td className="border border-black py-1 px-2">
                   <strong>Turma:</strong>{' '}
                   <span className="text-blue-600 font-bold italic">{prova.turma}</span>
                 </td>
               </tr>
               <tr>
-                <td className="border border-black p-2">
+                <td className="border border-black py-1 px-2">
                   <strong>Estudante:</strong>
                 </td>
               </tr>
@@ -189,13 +189,13 @@ export default function Step4VisualizarProva() {
           </table>
 
           {/* Capacidades/Habilidades */}
-          <div className="mt-6">
-            <div className="bg-[#004b8d] text-white font-bold p-2 uppercase text-sm">
+          <div className="mt-4">
+            <div className="bg-[#004b8d] text-white font-bold py-1 px-2 uppercase text-xs">
               {termoCapacidade}S
             </div>
-            <div className="border border-black border-t-0 p-4">
+            <div className="border border-black border-t-0 p-2">
               {Object.entries(getCapacidadesProva()).map(([codigo, descricao]) => (
-                <p key={codigo} className="mb-2 text-sm">
+                <p key={codigo} className="mb-1 text-xs">
                   <strong>{codigo}:</strong> {descricao}
                 </p>
               ))}

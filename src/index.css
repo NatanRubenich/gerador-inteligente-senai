@@ -13,6 +13,12 @@ body {
 }
 
 @media print {
+  /* Configuração da página - remove cabeçalho e rodapé do navegador */
+  @page {
+    size: A4;
+    margin: 15mm 10mm 15mm 10mm;
+  }
+
   .no-print {
     display: none !important;
   }
@@ -21,17 +27,26 @@ body {
     display: block !important;
   }
   
-  body {
+  /* Fundo totalmente branco */
+  html, body {
     background: white !important;
+    background-color: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Remove fundo cinza do container principal */
+  #root, .min-h-screen, .bg-gray-100 {
+    background: white !important;
+    background-color: white !important;
   }
   
   .prova-container {
     box-shadow: none !important;
     margin: 0 !important;
-    padding: 20px !important;
+    padding: 10px !important;
     max-width: 100% !important;
+    background: white !important;
   }
 
   .bg-\[\\#004b8d\] {
@@ -46,5 +61,15 @@ body {
 
   .item-container {
     page-break-inside: avoid;
+  }
+
+  /* Remove sombras na impressão */
+  .shadow-lg, .shadow-md, .shadow {
+    box-shadow: none !important;
+  }
+
+  /* Remove bordas arredondadas excessivas */
+  .rounded-xl {
+    border-radius: 4px !important;
   }
 }
