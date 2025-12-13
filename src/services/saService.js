@@ -10,7 +10,7 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
  * Obtém a API key do ambiente
  */
 const getApiKey = () => {
-  return import.meta.env.VITE_GROQ_API_KEY || '';
+  return import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY || '';
 };
 
 /**
