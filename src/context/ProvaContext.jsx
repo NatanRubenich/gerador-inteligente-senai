@@ -8,7 +8,8 @@ const ProvaContext = createContext(null);
 export const TIPO_AVALIACAO = {
   OBJETIVA: 'objetiva',
   PRATICA: 'pratica',
-  SITUACAO_APRENDIZAGEM: 'situacao_aprendizagem'
+  SITUACAO_APRENDIZAGEM: 'situacao_aprendizagem',
+  PLANO_ENSINO: 'plano_ensino'
 };
 
 export function ProvaProvider({ children }) {
@@ -41,6 +42,9 @@ export function ProvaProvider({ children }) {
 
   // Estado da situação de aprendizagem gerada
   const [situacaoAprendizagemGerada, setSituacaoAprendizagemGerada] = useState(null);
+
+  // Estado do plano de ensino gerado
+  const [planoEnsinoGerado, setPlanoEnsinoGerado] = useState(null);
 
   // Estado de loading
   const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +81,7 @@ export function ProvaProvider({ children }) {
     setQuestoesGeradas(null);
     setAvaliacaoPraticaGerada(null);
     setSituacaoAprendizagemGerada(null);
+    setPlanoEnsinoGerado(null);
     setTipoAvaliacao(null);
     setCurrentStep(1);
     setError(null);
@@ -124,6 +129,10 @@ export function ProvaProvider({ children }) {
     // Situação de Aprendizagem
     situacaoAprendizagemGerada,
     setSituacaoAprendizagemGerada,
+
+    // Plano de Ensino
+    planoEnsinoGerado,
+    setPlanoEnsinoGerado,
     
     // Loading e erro
     isLoading,

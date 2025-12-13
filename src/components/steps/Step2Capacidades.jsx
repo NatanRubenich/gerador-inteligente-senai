@@ -16,6 +16,7 @@ export default function Step2Capacidades() {
   
   const isAvaliacaoPratica = tipoAvaliacao === TIPO_AVALIACAO.PRATICA;
   const isSituacaoAprendizagem = tipoAvaliacao === TIPO_AVALIACAO.SITUACAO_APRENDIZAGEM;
+  const isPlanoEnsino = tipoAvaliacao === TIPO_AVALIACAO.PLANO_ENSINO;
   const isAvaliacaoObjetiva = tipoAvaliacao === TIPO_AVALIACAO.OBJETIVA;
 
   // Função para calcular distribuição de questões por dificuldade
@@ -324,6 +325,15 @@ export default function Step2Capacidades() {
               </p>
             </div>
           )}
+
+          {/* Info para Plano de Ensino */}
+          {isPlanoEnsino && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <p className="text-sm text-purple-800">
+                <strong>Plano de Ensino:</strong> A carga horária, estratégias de ensino, instrumentos de avaliação e cronograma serão definidos na próxima etapa.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Botões de Navegação */}
@@ -343,6 +353,7 @@ export default function Step2Capacidades() {
             {isAvaliacaoObjetiva && 'Próximo: Gerar Questões'}
             {isAvaliacaoPratica && 'Próximo: Configurar Avaliação'}
             {isSituacaoAprendizagem && 'Próximo: Configurar SA'}
+            {isPlanoEnsino && 'Próximo: Configurar Plano'}
             <ChevronRight size={20} />
           </button>
         </div>

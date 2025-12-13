@@ -22,18 +22,27 @@ const stepsSA = [
   { id: 4, name: 'Visualizar SA' }
 ];
 
+const stepsPlano = [
+  { id: 1, name: 'Dados Básicos' },
+  { id: 2, name: 'Capacidades' },
+  { id: 3, name: 'Configurar Plano' },
+  { id: 4, name: 'Visualizar Plano' }
+];
+
 export default function StepIndicator() {
-  const { currentStep, goToStep, questoesGeradas, avaliacaoPraticaGerada, situacaoAprendizagemGerada, tipoAvaliacao } = useProva();
+  const { currentStep, goToStep, questoesGeradas, avaliacaoPraticaGerada, situacaoAprendizagemGerada, planoEnsinoGerado, tipoAvaliacao } = useProva();
   
   const getSteps = () => {
     if (tipoAvaliacao === TIPO_AVALIACAO.PRATICA) return stepsPratica;
     if (tipoAvaliacao === TIPO_AVALIACAO.SITUACAO_APRENDIZAGEM) return stepsSA;
+    if (tipoAvaliacao === TIPO_AVALIACAO.PLANO_ENSINO) return stepsPlano;
     return stepsObjetiva;
   };
 
   const getHasResult = () => {
     if (tipoAvaliacao === TIPO_AVALIACAO.PRATICA) return avaliacaoPraticaGerada;
     if (tipoAvaliacao === TIPO_AVALIACAO.SITUACAO_APRENDIZAGEM) return situacaoAprendizagemGerada;
+    if (tipoAvaliacao === TIPO_AVALIACAO.PLANO_ENSINO) return planoEnsinoGerado;
     return questoesGeradas;
   };
 

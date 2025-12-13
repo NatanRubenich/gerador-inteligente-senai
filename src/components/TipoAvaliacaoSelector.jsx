@@ -1,4 +1,4 @@
-import { FileText, Wrench, BookOpen, ChevronRight } from 'lucide-react';
+import { FileText, Wrench, BookOpen, ClipboardList, ChevronRight } from 'lucide-react';
 
 export default function TipoAvaliacaoSelector({ onSelect }) {
   const opcoes = [
@@ -27,13 +27,24 @@ export default function TipoAvaliacaoSelector({ onSelect }) {
     {
       id: 'situacao_aprendizagem',
       titulo: 'Situação de Aprendizagem',
-      descricao: 'Plano de ensino contextualizado',
+      descricao: 'SA com contexto, desafio e rubrica',
       icon: BookOpen,
       bgIcon: 'bg-green-50',
       textIcon: 'text-green-600',
       hoverBg: 'hover:border-green-500 hover:bg-green-50',
       hoverIconBg: 'group-hover:bg-green-600',
       hoverText: 'group-hover:text-green-600'
+    },
+    {
+      id: 'plano_ensino',
+      titulo: 'Plano de Ensino',
+      descricao: 'Planejamento completo da Unidade Curricular',
+      icon: ClipboardList,
+      bgIcon: 'bg-purple-50',
+      textIcon: 'text-purple-600',
+      hoverBg: 'hover:border-purple-500 hover:bg-purple-50',
+      hoverIconBg: 'group-hover:bg-purple-600',
+      hoverText: 'group-hover:text-purple-600'
     }
   ];
 

@@ -1,4 +1,4 @@
-import { RotateCcw, Brain, FileText, Wrench, BookOpen } from 'lucide-react';
+import { RotateCcw, Brain, FileText, Wrench, BookOpen, ClipboardList } from 'lucide-react';
 import { useProva, TIPO_AVALIACAO } from '../context/ProvaContext';
 import { isApiConfigured } from '../services/llmService';
 
@@ -42,6 +42,12 @@ export default function Header() {
                       <span className="flex items-center gap-1 text-green-300">
                         <BookOpen size={12} />
                         Situação de Aprendizagem
+                      </span>
+                    )}
+                    {tipoAvaliacao === TIPO_AVALIACAO.PLANO_ENSINO && (
+                      <span className="flex items-center gap-1 text-purple-300">
+                        <ClipboardList size={12} />
+                        Plano de Ensino
                       </span>
                     )}
                   </>
