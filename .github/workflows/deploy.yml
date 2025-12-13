@@ -3,8 +3,6 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -21,17 +19,13 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build
-      run: |
-        echo "API Key length: ${#VITE_GROQ_API_KEY}"
-        echo "API Key starts with: ${VITE_GROQ_API_KEY:0:10}"
-        npm run build
+    - name: Build with API Key
+      run: npm run build
       env:
         VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist
