@@ -22,7 +22,10 @@ jobs:
       run: npm ci
 
     - name: Build
-      run: npm run build
+      run: |
+        echo "API Key length: ${#VITE_GROQ_API_KEY}"
+        echo "API Key starts with: ${VITE_GROQ_API_KEY:0:10}"
+        npm run build
       env:
         VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}
 
