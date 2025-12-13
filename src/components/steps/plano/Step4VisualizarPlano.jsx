@@ -5,7 +5,7 @@ import { useProva } from '../../../context/ProvaContext';
 export default function Step4VisualizarPlano() {
   const { planoEnsinoGerado, prevStep, resetProva, termoCapacidade, dadosProva } = useProva();
   const [copiedField, setCopiedField] = useState(null);
-  const [abaAtiva, setAbaAtiva] = useState('campos'); // 'campos', 'sas'
+  const [abaAtiva, setAbaAtiva] = useState('campos'); // 'campos', 'modulos'
 
   if (!planoEnsinoGerado) {
     return (
@@ -99,13 +99,13 @@ export default function Step4VisualizarPlano() {
                 Campos SGN
               </button>
               <button
-                onClick={() => setAbaAtiva('sas')}
+                onClick={() => setAbaAtiva('modulos')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  abaAtiva === 'sas' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
+                  abaAtiva === 'modulos' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
                 <Target size={14} className="inline mr-1" />
-                Situações de Aprendizagem
+                Planos de Aula (Módulos)
               </button>
             </div>
 
@@ -213,86 +213,108 @@ export default function Step4VisualizarPlano() {
         </div>
       )}
 
-      {/* Aba: Situações de Aprendizagem */}
-      {abaAtiva === 'sas' && (
+      {/* Aba: Planos de Aula (Módulos) */}
+      {abaAtiva === 'modulos' && (
         <div className="space-y-6">
-          {plano.situacoesAprendizagem?.map((sa, i) => (
+          {plano.planosAula?.map((modulo, i) => (
             <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden">
-              {/* Cabeçalho da SA */}
+              {/* Cabeçalho do Módulo */}
               <div className="bg-purple-600 text-white p-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold">
-                    SA {i + 1}: {sa.titulo}
+                    {modulo.titulo}
                   </h3>
                   <div className="flex items-center gap-3">
                     <span className="bg-purple-500 px-3 py-1 rounded text-sm">
-                      {sa.cargaHoraria}h
+                      C.H.: {modulo.cargaHoraria}
                     </span>
                     <button
-                      onClick={() => copyToClipboard(sa.titulo, `sa_titulo_${i}`)}
+                      onClick={() => copyToClipboard(modulo.titulo, `modulo_titulo_${i}`)}
                       className={`px-3 py-1 rounded text-sm transition-colors ${
-                        copiedField === `sa_titulo_${i}` ? 'bg-green-500' : 'bg-purple-500 hover:bg-purple-400'
+                        copiedField === `modulo_titulo_${i}` ? 'bg-green-500' : 'bg-purple-500 hover:bg-purple-400'
                       }`}
                     >
-                      {copiedField === `sa_titulo_${i}` ? 'Copiado!' : 'Copiar Título'}
+                      {copiedField === `modulo_titulo_${i}` ? 'Copiado!' : 'Copiar Título'}
                     </button>
                   </div>
                 </div>
               </div>
 
               <div className="p-6 space-y-4">
-                {/* Contextualização */}
-                <CopyableField
-                  label="Contextualização"
-                  value={sa.contextualizacao}
-                  fieldName={`sa_contexto_${i}`}
-                  rows={4}
-                />
-
-                {/* Desafio */}
-                <CopyableField
-                  label="Desafio"
-                  value={sa.desafio}
-                  fieldName={`sa_desafio_${i}`}
-                  rows={3}
-                />
-
-                {/* Resultados Esperados */}
-                <CopyableField
-                  label="Resultados Esperados (Entregas)"
-                  value={sa.resultadosEsperados}
-                  fieldName={`sa_resultados_${i}`}
-                  rows={3}
-                />
-
-                {/* Critérios de Avaliação */}
-                <CopyableField
-                  label="Critérios de Avaliação"
-                  value={sa.criteriosAvaliacao?.join(';\n') || ''}
-                  fieldName={`sa_criterios_${i}`}
-                  rows={4}
-                />
-
-                {/* Capacidades Trabalhadas */}
-                {sa.capacidadesTrabalhadas && sa.capacidadesTrabalhadas.length > 0 && (
+                {/* Capacidades a serem trabalhadas */}
+                {modulo.capacidadesTrabalhadas && modulo.capacidadesTrabalhadas.length > 0 && (
                   <div className="p-3 bg-purple-50 rounded-lg">
-                    <h4 className="font-semibold text-purple-800 text-sm mb-2">
-                      {termoCapacidade}s Trabalhadas:
-                    </h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-purple-800 text-sm">
+                        {termoCapacidade}s a serem trabalhadas:
+                      </h4>
+                      <button
+                        onClick={() => copyToClipboard(
+                          modulo.capacidadesTrabalhadas.map(c => c.descricao).join('\n'), 
+                          `modulo_caps_${i}`
+                        )}
+                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                          copiedField === `modulo_caps_${i}` ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                        }`}
+                      >
+                        {copiedField === `modulo_caps_${i}` ? <Check size={12} /> : <Copy size={12} />}
+                        {copiedField === `modulo_caps_${i}` ? 'Copiado!' : 'Copiar'}
+                      </button>
+                    </div>
                     <ul className="text-sm space-y-1">
-                      {sa.capacidadesTrabalhadas.map((cap, j) => (
-                        <li key={j} className="text-purple-700">• {cap}</li>
+                      {modulo.capacidadesTrabalhadas.map((cap, j) => (
+                        <li key={j} className="text-purple-700">• {cap.descricao}</li>
                       ))}
                     </ul>
                   </div>
                 )}
+
+                {/* Conhecimentos Relacionados */}
+                <CopyableField
+                  label="Conhecimentos Relacionados"
+                  value={modulo.conhecimentosRelacionados?.join('\n') || ''}
+                  fieldName={`modulo_conhecimentos_${i}`}
+                  rows={4}
+                />
+
+                {/* Estratégias de Ensino */}
+                <CopyableField
+                  label="Estratégias de Ensino"
+                  value={modulo.estrategiasEnsino?.join('; ') || ''}
+                  fieldName={`modulo_estrategias_${i}`}
+                  rows={2}
+                />
+
+                {/* Critérios de Avaliação */}
+                <CopyableField
+                  label="Critérios de Avaliação (como vou avaliar)"
+                  value={modulo.criteriosAvaliacao || ''}
+                  fieldName={`modulo_criterios_${i}`}
+                  rows={5}
+                />
+
+                {/* Instrumentos de Avaliação */}
+                <CopyableField
+                  label="Instrumentos de Avaliação da Aprendizagem"
+                  value={modulo.instrumentosAvaliacao || ''}
+                  fieldName={`modulo_instrumentos_${i}`}
+                  rows={2}
+                />
+
+                {/* Recursos e Ambientes Pedagógicos */}
+                <CopyableField
+                  label="Recursos e Ambientes Pedagógicos"
+                  value={modulo.recursosPedagogicos || ''}
+                  fieldName={`modulo_recursos_${i}`}
+                  rows={3}
+                />
               </div>
             </div>
           ))}
 
-          {(!plano.situacoesAprendizagem || plano.situacoesAprendizagem.length === 0) && (
+          {(!plano.planosAula || plano.planosAula.length === 0) && (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-              <p className="text-gray-500">Nenhuma Situação de Aprendizagem gerada.</p>
+              <p className="text-gray-500">Nenhum Plano de Aula (Módulo) gerado.</p>
             </div>
           )}
         </div>
@@ -310,7 +332,25 @@ export default function Step4VisualizarPlano() {
             <li>Vá para a aba "Plano de Ensino"</li>
             <li>Clique em "Copiar" ao lado de cada campo acima</li>
             <li>Cole (Ctrl+V) no campo correspondente do SGN</li>
-            <li>Para as SAs, use a aba "Situações de Aprendizagem" e adicione cada uma no SGN</li>
+            <li>Para os Planos de Aula, use a aba "Planos de Aula (Módulos)" e adicione cada módulo no SGN</li>
+          </ol>
+        </div>
+      )}
+      
+      {/* Dica de uso para Módulos */}
+      {abaAtiva === 'modulos' && (
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 no-print">
+          <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+            <BookOpen size={18} />
+            Como adicionar Planos de Aula no SGN
+          </h4>
+          <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+            <li>No SGN, vá para a seção "Plano de Aulas"</li>
+            <li>Digite o título do módulo e clique em "Adicionar Plano de Aula"</li>
+            <li>Preencha a C.H. Planejada (formato XX:00)</li>
+            <li>Selecione as Capacidades a serem trabalhadas</li>
+            <li>Copie e cole os demais campos: Conhecimentos, Estratégias, Critérios, Instrumentos e Recursos</li>
+            <li>Repita para cada módulo</li>
           </ol>
         </div>
       )}

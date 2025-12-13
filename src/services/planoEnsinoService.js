@@ -34,26 +34,31 @@ export const INSTRUMENTOS_AVALIACAO = [
   'Observação direta'
 ];
 
-// Softwares/Ferramentas comuns por área
+// Softwares/Ferramentas comuns por área (ordenados por prioridade)
 export const FERRAMENTAS_COMUNS = {
-  informatica: [
+  prioritarias: [
+    'Quadro branco',
+    'Projetor multimídia',
     'VSCode',
-    'Visual Studio',
-    'Git/GitHub',
-    'Postman',
-    'MySQL Workbench',
+    'Portugol Studio',
     'pgAdmin',
     'Node.js',
+    'Postman',
+    'Git/GitHub'
+  ],
+  informatica: [
+    'Visual Studio',
+    'MySQL Workbench',
     'Docker',
-    'Figma'
+    'Figma',
+    'DBeaver'
   ],
   programacao: [
-    'Portugol Studio',
-    'VSCode',
     'Python IDLE',
     'Eclipse',
     'IntelliJ IDEA',
-    'NetBeans'
+    'NetBeans',
+    'Jupyter Notebook'
   ],
   redes: [
     'Packet Tracer',
@@ -65,14 +70,31 @@ export const FERRAMENTAS_COMUNS = {
   geral: [
     'Microsoft Office',
     'Google Workspace',
-    'Projetor multimídia',
-    'Quadro branco'
+    'Google Chrome',
+    'Google Drive'
   ]
 };
+
+// Estratégias de Ensino disponíveis no SGN
+export const ESTRATEGIAS_ENSINO = [
+  'Exposição Dialogada',
+  'Atividade Prática',
+  'Gamificação',
+  'Trabalho em Grupo',
+  'Dinâmica de Grupo',
+  'Visita Técnica',
+  'Ensaio Tecnológico',
+  'Workshop',
+  'Seminário',
+  'Painel Temático',
+  'Sala de Aula Invertida',
+  'Design Thinking'
+];
 
 /**
  * Gera um Plano de Ensino completo usando IA
  * Compatível com os campos do sistema SGN
+ * Inclui Planos de Aula (Módulos) conforme estrutura do SGN
  */
 export async function gerarPlanoEnsino({
   curso,
@@ -86,7 +108,7 @@ export async function gerarPlanoEnsino({
   ferramentas,
   contextoAdicional,
   termoCapacidade = 'Capacidade',
-  quantidadeSAs = 1
+  quantidadeModulos = 3
 }) {
   if (!API_KEY) {
     throw new Error('API Key não configurada. Configure VITE_GROQ_API_KEY no arquivo .env');
@@ -94,7 +116,7 @@ export async function gerarPlanoEnsino({
 
   // Formatar capacidades para o prompt
   const capacidadesTexto = capacidades.map((cap, i) => 
-    `${i + 1}. ${cap.codigo} - ${cap.descricao}`
+    `${i}. ${cap.codigo} - ${cap.descricao}`
   ).join('\n');
 
   // Formatar ambientes
@@ -102,6 +124,9 @@ export async function gerarPlanoEnsino({
 
   // Formatar instrumentos
   const instrumentosTexto = instrumentosAvaliacao.join(';\n');
+
+  // Calcular carga horária por módulo (aproximada)
+  const chPorModulo = Math.floor(cargaHoraria / quantidadeModulos);
 
   const prompt = `Você é um especialista em educação profissional do SENAI, seguindo a Metodologia SENAI de Educação Profissional (MSEP).
 
@@ -114,7 +139,7 @@ DADOS DO CURSO:
 - Período: ${periodo}
 - Competência Geral do Curso: ${competenciaGeral}
 
-${termoCapacidade.toUpperCase()}S/HABILIDADES A DESENVOLVER:
+${termoCapacidade.toUpperCase()}S/HABILIDADES A DESENVOLVER (índice começa em 0):
 ${capacidadesTexto}
 
 AMBIENTES PEDAGÓGICOS DISPONÍVEIS:
@@ -128,36 +153,40 @@ ${instrumentosTexto}
 
 ${contextoAdicional ? `ORIENTAÇÕES ADICIONAIS DO DOCENTE: ${contextoAdicional}` : ''}
 
-Gere ${quantidadeSAs} Situação(ões) de Aprendizagem.
+Gere ${quantidadeModulos} PLANOS DE AULA (MÓDULOS) para dividir a UC.
+Carga horária aproximada por módulo: ${chPorModulo}h (pode variar conforme conteúdo).
 
-CAMPOS DO SGN A PREENCHER:
+ESTRUTURA DE CADA PLANO DE AULA (MÓDULO) - CONFORME SGN:
 
-1. AMBIENTES PEDAGÓGICOS: Liste os ambientes onde as aulas serão ministradas e as ferramentas/softwares utilizados. Formato de lista simples.
+1. TÍTULO: Formato "MÓDULO X - [Tema principal do módulo]"
+   Exemplo: "MÓDULO 1 - Introdução à lógica e algoritmo com pseudocódigo em Portugol"
 
-2. OUTROS INSTRUMENTOS DE AVALIAÇÃO: Liste os instrumentos de avaliação que serão utilizados. Formato de lista simples com ponto e vírgula.
+2. C.H. PLANEJADA: Carga horária do módulo em horas (formato "XX:00")
 
-3. REFERÊNCIAS BIBLIOGRÁFICAS - BÁSICAS: 3-4 referências principais no formato ABNT (Autor, Título, Editora, Ano).
+3. CAPACIDADES A SEREM TRABALHADAS: Índices das capacidades que serão desenvolvidas neste módulo
 
-4. REFERÊNCIAS BIBLIOGRÁFICAS - COMPLEMENTARES: 2-3 referências complementares no formato ABNT.
+4. CONHECIMENTOS RELACIONADOS: Lista de conhecimentos/conteúdos que serão abordados
 
-5. OBSERVAÇÕES: Informações adicionais relevantes sobre a UC (pode ser vazio).
+5. ESTRATÉGIAS DE ENSINO: Escolha entre: Exposição Dialogada, Atividade Prática, Gamificação, Trabalho em Grupo, Dinâmica de Grupo, Visita Técnica, Workshop, Seminário, Sala de Aula Invertida, Design Thinking
 
-6. SITUAÇÕES DE APRENDIZAGEM: Para cada SA, gere:
-   - Título descritivo
-   - Contextualização (cenário/problema do mundo real)
-   - Desafio proposto aos alunos
-   - Resultados esperados (entregas)
-   - ${termoCapacidade}s trabalhadas
-   - Critérios de avaliação
-   - Carga horária estimada
+6. CRITÉRIOS DE AVALIAÇÃO: Perguntas no formato "Verbo + complemento ?" para avaliar o aluno
+   Exemplo: "Aplicou lógica de programação para resolução dos problemas ?"
+
+7. INSTRUMENTOS DE AVALIAÇÃO DA APRENDIZAGEM: Como será avaliado
+   Exemplo: "AV1-Avaliação objetiva múltipla escolha sobre Portugol"
+   Se não houver avaliação neste módulo, use: "Será avaliado no próximo bloco"
+
+8. RECURSOS E AMBIENTES PEDAGÓGICOS: Recursos e ambientes utilizados
+   Exemplo: "Laboratório de informática; Projetor multimídia; VSCode; Git/GitHub"
 
 REGRAS IMPORTANTES:
-- Seja específico para a área de ${curso}
-- Use linguagem técnica apropriada
-- As SAs devem ser contextualizadas no mercado de trabalho
-- Cada ${termoCapacidade} deve ser contemplada em pelo menos uma SA
-- Os critérios de avaliação devem ser mensuráveis
-- As referências devem ser reais e atualizadas
+- Divida as ${termoCapacidade}s de forma lógica entre os módulos
+- Cada ${termoCapacidade} deve aparecer em pelo menos um módulo
+- Os módulos devem ter progressão lógica de complexidade
+- O último módulo pode ser um "Projeto Final" integrando todas as capacidades
+- Os critérios de avaliação devem ser perguntas mensuráveis
+- Use as ferramentas fornecidas nos recursos pedagógicos
+- A soma das cargas horárias deve ser aproximadamente ${cargaHoraria}h
 
 Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a estrutura:
 {
@@ -166,15 +195,16 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
   "referenciasBasicas": "texto formatado para o campo do SGN",
   "referenciasComplementares": "texto formatado para o campo do SGN",
   "observacoes": "texto para observações ou string vazia",
-  "situacoesAprendizagem": [
+  "planosAula": [
     {
-      "titulo": "Título da SA",
-      "contextualizacao": "Texto de contextualização detalhado",
-      "desafio": "Descrição do desafio proposto",
-      "resultadosEsperados": "Entregas/produtos esperados",
-      "capacidadesTrabalhadasIndices": [0, 1],
-      "criteriosAvaliacao": ["critério 1", "critério 2", "critério 3"],
-      "cargaHoraria": 20
+      "titulo": "MÓDULO 1 - Título descritivo",
+      "cargaHoraria": "40:00",
+      "capacidadesIndices": [0, 1, 2],
+      "conhecimentosRelacionados": ["Conhecimento 1", "Conhecimento 2"],
+      "estrategiasEnsino": ["Exposição Dialogada", "Atividade Prática"],
+      "criteriosAvaliacao": "Pergunta 1 ?\\nPergunta 2 ?\\nPergunta 3 ?",
+      "instrumentosAvaliacao": "AV1-Descrição do instrumento",
+      "recursosPedagogicos": "Laboratório de informática; VSCode; Git/GitHub"
     }
   ]
 }`;
@@ -225,12 +255,12 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
 
     const planoEnsino = JSON.parse(jsonStr);
 
-    // Mapear índices de capacidades para os códigos reais
-    if (planoEnsino.situacoesAprendizagem) {
-      planoEnsino.situacoesAprendizagem = planoEnsino.situacoesAprendizagem.map(sa => ({
-        ...sa,
-        capacidadesTrabalhadas: (sa.capacidadesTrabalhadasIndices || []).map(idx => 
-          capacidades[idx] ? `${capacidades[idx].codigo}: ${capacidades[idx].descricao}` : ''
+    // Mapear índices de capacidades para os códigos reais nos Planos de Aula
+    if (planoEnsino.planosAula) {
+      planoEnsino.planosAula = planoEnsino.planosAula.map(modulo => ({
+        ...modulo,
+        capacidadesTrabalhadas: (modulo.capacidadesIndices || []).map(idx => 
+          capacidades[idx] ? { codigo: capacidades[idx].codigo, descricao: capacidades[idx].descricao } : null
         ).filter(Boolean)
       }));
     }
@@ -246,7 +276,7 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
       competenciaGeral,
       // Capacidades originais
       capacidades: capacidades.map((cap, i) => ({
-        indice: i + 1,
+        indice: i,
         codigo: cap.codigo,
         descricao: cap.descricao
       })),
@@ -268,5 +298,6 @@ export default {
   gerarPlanoEnsino,
   AMBIENTES_PEDAGOGICOS,
   INSTRUMENTOS_AVALIACAO,
-  FERRAMENTAS_COMUNS
+  FERRAMENTAS_COMUNS,
+  ESTRATEGIAS_ENSINO
 };

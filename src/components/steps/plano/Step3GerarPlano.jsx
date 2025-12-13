@@ -5,7 +5,8 @@ import {
   gerarPlanoEnsino, 
   AMBIENTES_PEDAGOGICOS, 
   INSTRUMENTOS_AVALIACAO,
-  FERRAMENTAS_COMUNS
+  FERRAMENTAS_COMUNS,
+  ESTRATEGIAS_ENSINO
 } from '../../../services/planoEnsinoService';
 import { cursos } from '../../../data/cursos';
 
@@ -58,7 +59,7 @@ export default function Step3GerarPlano() {
   const [instrumentosSelecionados, setInstrumentosSelecionados] = useState(['Exercícios teóricos e práticos', 'Avaliações objetivas', 'Avaliações práticas']);
   const [ferramentasSelecionadas, setFerramentasSelecionadas] = useState([]);
   const [ferramentaCustom, setFerramentaCustom] = useState('');
-  const [quantidadeSAs, setQuantidadeSAs] = useState(1);
+  const [quantidadeModulos, setQuantidadeModulos] = useState(3);
   const [contextoAdicional, setContextoAdicional] = useState('');
 
   // Preparar capacidades para exibição
@@ -104,12 +105,13 @@ export default function Step3GerarPlano() {
     setList(prev => prev.filter(i => i !== item));
   };
 
-  // Todas as ferramentas disponíveis
+  // Todas as ferramentas disponíveis (prioritárias primeiro)
   const todasFerramentas = [
-    ...FERRAMENTAS_COMUNS.geral,
-    ...FERRAMENTAS_COMUNS.programacao,
+    ...FERRAMENTAS_COMUNS.prioritarias,
     ...FERRAMENTAS_COMUNS.informatica,
-    ...FERRAMENTAS_COMUNS.redes
+    ...FERRAMENTAS_COMUNS.programacao,
+    ...FERRAMENTAS_COMUNS.redes,
+    ...FERRAMENTAS_COMUNS.geral
   ].filter((v, i, a) => a.indexOf(v) === i); // Remove duplicatas
 
   const handleGerarPlano = async () => {
@@ -143,7 +145,7 @@ export default function Step3GerarPlano() {
         ferramentas: ferramentasSelecionadas,
         contextoAdicional,
         termoCapacidade,
-        quantidadeSAs
+        quantidadeModulos
       });
 
       setPlanoEnsinoGerado({
@@ -268,17 +270,22 @@ export default function Step3GerarPlano() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantidade de SAs
+                Quantidade de Módulos (Planos de Aula)
               </label>
               <select
-                value={quantidadeSAs}
-                onChange={(e) => setQuantidadeSAs(parseInt(e.target.value))}
+                value={quantidadeModulos}
+                onChange={(e) => setQuantidadeModulos(parseInt(e.target.value))}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
-                <option value={1}>1 Situação de Aprendizagem</option>
-                <option value={2}>2 Situações de Aprendizagem</option>
-                <option value={3}>3 Situações de Aprendizagem</option>
+                <option value={2}>2 Módulos</option>
+                <option value={3}>3 Módulos</option>
+                <option value={4}>4 Módulos</option>
+                <option value={5}>5 Módulos</option>
+                <option value={6}>6 Módulos</option>
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Cada módulo é um bloco de aulas com capacidades específicas
+              </p>
             </div>
           </div>
 
@@ -472,8 +479,8 @@ export default function Step3GerarPlano() {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 text-sm">
               <div className="bg-white rounded px-2 py-1">
-                <span className="text-gray-500">SAs geradas:</span>
-                <span className="ml-1 font-medium">{planoEnsinoGerado.situacoesAprendizagem?.length || 0}</span>
+                <span className="text-gray-500">Módulos gerados:</span>
+                <span className="ml-1 font-medium">{planoEnsinoGerado.planosAula?.length || 0}</span>
               </div>
               <div className="bg-white rounded px-2 py-1">
                 <span className="text-gray-500">Carga Horária:</span>

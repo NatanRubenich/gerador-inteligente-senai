@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, GraduationCap, BookOpen } from 'lucide-react';
-import { useProva } from '../../context/ProvaContext';
+import { useProva, TIPO_AVALIACAO } from '../../context/ProvaContext';
 import { cursos, TIPO_ENSINO, getTermoCapacidade } from '../../data/cursos';
 
 export default function Step1DadosBasicos() {
-  const { dadosProva, updateDadosProva, nextStep } = useProva();
+  const { dadosProva, updateDadosProva, nextStep, tipoAvaliacao } = useProva();
   const [errors, setErrors] = useState({});
 
   // Filtrar cursos por tipo de ensino
@@ -68,7 +68,11 @@ export default function Step1DadosBasicos() {
       <div className="bg-white rounded-xl shadow-lg p-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
           <BookOpen className="text-[#004b8d]" />
-          Dados Básicos da Prova
+          {tipoAvaliacao === TIPO_AVALIACAO.PLANO_ENSINO 
+            ? 'Dados do Plano de Ensino' 
+            : tipoAvaliacao === TIPO_AVALIACAO.SITUACAO_APRENDIZAGEM
+              ? 'Dados da Situação de Aprendizagem'
+              : 'Dados Básicos da Prova'}
         </h2>
 
         <div className="space-y-6">
