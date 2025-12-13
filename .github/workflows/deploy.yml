@@ -20,7 +20,10 @@ jobs:
       run: npm ci
 
     - name: Build with API Key
-      run: npm run build
+      run: |
+        echo "API Key exists: ${{ secrets.VITE_GROQ_API_KEY != '' }}"
+        echo "API Key length: ${{ secrets.VITE_GROQ_API_KEY && length(secrets.VITE_GROQ_API_KEY) || 0 }}"
+        npm run build
       env:
         VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}
 
