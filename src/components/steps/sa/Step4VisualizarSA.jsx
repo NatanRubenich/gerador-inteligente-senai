@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
-import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain } from 'lucide-react';
+import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain, FileText, AlertTriangle, Award } from 'lucide-react';
 import { useProva } from '../../../context/ProvaContext';
 
 export default function Step4VisualizarSA() {
   const { situacaoAprendizagemGerada, prevStep, resetProva, termoCapacidade, dadosProva } = useProva();
   const printRef = useRef();
+  const [abaAtiva, setAbaAtiva] = useState('sa'); // 'sa' ou 'rubrica'
 
   if (!situacaoAprendizagemGerada) {
     return (
@@ -35,6 +36,12 @@ export default function Step4VisualizarSA() {
     return `${dia}/${mes}/${ano}`;
   };
 
+  // Obter nome do nível de dificuldade
+  const getNivelNome = (id) => {
+    const niveis = { facil: 'Fácil', intermediario: 'Intermediário', dificil: 'Difícil' };
+    return niveis[id] || id;
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Controles - não aparecem na impressão */}
@@ -46,12 +53,34 @@ export default function Step4VisualizarSA() {
           </h2>
 
           <div className="flex items-center gap-3">
+            {/* Abas */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setAbaAtiva('sa')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  abaAtiva === 'sa' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <FileText size={16} className="inline mr-1" />
+                SA
+              </button>
+              <button
+                onClick={() => setAbaAtiva('rubrica')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  abaAtiva === 'rubrica' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <CheckSquare size={16} className="inline mr-1" />
+                Rubrica
+              </button>
+            </div>
+
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors"
             >
               <Printer size={18} />
-              Imprimir SA
+              Imprimir
             </button>
 
             <button
@@ -66,219 +95,323 @@ export default function Step4VisualizarSA() {
       </div>
 
       {/* Documento da SA */}
-      <div ref={printRef} className="bg-white rounded-xl shadow-lg prova-container" id="sa-print">
-        {/* Cabeçalho */}
-        <table className="w-full border-collapse border border-black text-sm">
-          <tbody>
-            <tr>
-              <td rowSpan="5" className="border border-black p-2 w-36 text-center align-middle">
-                <img 
-                  src="/senai.png" 
-                  alt="SENAI" 
-                  className="w-full max-w-[100px] mx-auto mb-1"
-                />
-                <p className="font-bold text-xs">Serviço Nacional de</p>
-                <p className="font-bold text-xs">Aprendizagem Industrial</p>
-                <p className="text-xs">Santa Catarina</p>
-              </td>
-              <td colSpan="2" className="border border-black p-2 text-center font-bold text-base bg-[#004b8d] text-white">
-                SITUAÇÃO DE APRENDIZAGEM
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-black py-1 px-2">
-                <strong>Curso:</strong>{' '}
-                <span className="text-blue-600 font-medium italic">{sa.curso}</span>
-              </td>
-              <td className="border border-black py-1 px-2">
-                <strong>Carga Horária:</strong>{' '}
-                <span className="text-blue-600 font-medium italic">{sa.cargaHoraria}h</span>
-              </td>
-            </tr>
-            <tr>
-              <td colSpan="2" className="border border-black py-1 px-2">
-                <strong>Unidade Curricular:</strong>{' '}
-                <span className="text-blue-600 font-medium italic">{sa.unidadeCurricular}</span>
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-black py-1 px-2">
-                <strong>Docente:</strong>{' '}
-                <span className="text-blue-600 italic">{sa.docente || dadosProva.professor}</span>
-              </td>
-              <td className="border border-black py-1 px-2">
-                <strong>Turma:</strong>{' '}
-                <span className="text-blue-600 italic">{sa.turma || dadosProva.turma}</span>
-              </td>
-            </tr>
-            <tr>
-              <td colSpan="2" className="border border-black py-1 px-2">
-                <strong>Data:</strong>{' '}
-                <span className="text-blue-600 italic">{formatarData(sa.data || dadosProva.data)}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      {abaAtiva === 'sa' && (
+        <div ref={printRef} className="bg-white rounded-xl shadow-lg prova-container" id="sa-print">
+          {/* Cabeçalho */}
+          <table className="w-full border-collapse border border-black text-sm">
+            <tbody>
+              <tr>
+                <td rowSpan="4" className="border border-black p-2 w-32 text-center align-middle">
+                  <img src="/senai.png" alt="SENAI" className="w-full max-w-[80px] mx-auto mb-1" />
+                  <p className="font-bold text-xs">SENAI</p>
+                  <p className="text-xs">Santa Catarina</p>
+                </td>
+                <td colSpan="3" className="border border-black p-2 text-center font-bold text-base bg-[#004b8d] text-white">
+                  SITUAÇÃO DE APRENDIZAGEM
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black py-1 px-2">
+                  <strong>Curso:</strong> <span className="text-blue-600 italic">{sa.curso}</span>
+                </td>
+                <td className="border border-black py-1 px-2">
+                  <strong>UC:</strong> <span className="text-blue-600 italic">{sa.unidadeCurricular}</span>
+                </td>
+                <td className="border border-black py-1 px-2">
+                  <strong>CH:</strong> <span className="text-blue-600 italic">{sa.cargaHoraria}h</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black py-1 px-2">
+                  <strong>Docente:</strong> <span className="text-blue-600 italic">{sa.docente || dadosProva.professor}</span>
+                </td>
+                <td className="border border-black py-1 px-2">
+                  <strong>Turma:</strong> <span className="text-blue-600 italic">{sa.turma || dadosProva.turma}</span>
+                </td>
+                <td className="border border-black py-1 px-2">
+                  <strong>Nível:</strong> <span className="text-blue-600 italic">{getNivelNome(sa.nivelDificuldade)}</span>
+                </td>
+              </tr>
+              <tr>
+                <td colSpan="2" className="border border-black py-1 px-2">
+                  <strong>Estratégia:</strong> <span className="text-blue-600 italic">{sa.estrategiaPedagogica}</span>
+                </td>
+                <td className="border border-black py-1 px-2">
+                  <strong>Data:</strong> <span className="text-blue-600 italic">{formatarData(sa.data || dadosProva.data)}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-        {/* Título da SA */}
-        <div className="mt-4 bg-[#004b8d] text-white p-3 text-center">
-          <h1 className="text-lg font-bold">{sa.titulo}</h1>
-        </div>
-
-        {/* Capacidades */}
-        <div className="mt-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <Target size={16} />
-            {termoCapacidade.toUpperCase()}S A SEREM DESENVOLVIDAS
+          {/* Título da SA */}
+          <div className="mt-4 bg-[#004b8d] text-white p-3 text-center">
+            <h1 className="text-lg font-bold">{sa.titulo}</h1>
           </div>
-          <div className="border border-black border-t-0 p-3">
-            {sa.capacidades && Object.entries(sa.capacidades).map(([codigo, descricao]) => (
-              <p key={codigo} className="mb-2 text-sm">
-                <strong className="text-[#004b8d]">{codigo}:</strong> {descricao}
+
+          {/* Capacidades a Desenvolver */}
+          <div className="mt-4">
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+              <Target size={16} />
+              {termoCapacidade.toUpperCase()}S A DESENVOLVER
+            </div>
+            <div className="border border-black border-t-0 p-3">
+              {sa.capacidades && Object.entries(sa.capacidades).map(([codigo, cap]) => (
+                <p key={codigo} className="mb-1 text-sm">
+                  <span className="bg-[#004b8d] text-white text-xs px-1.5 py-0.5 rounded mr-2">{codigo}</span>
+                  <strong>{cap.codigo}:</strong> {cap.descricao}
+                </p>
+              ))}
+            </div>
+          </div>
+
+          {/* CONTEXTO */}
+          <div className="mt-4">
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+              <BookOpen size={16} />
+              CONTEXTO
+            </div>
+            <div className="border border-black border-t-0 p-3">
+              <p className="text-sm text-gray-700 text-justify leading-relaxed">
+                {sa.contexto || sa.contextualizacao}
               </p>
-            ))}
+            </div>
           </div>
-        </div>
 
-        {/* Contextualização */}
-        <div className="mt-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <BookOpen size={16} />
-            CONTEXTUALIZAÇÃO
+          {/* DESAFIO */}
+          <div className="mt-4">
+            <div className="bg-amber-500 text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+              <AlertTriangle size={16} />
+              DESAFIO
+            </div>
+            <div className="border border-black border-t-0 p-3 bg-amber-50">
+              <p className="text-sm text-gray-800 text-justify leading-relaxed font-medium">
+                {sa.desafio}
+              </p>
+            </div>
           </div>
-          <div className="border border-black border-t-0 p-3">
-            <p className="text-sm text-gray-700 text-justify leading-relaxed">
-              {sa.contextualizacao}
-            </p>
-          </div>
-        </div>
 
-        {/* Desafio */}
-        <div className="mt-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <Target size={16} />
-            DESAFIO
+          {/* RESULTADO (Entrega Final) */}
+          <div className="mt-4">
+            <div className="bg-green-600 text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+              <Award size={16} />
+              RESULTADO (ENTREGA FINAL)
+            </div>
+            <div className="border border-black border-t-0 p-3 bg-green-50">
+              <p className="text-sm text-gray-800 font-medium">
+                {sa.resultado}
+              </p>
+            </div>
           </div>
-          <div className="border border-black border-t-0 p-3">
-            <p className="text-sm text-gray-800 text-justify leading-relaxed font-medium">
-              {sa.desafio}
-            </p>
-          </div>
-        </div>
 
-        {/* Resultados Esperados */}
-        <div className="mt-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <CheckSquare size={16} />
-            RESULTADOS ESPERADOS (ENTREGAS)
-          </div>
-          <div className="border border-black border-t-0 p-3">
-            <ul className="space-y-2">
-              {sa.resultadosEsperados?.map((resultado, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm">
-                  <span className="bg-[#004b8d] text-white text-xs px-2 py-0.5 rounded font-medium mt-0.5">
-                    {index + 1}
-                  </span>
-                  <span>{resultado}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Atividades */}
-        <div className="mt-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <Wrench size={16} />
-            ATIVIDADES
-          </div>
-          <div className="border border-black border-t-0">
-            {sa.atividades?.map((atividade, index) => (
-              <div key={index} className={`p-3 ${index > 0 ? 'border-t border-gray-300' : ''}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-bold text-[#004b8d] text-sm">
-                    Atividade {atividade.numero || index + 1}: {atividade.titulo}
-                  </h4>
-                  <span className="text-xs bg-blue-100 text-[#004b8d] px-2 py-1 rounded flex items-center gap-1">
-                    <Clock size={12} />
-                    {atividade.duracao}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700 mb-2">{atividade.descricao}</p>
-                {atividade.recursos && atividade.recursos.length > 0 && (
-                  <div className="text-xs text-gray-500">
-                    <strong>Recursos:</strong> {atividade.recursos.join(', ')}
+          {/* Atividades */}
+          <div className="mt-4">
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+              <Wrench size={16} />
+              ATIVIDADES
+            </div>
+            <div className="border border-black border-t-0">
+              {sa.atividades?.map((atividade, index) => (
+                <div key={index} className={`p-3 ${index > 0 ? 'border-t border-gray-300' : ''}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-bold text-[#004b8d] text-sm">
+                      Atividade {atividade.numero || index + 1}: {atividade.titulo}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {atividade.capacidadesRelacionadas && (
+                        <span className="text-xs text-gray-500">
+                          {atividade.capacidadesRelacionadas.join(', ')}
+                        </span>
+                      )}
+                      <span className="text-xs bg-blue-100 text-[#004b8d] px-2 py-1 rounded flex items-center gap-1">
+                        <Clock size={12} />
+                        {atividade.duracao}
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recursos Necessários */}
-        <div className="mt-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <Wrench size={16} />
-            RECURSOS NECESSÁRIOS
-          </div>
-          <div className="border border-black border-t-0 p-3">
-            <ul className="grid grid-cols-2 gap-2">
-              {sa.recursosNecessarios?.map((recurso, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm">
-                  <span className="w-1.5 h-1.5 bg-[#004b8d] rounded-full"></span>
-                  {recurso}
-                </li>
+                  <p className="text-sm text-gray-700">{atividade.descricao}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
-        </div>
 
-        {/* Critérios de Avaliação */}
-        <div className="mt-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <CheckSquare size={16} />
-            CRITÉRIOS DE AVALIAÇÃO
-          </div>
-          <div className="border border-black border-t-0">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border-b border-r border-gray-300 p-2 text-left">Critério</th>
-                  <th className="border-b border-gray-300 p-2 text-center w-24">{termoCapacidade}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sa.criteriosAvaliacao?.map((item, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="border-b border-r border-gray-300 p-2">{item.criterio}</td>
-                    <td className="border-b border-gray-300 p-2 text-center font-medium text-[#004b8d]">
-                      {item.capacidadeRelacionada}
-                    </td>
-                  </tr>
+          {/* Recursos Necessários */}
+          <div className="mt-4">
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+              <Wrench size={16} />
+              RECURSOS NECESSÁRIOS
+            </div>
+            <div className="border border-black border-t-0 p-3">
+              <ul className="grid grid-cols-2 gap-1">
+                {sa.recursosNecessarios?.map((recurso, index) => (
+                  <li key={index} className="flex items-center gap-2 text-sm">
+                    <span className="w-1.5 h-1.5 bg-[#004b8d] rounded-full"></span>
+                    {recurso}
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+            </div>
           </div>
-        </div>
 
-        {/* Conhecimentos Mobilizados */}
-        <div className="mt-4 mb-4">
-          <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-            <Brain size={16} />
-            CONHECIMENTOS MOBILIZADOS
-          </div>
-          <div className="border border-black border-t-0 p-3">
-            <ul className="grid grid-cols-2 gap-2">
-              {sa.conhecimentosMobilizados?.map((conhecimento, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm">
-                  <span className="w-1.5 h-1.5 bg-[#004b8d] rounded-full"></span>
-                  {conhecimento}
-                </li>
-              ))}
-            </ul>
+          {/* Conhecimentos Mobilizados */}
+          <div className="mt-4 mb-4">
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+              <Brain size={16} />
+              CONHECIMENTOS MOBILIZADOS
+            </div>
+            <div className="border border-black border-t-0 p-3">
+              <ul className="grid grid-cols-2 gap-1">
+                {sa.conhecimentosMobilizados?.map((conhecimento, index) => (
+                  <li key={index} className="flex items-center gap-2 text-sm">
+                    <span className="w-1.5 h-1.5 bg-[#004b8d] rounded-full"></span>
+                    {conhecimento}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Rubrica de Avaliação */}
+      {abaAtiva === 'rubrica' && (
+        <div className="bg-white rounded-xl shadow-lg prova-container" id="rubrica-print">
+          {/* Cabeçalho da Rubrica */}
+          <div className="bg-[#004b8d] text-white p-4 rounded-t-xl">
+            <h1 className="text-lg font-bold text-center">FICHA DE AVALIAÇÃO - {sa.tipoRubrica === 'gradual' ? 'RUBRICA GRADUAL' : 'RUBRICA DICOTÔMICA'}</h1>
+            <p className="text-center text-blue-200 text-sm mt-1">{sa.titulo}</p>
+          </div>
+
+          {/* Info da SA */}
+          <div className="p-4 bg-gray-50 border-b text-sm grid grid-cols-3 gap-4">
+            <div><strong>Curso:</strong> {sa.curso}</div>
+            <div><strong>UC:</strong> {sa.unidadeCurricular}</div>
+            <div><strong>Carga Horária:</strong> {sa.cargaHoraria}h</div>
+          </div>
+
+          {/* Espaço para nome do aluno */}
+          <div className="p-4 border-b">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <strong className="text-sm">Nome do Estudante:</strong>
+                <div className="border-b-2 border-gray-400 mt-2 h-6"></div>
+              </div>
+              <div className="w-32">
+                <strong className="text-sm">Data:</strong>
+                <div className="border-b-2 border-gray-400 mt-2 h-6"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabela da Rubrica */}
+          <div className="p-4">
+            {sa.rubrica?.tipo === 'gradual' ? (
+              /* Rubrica Gradual */
+              <table className="w-full text-sm border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-[#004b8d] text-white">
+                    <th className="border border-gray-300 p-2 text-left w-1/3">Critério (Peso)</th>
+                    <th className="border border-gray-300 p-2 text-center w-16">{termoCapacidade.substring(0,3)}</th>
+                    <th className="border border-gray-300 p-1 text-center text-xs">Abaixo do Básico<br/>(1-2)</th>
+                    <th className="border border-gray-300 p-1 text-center text-xs">Básico<br/>(3-5)</th>
+                    <th className="border border-gray-300 p-1 text-center text-xs">Adequado<br/>(6-7)</th>
+                    <th className="border border-gray-300 p-1 text-center text-xs">Avançado<br/>(8-10)</th>
+                    <th className="border border-gray-300 p-2 text-center w-16">Nota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sa.rubrica?.criterios?.map((crit, index) => (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="border border-gray-300 p-2 font-medium">
+                        {crit.criterio}
+                        <span className="text-xs text-gray-500 ml-1">(Peso: {crit.peso})</span>
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center font-bold text-[#004b8d]">
+                        {crit.capacidadeAssociada}
+                      </td>
+                      <td className="border border-gray-300 p-1 text-xs text-gray-600">
+                        {crit.descritores?.abaixoDoBasico}
+                      </td>
+                      <td className="border border-gray-300 p-1 text-xs text-gray-600">
+                        {crit.descritores?.basico}
+                      </td>
+                      <td className="border border-gray-300 p-1 text-xs text-gray-600">
+                        {crit.descritores?.adequado}
+                      </td>
+                      <td className="border border-gray-300 p-1 text-xs text-gray-600">
+                        {crit.descritores?.avancado}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center">
+                        <div className="w-full h-6 border border-gray-400 rounded"></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              /* Rubrica Dicotômica */
+              <table className="w-full text-sm border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-[#004b8d] text-white">
+                    <th className="border border-gray-300 p-2 text-left">Critério (Peso)</th>
+                    <th className="border border-gray-300 p-2 text-center w-20">{termoCapacidade.substring(0,3)}</th>
+                    <th className="border border-gray-300 p-2 text-left">Descritor</th>
+                    <th className="border border-gray-300 p-2 text-center w-24">Atende</th>
+                    <th className="border border-gray-300 p-2 text-center w-24">Não Atende</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sa.rubrica?.criterios?.map((crit, index) => (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="border border-gray-300 p-2 font-medium">
+                        {crit.criterio}
+                        <span className="text-xs text-gray-500 ml-1">(Peso: {crit.peso})</span>
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center font-bold text-[#004b8d]">
+                        {crit.capacidadeAssociada}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-xs text-gray-600">
+                        {crit.descritores?.atende}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center">
+                        <div className="w-6 h-6 border-2 border-gray-400 rounded mx-auto"></div>
+                      </td>
+                      <td className="border border-gray-300 p-2 text-center">
+                        <div className="w-6 h-6 border-2 border-gray-400 rounded mx-auto"></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {/* Pontuação e Feedback */}
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="border border-gray-300 rounded p-3">
+                <strong className="text-sm">Pontuação Final (0-10):</strong>
+                <div className="border-b-2 border-gray-400 mt-2 h-8 flex items-end justify-center text-2xl font-bold text-[#004b8d]"></div>
+              </div>
+              <div className="border border-gray-300 rounded p-3">
+                <strong className="text-sm">Feedback do Docente:</strong>
+                <div className="border border-gray-300 mt-2 h-20 rounded"></div>
+              </div>
+            </div>
+
+            {/* Assinatura */}
+            <div className="mt-6 flex justify-between">
+              <div className="text-center">
+                <div className="border-t-2 border-gray-400 w-48 pt-1">
+                  <span className="text-xs text-gray-600">Assinatura do Docente</span>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="border-t-2 border-gray-400 w-48 pt-1">
+                  <span className="text-xs text-gray-600">Assinatura do Estudante</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Botões de navegação - não aparecem na impressão */}
       <div className="flex justify-between mt-6 no-print">

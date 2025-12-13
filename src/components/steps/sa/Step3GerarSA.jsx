@@ -1,7 +1,12 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Loader2, AlertCircle, Clock, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Loader2, AlertCircle, Clock, FileText, Target, BookOpen, ClipboardList } from 'lucide-react';
 import { useProva } from '../../../context/ProvaContext';
-import { gerarSituacaoAprendizagem } from '../../../services/saService';
+import { 
+  gerarSituacaoAprendizagem, 
+  ESTRATEGIAS_PEDAGOGICAS, 
+  NIVEIS_DIFICULDADE, 
+  TIPOS_RUBRICA 
+} from '../../../services/saService';
 
 export default function Step3GerarSA() {
   const { 
@@ -19,6 +24,9 @@ export default function Step3GerarSA() {
   const [cargaHoraria, setCargaHoraria] = useState(20);
   const [tema, setTema] = useState(dadosProva.assunto || '');
   const [contextoAdicional, setContextoAdicional] = useState('');
+  const [estrategiaPedagogica, setEstrategiaPedagogica] = useState('Projeto');
+  const [nivelDificuldade, setNivelDificuldade] = useState('intermediario');
+  const [tipoRubrica, setTipoRubrica] = useState('gradual');
 
   // Preparar capacidades para exibição
   const capacidadesSelecionadas = dadosProva.capacidades.map(cap => ({
@@ -43,7 +51,10 @@ export default function Step3GerarSA() {
         cargaHoraria,
         tema,
         contextoAdicional,
-        termoCapacidade
+        termoCapacidade,
+        estrategiaPedagogica,
+        nivelDificuldade,
+        tipoRubrica
       });
 
       setSituacaoAprendizagemGerada({
@@ -71,8 +82,8 @@ export default function Step3GerarSA() {
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-xl shadow-lg p-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-          <FileText className="text-green-600" />
-          Gerar Situação de Aprendizagem
+          <FileText className="text-[#004b8d]" />
+          Configurar Situação de Aprendizagem
         </h2>
 
         {/* Resumo dos dados */}
@@ -99,65 +110,122 @@ export default function Step3GerarSA() {
         </div>
 
         {/* Capacidades selecionadas */}
-        <div className="bg-green-50 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-green-800 mb-3">
-            {termoCapacidade}s Selecionadas ({capacidadesSelecionadas.length})
+        <div className="bg-blue-50 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-[#004b8d] mb-3 flex items-center gap-2">
+            <Target size={18} />
+            {termoCapacidade}s a Desenvolver ({capacidadesSelecionadas.length})
           </h3>
           <ul className="space-y-2 text-sm">
             {capacidadesSelecionadas.map((cap, index) => (
               <li key={index} className="flex items-start gap-2">
-                <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded font-medium">
-                  {cap.codigo}
+                <span className="bg-[#004b8d] text-white text-xs px-2 py-0.5 rounded font-medium">
+                  C{index + 1}
                 </span>
-                <span className="text-green-900">{cap.descricao}</span>
+                <span className="text-gray-700">
+                  <strong>{cap.codigo}:</strong> {cap.descricao}
+                </span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Configurações da SA */}
-        <div className="space-y-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Clock size={16} className="inline mr-1" />
-              Carga Horária (horas)
-            </label>
-            <input
-              type="number"
-              min="4"
-              max="100"
-              value={cargaHoraria}
-              onChange={(e) => setCargaHoraria(parseInt(e.target.value) || 20)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Tempo total estimado para realização da SA
-            </p>
+        <div className="space-y-5 mb-6">
+          {/* Linha 1: Tema e Carga Horária */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <BookOpen size={16} className="inline mr-1" />
+                Tema/Assunto Principal *
+              </label>
+              <input
+                type="text"
+                value={tema}
+                onChange={(e) => setTema(e.target.value)}
+                placeholder="Ex: Desenvolvimento de API RESTful, Instalação elétrica residencial..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Clock size={16} className="inline mr-1" />
+                Carga Horária (h)
+              </label>
+              <input
+                type="number"
+                min="4"
+                max="200"
+                value={cargaHoraria}
+                onChange={(e) => setCargaHoraria(parseInt(e.target.value) || 20)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tema/Assunto Principal *
-            </label>
-            <input
-              type="text"
-              value={tema}
-              onChange={(e) => setTema(e.target.value)}
-              placeholder="Ex: Desenvolvimento de API RESTful, Instalação elétrica residencial..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
+          {/* Linha 2: Estratégia, Nível e Tipo de Rubrica */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estratégia Pedagógica
+              </label>
+              <select
+                value={estrategiaPedagogica}
+                onChange={(e) => setEstrategiaPedagogica(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              >
+                {ESTRATEGIAS_PEDAGOGICAS.map(est => (
+                  <option key={est} value={est}>{est}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nível de Dificuldade
+              </label>
+              <select
+                value={nivelDificuldade}
+                onChange={(e) => setNivelDificuldade(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              >
+                {NIVEIS_DIFICULDADE.map(nivel => (
+                  <option key={nivel.id} value={nivel.id}>{nivel.nome}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {NIVEIS_DIFICULDADE.find(n => n.id === nivelDificuldade)?.descricao}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <ClipboardList size={16} className="inline mr-1" />
+                Tipo de Rubrica
+              </label>
+              <select
+                value={tipoRubrica}
+                onChange={(e) => setTipoRubrica(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              >
+                {TIPOS_RUBRICA.map(tipo => (
+                  <option key={tipo.id} value={tipo.id}>{tipo.nome}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {TIPOS_RUBRICA.find(t => t.id === tipoRubrica)?.descricao}
+              </p>
+            </div>
           </div>
 
+          {/* Contexto Adicional */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contexto Adicional (opcional)
+              Orientações Adicionais (opcional)
             </label>
             <textarea
               value={contextoAdicional}
               onChange={(e) => setContextoAdicional(e.target.value)}
-              placeholder="Informações adicionais que deseja incluir na SA, como recursos disponíveis, nível da turma, projetos anteriores..."
+              placeholder="Informações adicionais: recursos disponíveis, nível da turma, projetos anteriores, requisitos específicos..."
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
             />
           </div>
         </div>
@@ -189,11 +257,25 @@ export default function Step3GerarSA() {
             <h3 className="font-semibold text-green-800 mb-2">
               ✓ Situação de Aprendizagem Gerada
             </h3>
-            <p className="text-green-700 font-medium">{situacaoAprendizagemGerada.titulo}</p>
-            <p className="text-green-600 text-sm mt-1">
-              {situacaoAprendizagemGerada.atividades?.length || 0} atividades • 
-              {situacaoAprendizagemGerada.cargaHoraria}h de carga horária
-            </p>
+            <p className="text-green-700 font-medium text-lg">{situacaoAprendizagemGerada.titulo}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-sm">
+              <div className="bg-white rounded px-2 py-1">
+                <span className="text-gray-500">Atividades:</span>
+                <span className="ml-1 font-medium">{situacaoAprendizagemGerada.atividades?.length || 0}</span>
+              </div>
+              <div className="bg-white rounded px-2 py-1">
+                <span className="text-gray-500">Carga:</span>
+                <span className="ml-1 font-medium">{situacaoAprendizagemGerada.cargaHoraria}h</span>
+              </div>
+              <div className="bg-white rounded px-2 py-1">
+                <span className="text-gray-500">Critérios:</span>
+                <span className="ml-1 font-medium">{situacaoAprendizagemGerada.rubrica?.criterios?.length || 0}</span>
+              </div>
+              <div className="bg-white rounded px-2 py-1">
+                <span className="text-gray-500">Rubrica:</span>
+                <span className="ml-1 font-medium capitalize">{situacaoAprendizagemGerada.tipoRubrica}</span>
+              </div>
+            </div>
           </div>
         )}
 
@@ -211,7 +293,7 @@ export default function Step3GerarSA() {
             <button
               onClick={handleGerarSA}
               disabled={isLoading || !apiConfigured}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>

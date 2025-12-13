@@ -15,6 +15,8 @@ export default function Step2Capacidades() {
   } = useProva();
   
   const isAvaliacaoPratica = tipoAvaliacao === TIPO_AVALIACAO.PRATICA;
+  const isSituacaoAprendizagem = tipoAvaliacao === TIPO_AVALIACAO.SITUACAO_APRENDIZAGEM;
+  const isAvaliacaoObjetiva = tipoAvaliacao === TIPO_AVALIACAO.OBJETIVA;
 
   // Função para calcular distribuição de questões por dificuldade
   const calcularDistribuicao = (quantidade, dificuldades) => {
@@ -80,17 +82,17 @@ export default function Step2Capacidades() {
     }
     
     // Assunto é obrigatório apenas para avaliação objetiva
-    if (!isAvaliacaoPratica && !dadosProva.assunto.trim()) {
+    if (isAvaliacaoObjetiva && !dadosProva.assunto.trim()) {
       newErrors.assunto = 'Informe o assunto da prova';
     }
     
     // Quantidade de questões só é obrigatória para avaliação objetiva
-    if (!isAvaliacaoPratica && (!dadosProva.quantidade || dadosProva.quantidade < 1)) {
+    if (isAvaliacaoObjetiva && (!dadosProva.quantidade || dadosProva.quantidade < 1)) {
       newErrors.quantidade = 'Informe a quantidade de questões';
     }
     
     // Pelo menos uma dificuldade deve ser selecionada (apenas para objetiva)
-    if (!isAvaliacaoPratica && (!dadosProva.dificuldades || dadosProva.dificuldades.length === 0)) {
+    if (isAvaliacaoObjetiva && (!dadosProva.dificuldades || dadosProva.dificuldades.length === 0)) {
       newErrors.dificuldades = 'Selecione pelo menos um nível de dificuldade';
     }
     
@@ -179,7 +181,7 @@ export default function Step2Capacidades() {
           </div>
 
           {/* Campos específicos para Avaliação Objetiva */}
-          {!isAvaliacaoPratica && (
+          {isAvaliacaoObjetiva && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Quantidade de Questões */}
@@ -252,7 +254,7 @@ export default function Step2Capacidades() {
           )}
 
           {/* Assunto - Obrigatório apenas para Objetiva */}
-          {!isAvaliacaoPratica && (
+          {isAvaliacaoObjetiva && (
             <>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -313,6 +315,15 @@ export default function Step2Capacidades() {
               </p>
             </div>
           )}
+
+          {/* Info para Situação de Aprendizagem */}
+          {isSituacaoAprendizagem && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800">
+                <strong>Situação de Aprendizagem:</strong> O tema, carga horária e contexto adicional serão definidos na próxima etapa.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Botões de Navegação */}
@@ -329,7 +340,9 @@ export default function Step2Capacidades() {
             onClick={handleNext}
             className="flex items-center gap-2 px-6 py-3 bg-[#004b8d] text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
           >
-            {isAvaliacaoPratica ? 'Próximo: Configurar Avaliação' : 'Próximo: Gerar Questões'}
+            {isAvaliacaoObjetiva && 'Próximo: Gerar Questões'}
+            {isAvaliacaoPratica && 'Próximo: Configurar Avaliação'}
+            {isSituacaoAprendizagem && 'Próximo: Configurar SA'}
             <ChevronRight size={20} />
           </button>
         </div>
