@@ -11,7 +11,11 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="bg-white p-2 rounded-lg">
+            <div 
+              className="bg-white p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={resetProva}
+              title="Voltar ao início"
+            >
               <img 
                 src={`${import.meta.env.BASE_URL}senai.png`} 
                 alt="SENAI" 

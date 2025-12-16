@@ -50,49 +50,54 @@ export default function Step4VisualizarPratica() {
       </div>
 
       {/* Toolbar */}
-      <div className="bg-white rounded-xl shadow-lg p-4 no-print">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setViewMode('prova')}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                viewMode === 'prova'
-                  ? 'bg-[#004b8d] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Eye size={18} />
-              Prova
-            </button>
-            <button
-              onClick={() => setViewMode('checklist')}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                viewMode === 'checklist'
-                  ? 'bg-[#004b8d] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <ClipboardList size={18} />
-              Lista de Verificação
-            </button>
-          </div>
+      <div className="bg-white rounded-xl shadow-lg p-6 no-print">
+        {/* Linha 1: Visualização */}
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-sm font-medium text-gray-600">Visualizar:</span>
+          <button
+            onClick={() => setViewMode('prova')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              viewMode === 'prova'
+                ? 'bg-[#004b8d] text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Eye size={18} />
+            Prova
+          </button>
+          <button
+            onClick={() => setViewMode('checklist')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              viewMode === 'checklist'
+                ? 'bg-[#004b8d] text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <ClipboardList size={18} />
+            Lista de Verificação
+          </button>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrint}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
-            >
-              <Printer size={18} />
-              Imprimir
-            </button>
-            <button
-              onClick={resetProva}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 flex items-center gap-2"
-            >
-              <ArrowLeft size={18} />
-              Nova Avaliação
-            </button>
-          </div>
+        {/* Divisor */}
+        <div className="border-t border-gray-200 my-4"></div>
+
+        {/* Linha 2: Ações */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-gray-600">Ações:</span>
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Printer size={18} />
+            Imprimir
+          </button>
+          <button
+            onClick={resetProva}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+          >
+            <ArrowLeft size={18} />
+            Nova Avaliação
+          </button>
         </div>
       </div>
 
