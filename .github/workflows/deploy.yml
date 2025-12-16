@@ -20,12 +20,9 @@ jobs:
       run: npm ci
 
     - name: Build with API Key
-      run: |
-        echo "API Key exists: ${{ secrets.VITE_GROQ_API_KEY != '' }}"
-        echo "API Key starts with: ${{ secrets.VITE_GROQ_API_KEY }}"
-        npm run build
+      run: npm run build
       env:
-        VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}
+        VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
