@@ -3,7 +3,7 @@
 
 // API Groq - Inferência ultra-rápida
 // Para obter sua chave gratuita: https://console.groq.com/keys
-export const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY || '';
+export const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || '';
 
 // Modelo a ser utilizado (Llama 3.3 70B - excelente para JSON estruturado)
 export const LLM_MODEL = 'llama-3.3-70b-versatile';

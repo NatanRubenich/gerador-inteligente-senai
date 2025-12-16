@@ -477,10 +477,25 @@ export default function Step3GerarPlano() {
 
         {/* Preview do Plano gerado */}
         {planoEnsinoGerado && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-green-800 mb-2">
-              ✓ Plano de Ensino Gerado para o SGN
-            </h3>
+          <>
+            {/* Aviso de IA */}
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+                <div>
+                  <p className="text-amber-800 font-medium">⚠️ Conteúdo gerado por Inteligência Artificial</p>
+                  <p className="text-amber-700 text-sm mt-1">
+                    O Plano de Ensino abaixo foi gerado por IA e pode conter erros, imprecisões ou informações desatualizadas. 
+                    <strong className="block mt-1">É fundamental revisar todo o conteúdo cuidadosamente antes de utilizá-lo.</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-green-800 mb-2">
+                ✓ Plano de Ensino Gerado para o SGN
+              </h3>
             <p className="text-green-700 font-medium">
               {planoEnsinoGerado.unidadeCurricular}
             </p>
@@ -509,6 +524,7 @@ export default function Step3GerarPlano() {
               </div>
             )}
           </div>
+          </>
         )}
 
         {/* Botões */}

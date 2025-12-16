@@ -31,6 +31,7 @@ export default function Step3GerarQuestoes() {
   const [showCodigoModal, setShowCodigoModal] = useState(false);
   const [codigoBloco, setCodigoBloco] = useState({ linguagem: 'javascript', codigo: '' });
   const [previewMode, setPreviewMode] = useState(false);
+  const [codigoAlternativaModal, setCodigoAlternativaModal] = useState({ show: false, letra: null, linguagem: 'javascript', codigo: '' });
   const fileInputRef = useRef(null);
   
   // Verificar se API está configurada
@@ -204,10 +205,15 @@ Gere as questões no formato JSON.`;
       dificuldade: 'Médio',
       contexto: '',
       comando: '',
-      alternativas: { a: '', b: '', c: '', d: '' },
+      alternativas: { 
+        a: { texto: '', codigo: null }, 
+        b: { texto: '', codigo: null }, 
+        c: { texto: '', codigo: null }, 
+        d: { texto: '', codigo: null } 
+      },
       resposta_correta: 'a',
       imagens: [], // Array de URLs de imagens
-      codigos: []  // Array de blocos de código
+      codigos: []  // Array de blocos de código no contexto
     });
     setShowNovaQuestao(true);
     setPreviewMode(false);
@@ -221,13 +227,24 @@ Gere as questões no formato JSON.`;
     }));
   };
 
-  // Atualizar alternativa da nova questão
+  // Atualizar texto da alternativa da nova questão
   const handleUpdateNovaAlternativa = (letra, valor) => {
     setNovaQuestao(prev => ({
       ...prev,
       alternativas: {
         ...prev.alternativas,
-        [letra]: valor
+        [letra]: { ...prev.alternativas[letra], texto: valor }
+      }
+    }));
+  };
+
+  // Atualizar código da alternativa da nova questão
+  const handleUpdateNovaAlternativaCodigo = (letra, codigo) => {
+    setNovaQuestao(prev => ({
+      ...prev,
+      alternativas: {
+        ...prev.alternativas,
+        [letra]: { ...prev.alternativas[letra], codigo }
       }
     }));
   };
@@ -311,9 +328,9 @@ Gere as questões no formato JSON.`;
       return;
     }
     
-    const alternativasPreenchidas = Object.values(novaQuestao.alternativas).filter(a => a.trim()).length;
+    const alternativasPreenchidas = Object.values(novaQuestao.alternativas).filter(a => a.texto?.trim() || a.codigo).length;
     if (alternativasPreenchidas < 4) {
-      setError('Preencha todas as 4 alternativas.');
+      setError('Preencha todas as 4 alternativas (texto ou código).');
       return;
     }
 
@@ -759,38 +776,71 @@ Gere as questões no formato JSON.`;
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Alternativas <span className="text-red-500">*</span>
+                      <span className="text-xs font-normal text-gray-500 ml-2">(texto e/ou código)</span>
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {['a', 'b', 'c', 'd'].map(letra => (
-                        <div key={letra} className="flex items-center gap-2">
-                          <label className="flex items-center gap-2 min-w-[80px]">
-                            <input
-                              type="radio"
-                              name="nova-resposta"
-                              checked={novaQuestao.resposta_correta === letra}
-                              onChange={() => handleUpdateNovaQuestaoField('resposta_correta', letra)}
-                              className="text-green-600"
-                            />
-                            <span className={`font-medium ${novaQuestao.resposta_correta === letra ? 'text-green-700' : 'text-gray-700'}`}>
-                              {letra.toUpperCase()})
-                            </span>
-                          </label>
+                        <div key={letra} className={`p-3 rounded-lg border ${
+                          novaQuestao.resposta_correta === letra 
+                            ? 'border-green-300 bg-green-50' 
+                            : 'border-gray-200 bg-gray-50'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="nova-resposta"
+                                checked={novaQuestao.resposta_correta === letra}
+                                onChange={() => handleUpdateNovaQuestaoField('resposta_correta', letra)}
+                                className="text-green-600"
+                              />
+                              <span className={`font-medium ${novaQuestao.resposta_correta === letra ? 'text-green-700' : 'text-gray-700'}`}>
+                                {letra.toUpperCase()})
+                              </span>
+                            </label>
+                            {novaQuestao.resposta_correta === letra && (
+                              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">Correta</span>
+                            )}
+                          </div>
                           <input
                             type="text"
-                            value={novaQuestao.alternativas[letra]}
+                            value={novaQuestao.alternativas[letra]?.texto || ''}
                             onChange={(e) => handleUpdateNovaAlternativa(letra, e.target.value)}
-                            placeholder={`Alternativa ${letra.toUpperCase()}`}
-                            className={`flex-1 px-3 py-2 border rounded-lg text-sm ${
-                              novaQuestao.resposta_correta === letra 
-                                ? 'border-green-300 bg-green-50' 
-                                : 'border-gray-300 bg-white'
-                            }`}
+                            placeholder={`Texto da alternativa ${letra.toUpperCase()}`}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white mb-2"
                           />
+                          {/* Código da alternativa */}
+                          {novaQuestao.alternativas[letra]?.codigo ? (
+                            <div className="relative">
+                              <div className="flex items-center justify-between bg-gray-800 text-white px-3 py-1 rounded-t-lg">
+                                <span className="text-xs font-mono">{novaQuestao.alternativas[letra].codigo.linguagem}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateNovaAlternativaCodigo(letra, null)}
+                                  className="p-1 text-red-400 hover:text-red-300"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                              <pre className="bg-gray-900 text-green-400 p-2 rounded-b-lg text-xs font-mono overflow-x-auto max-h-24">
+                                <code>{novaQuestao.alternativas[letra].codigo.codigo}</code>
+                              </pre>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setCodigoAlternativaModal({ show: true, letra, linguagem: 'javascript', codigo: '' })}
+                              className="flex items-center gap-1 px-2 py-1 text-xs text-purple-600 hover:bg-purple-50 rounded border border-purple-200"
+                            >
+                              <Code size={12} />
+                              Adicionar código
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
                     <p className="text-xs text-gray-500 mt-2">
-                      Selecione o radio button para marcar a resposta correta
+                      Selecione o radio button para marcar a resposta correta. Cada alternativa pode ter texto e/ou código.
                     </p>
                   </div>
                 </>
@@ -854,12 +904,22 @@ Gere as questões no formato JSON.`;
 
                     <div>
                       <span className="font-medium text-blue-600">Alternativas:</span>
-                      <div className="mt-2 space-y-1">
+                      <div className="mt-2 space-y-2">
                         {['a', 'b', 'c', 'd'].map(letra => (
-                          <p key={letra} className={`${novaQuestao.resposta_correta === letra ? 'font-medium text-green-700 bg-green-50 px-2 py-1 rounded' : 'text-gray-600'}`}>
-                            {letra}) {novaQuestao.alternativas[letra] || <em className="text-gray-400">Não preenchido</em>}
+                          <div key={letra} className={`${novaQuestao.resposta_correta === letra ? 'font-medium text-green-700 bg-green-50 px-2 py-1 rounded' : 'text-gray-600'}`}>
+                            <span>{letra}) {novaQuestao.alternativas[letra]?.texto || <em className="text-gray-400">Sem texto</em>}</span>
                             {novaQuestao.resposta_correta === letra && ' ✓'}
-                          </p>
+                            {novaQuestao.alternativas[letra]?.codigo && (
+                              <div className="mt-1">
+                                <div className="bg-gray-800 text-white px-2 py-0.5 rounded-t text-xs font-mono inline-block">
+                                  {novaQuestao.alternativas[letra].codigo.linguagem}
+                                </div>
+                                <pre className="bg-gray-900 text-green-400 p-2 rounded-b text-xs font-mono overflow-x-auto">
+                                  <code>{novaQuestao.alternativas[letra].codigo.codigo}</code>
+                                </pre>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -982,6 +1042,75 @@ Gere as questões no formato JSON.`;
           </div>
         )}
 
+        {/* Modal para adicionar código em alternativa */}
+        {codigoAlternativaModal.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 shadow-2xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Code size={20} className="text-purple-600" />
+                Adicionar Código na Alternativa {codigoAlternativaModal.letra?.toUpperCase()}
+              </h4>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Linguagem</label>
+                <select
+                  value={codigoAlternativaModal.linguagem}
+                  onChange={(e) => setCodigoAlternativaModal(prev => ({ ...prev, linguagem: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="javascript">JavaScript</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="csharp">C#</option>
+                  <option value="cpp">C++</option>
+                  <option value="php">PHP</option>
+                  <option value="sql">SQL</option>
+                  <option value="html">HTML</option>
+                  <option value="css">CSS</option>
+                  <option value="typescript">TypeScript</option>
+                  <option value="bash">Bash/Shell</option>
+                  <option value="json">JSON</option>
+                  <option value="xml">XML</option>
+                  <option value="markdown">Markdown</option>
+                  <option value="plaintext">Texto Plano</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                <textarea
+                  value={codigoAlternativaModal.codigo}
+                  onChange={(e) => setCodigoAlternativaModal(prev => ({ ...prev, codigo: e.target.value }))}
+                  placeholder="Cole ou digite o código aqui..."
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setCodigoAlternativaModal({ show: false, letra: null, linguagem: 'javascript', codigo: '' })}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (codigoAlternativaModal.codigo.trim()) {
+                      handleUpdateNovaAlternativaCodigo(codigoAlternativaModal.letra, {
+                        linguagem: codigoAlternativaModal.linguagem,
+                        codigo: codigoAlternativaModal.codigo
+                      });
+                    }
+                    setCodigoAlternativaModal({ show: false, letra: null, linguagem: 'javascript', codigo: '' });
+                  }}
+                  disabled={!codigoAlternativaModal.codigo.trim()}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Lista de questões geradas - Editável */}
         {questoesGeradas && (
           <div className="mt-8 border-t pt-6">
@@ -995,9 +1124,23 @@ Gere as questões no formato JSON.`;
               </span>
             </div>
             
+            {/* Aviso de IA */}
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+                <div>
+                  <p className="text-amber-800 font-medium">⚠️ Conteúdo gerado por Inteligência Artificial</p>
+                  <p className="text-amber-700 text-sm mt-1">
+                    As questões abaixo foram geradas por IA e podem conter erros, imprecisões ou informações desatualizadas. 
+                    <strong className="block mt-1">É fundamental revisar cada questão cuidadosamente antes de utilizá-la em avaliações.</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p className="text-green-800">
-                ✓ {questoesGeradas.prova?.questoes?.length || 0} questões foram geradas. Revise e edite se necessário antes de prosseguir.
+                ✓ {questoesGeradas.prova?.questoes?.length || 0} questões disponíveis. Revise e edite se necessário antes de prosseguir.
               </p>
             </div>
 
@@ -1053,11 +1196,15 @@ Gere as questões no formato JSON.`;
                       <div>
                         <span className="font-medium text-gray-700">Alternativas:</span>
                         <div className="mt-1 space-y-1">
-                          {Object.entries(q.alternativas || {}).map(([letra, texto]) => (
-                            <p key={letra} className={`text-gray-600 ${q.resposta_correta === letra ? 'font-medium text-green-700' : ''}`}>
-                              {letra}) {texto} {q.resposta_correta === letra && '✓'}
-                            </p>
-                          ))}
+                          {Object.entries(q.alternativas || {}).map(([letra, alt]) => {
+                            // Suportar formato antigo (string) e novo (objeto)
+                            const textoAlt = typeof alt === 'string' ? alt : (alt?.texto || '');
+                            return (
+                              <p key={letra} className={`text-gray-600 ${q.resposta_correta === letra ? 'font-medium text-green-700' : ''}`}>
+                                {letra}) {textoAlt} {q.resposta_correta === letra && '✓'}
+                              </p>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>

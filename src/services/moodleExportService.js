@@ -94,11 +94,31 @@ ${codigosHtml}
 };
 
 /**
- * Gera o HTML formatado para uma alternativa
+ * Gera o HTML formatado para uma alternativa (suporta texto e/ou código)
  */
-const gerarAlternativaHtml = (texto) => {
-  return `<div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #6c757d; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
-<p style="color: #2d3748; font-size: 15px; line-height: 1.6; margin: 0;">${escapeXml(texto)}</p>
+const gerarAlternativaHtml = (alternativa) => {
+  // Suportar formato antigo (string) e novo (objeto com texto e código)
+  const texto = typeof alternativa === 'string' ? alternativa : (alternativa?.texto || '');
+  const codigo = typeof alternativa === 'object' ? alternativa?.codigo : null;
+  
+  let conteudo = '';
+  
+  if (texto) {
+    conteudo += `<p style="color: #2d3748; font-size: 15px; line-height: 1.6; margin: 0;">${escapeXml(texto)}</p>`;
+  }
+  
+  if (codigo && codigo.codigo) {
+    conteudo += `
+<div style="margin-top: ${texto ? '10px' : '0'}; border-radius: 6px; overflow: hidden;">
+  <div style="background: #1f2937; color: #f9fafb; padding: 6px 12px; font-size: 11px; font-family: monospace;">
+    ${escapeXml(codigo.linguagem || 'code')}
+  </div>
+  <pre style="background: #111827; color: #4ade80; padding: 12px; margin: 0; font-size: 13px; font-family: 'Courier New', monospace; overflow-x: auto; white-space: pre-wrap;"><code>${escapeXml(codigo.codigo)}</code></pre>
+</div>`;
+  }
+  
+  return `<div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #6c757d; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+${conteudo || '<p style="color: #9ca3af; font-style: italic; margin: 0;">Alternativa vazia</p>'}
 </div>`;
 };
 

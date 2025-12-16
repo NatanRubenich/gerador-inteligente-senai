@@ -270,18 +270,22 @@ export default function Step4VisualizarProva() {
                   </p>
                   <div className="italic text-sm">
                     <p className="font-bold text-blue-600 mb-2">Alternativas:</p>
-                    {Object.entries(questao.alternativas || {}).map(([letra, texto]) => (
-                      <p 
-                        key={letra} 
-                        className={`mb-1 ${
-                          showGabarito && questao.resposta_correta === letra 
-                            ? 'bg-green-100 font-bold text-green-800 px-2 py-1 rounded' 
-                            : ''
-                        }`}
-                      >
-                        {letra}) {texto}
-                      </p>
-                    ))}
+                    {Object.entries(questao.alternativas || {}).map(([letra, alt]) => {
+                      // Suportar formato antigo (string) e novo (objeto)
+                      const textoAlt = typeof alt === 'string' ? alt : (alt?.texto || '');
+                      return (
+                        <p 
+                          key={letra} 
+                          className={`mb-1 ${
+                            showGabarito && questao.resposta_correta === letra 
+                              ? 'bg-green-100 font-bold text-green-800 px-2 py-1 rounded' 
+                              : ''
+                          }`}
+                        >
+                          {letra}) {textoAlt}
+                        </p>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

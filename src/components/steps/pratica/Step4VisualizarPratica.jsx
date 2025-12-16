@@ -4,7 +4,8 @@ import {
   Printer, 
   Eye, 
   ClipboardList,
-  ArrowLeft
+  ArrowLeft,
+  AlertCircle
 } from 'lucide-react';
 
 export default function Step4VisualizarPratica() {
@@ -34,6 +35,20 @@ export default function Step4VisualizarPratica() {
 
   return (
     <div className="space-y-6">
+      {/* Aviso de IA */}
+      <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 no-print">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+          <div>
+            <p className="text-amber-800 font-medium">⚠️ Conteúdo gerado por Inteligência Artificial</p>
+            <p className="text-amber-700 text-sm mt-1">
+              A avaliação prática abaixo foi gerada por IA e pode conter erros, imprecisões ou informações desatualizadas. 
+              <strong className="block mt-1">É fundamental revisar todo o conteúdo cuidadosamente antes de utilizá-lo em avaliações.</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Toolbar */}
       <div className="bg-white rounded-xl shadow-lg p-4 no-print">
         <div className="flex flex-wrap items-center justify-between gap-4">
