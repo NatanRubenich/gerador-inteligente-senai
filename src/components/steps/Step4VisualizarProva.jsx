@@ -227,6 +227,43 @@ export default function Step4VisualizarProva() {
                     <strong className="text-blue-600 italic">Contexto:</strong>{' '}
                     {questao.contexto}
                   </p>
+
+                  {/* Imagens da questão */}
+                  {questao.imagens?.length > 0 && (
+                    <div className="my-3 flex flex-wrap gap-3">
+                      {questao.imagens.map((img, imgIdx) => (
+                        <figure key={imgIdx} className="max-w-sm">
+                          <img 
+                            src={img.src} 
+                            alt={img.descricao || `Imagem ${imgIdx + 1}`}
+                            className="rounded-lg border border-gray-300 shadow-sm max-h-48 object-contain"
+                          />
+                          {img.descricao && (
+                            <figcaption className="text-xs text-gray-500 mt-1 italic text-center">
+                              {img.descricao}
+                            </figcaption>
+                          )}
+                        </figure>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Blocos de código da questão */}
+                  {questao.codigos?.length > 0 && (
+                    <div className="my-3 space-y-2">
+                      {questao.codigos.map((cod, codIdx) => (
+                        <div key={codIdx} className="rounded-lg overflow-hidden border border-gray-300">
+                          <div className="bg-gray-800 text-white px-3 py-1 text-xs font-mono">
+                            {cod.linguagem}
+                          </div>
+                          <pre className="bg-gray-900 text-green-400 p-3 text-sm font-mono overflow-x-auto">
+                            <code>{cod.codigo}</code>
+                          </pre>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <p className="mb-3 text-sm">
                     <strong className="text-blue-600 italic">Comando:</strong>{' '}
                     {questao.comando}

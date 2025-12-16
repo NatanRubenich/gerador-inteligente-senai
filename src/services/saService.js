@@ -1,67 +1,60 @@
 /**
  * Serviço para geração de Situação de Aprendizagem (SA)
  * Baseado no Guia Prático SENAI - Etapas para elaboração do Plano de Ensino e SA
- * Utiliza a API Gemini para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
+ * Utiliza a API Groq (Llama 3.3) para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
  */
 
-import { GEMINI_API_KEY, GEMINI_API_URL, LLM_MODEL } from '../config/api';
+import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
 
 /**
  * Verifica se a API está configurada
  */
 export const isApiConfigured = () => {
-  return GEMINI_API_KEY && GEMINI_API_KEY.length > 0 && GEMINI_API_KEY !== 'sua_chave_aqui';
+  return GROQ_API_KEY && GROQ_API_KEY.length > 0 && GROQ_API_KEY !== 'sua_chave_groq_aqui';
 };
 
 /**
- * Faz chamada à API do Gemini
+ * Faz chamada à API do Groq (formato OpenAI)
  */
-async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 65536) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API Key não configurada. Configure a variável VITE_GEMINI_API_KEY no arquivo .env');
+async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  if (!GROQ_API_KEY) {
+    throw new Error('API Key não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
   }
 
-  const url = `${GEMINI_API_URL}/${LLM_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const response = await fetch(url, {
+  const response = await fetch(GROQ_API_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            { text: `${systemPrompt}\n\n${userPrompt}` }
-          ]
-        }
+      model: LLM_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
       ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: maxTokens,
-        thinkingConfig: {
-          thinkingBudget: 0
-        }
-      }
+      temperature: 0.7,
+      max_tokens: maxTokens,
+      response_format: { type: 'json_object' }
     })
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `Erro na API Gemini: ${response.status}`);
+    throw new Error(errorData.error?.message || `Erro na API Groq: ${response.status}`);
   }
 
   const data = await response.json();
   
-  const finishReason = data.candidates?.[0]?.finishReason;
-  if (finishReason === 'MAX_TOKENS') {
+  const finishReason = data.choices?.[0]?.finish_reason;
+  if (finishReason === 'length') {
     throw new Error('Resposta truncada. Tente reduzir a complexidade.');
   }
   
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const content = data.choices?.[0]?.message?.content;
 
   if (!content) {
-    throw new Error('Resposta vazia da API Gemini');
+    throw new Error('Resposta vazia da API Groq');
   }
 
   return content;
@@ -268,7 +261,7 @@ IMPORTANTE:
 - Os critérios devem ser em formato de pergunta no pretérito`;
 
   try {
-    const content = await callGeminiAPI(systemPrompt, userPrompt);
+    const content = await callGroqAPI(systemPrompt, userPrompt);
 
     // Limpar e parsear JSON
     let jsonContent = content.trim();

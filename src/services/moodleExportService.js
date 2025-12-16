@@ -16,6 +16,40 @@ const escapeXml = (text) => {
 };
 
 /**
+ * Gera HTML para imagens da questão
+ */
+const gerarImagensHtml = (imagens) => {
+  if (!imagens || imagens.length === 0) return '';
+  
+  return `<div style="margin: 20px 0; display: flex; flex-wrap: wrap; gap: 15px;">
+${imagens.map((img, idx) => `
+<figure style="margin: 0; max-width: 400px;">
+  <img src="${escapeXml(img.src)}" alt="${escapeXml(img.descricao || `Imagem ${idx + 1}`)}" style="max-width: 100%; border-radius: 8px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+  ${img.descricao ? `<figcaption style="font-size: 12px; color: #6b7280; margin-top: 8px; text-align: center; font-style: italic;">${escapeXml(img.descricao)}</figcaption>` : ''}
+</figure>
+`).join('')}
+</div>`;
+};
+
+/**
+ * Gera HTML para blocos de código da questão
+ */
+const gerarCodigosHtml = (codigos) => {
+  if (!codigos || codigos.length === 0) return '';
+  
+  return `<div style="margin: 20px 0;">
+${codigos.map(cod => `
+<div style="border-radius: 8px; overflow: hidden; margin-bottom: 15px; border: 1px solid #374151;">
+  <div style="background: #1f2937; color: #f9fafb; padding: 8px 15px; font-size: 12px; font-family: monospace;">
+    ${escapeXml(cod.linguagem)}
+  </div>
+  <pre style="background: #111827; color: #4ade80; padding: 15px; margin: 0; font-size: 14px; font-family: 'Courier New', monospace; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;"><code>${escapeXml(cod.codigo)}</code></pre>
+</div>
+`).join('')}
+</div>`;
+};
+
+/**
  * Gera o HTML formatado para o questiontext (contexto + comando)
  */
 const gerarQuestionTextHtml = (questao, termoCapacidade) => {
@@ -28,6 +62,10 @@ const gerarQuestionTextHtml = (questao, termoCapacidade) => {
     'Médio': { bg: '#fef3c7', text: '#92400e', border: '#f59e0b' },
     'Difícil': { bg: '#fee2e2', text: '#991b1b', border: '#ef4444' }
   }[dificuldade] || { bg: '#fef3c7', text: '#92400e', border: '#f59e0b' };
+
+  // Gerar HTML para imagens e códigos
+  const imagensHtml = gerarImagensHtml(questao.imagens);
+  const codigosHtml = gerarCodigosHtml(questao.codigos);
 
   return `<div style="max-width: 900px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); overflow: hidden;">
 <!-- Cabeçalho -->
@@ -44,6 +82,8 @@ const gerarQuestionTextHtml = (questao, termoCapacidade) => {
 <h3 style="margin: 0 0 12px 0; color: #0c4a6e; font-size: 16px;">📋 Contexto</h3>
 <p style="margin: 0; color: #0c4a6e; line-height: 1.7; font-size: 15px; text-align: justify;">${escapeXml(questao.contexto)}</p>
 </div>
+${imagensHtml}
+${codigosHtml}
 <!-- Comando -->
 <div style="background: ${corDificuldade.bg}; border-left: 4px solid ${corDificuldade.border}; padding: 20px; border-radius: 8px;">
 <h3 style="margin: 0 0 12px 0; color: ${corDificuldade.text}; font-size: 16px;">🎯 Comando</h3>

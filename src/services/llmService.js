@@ -1,86 +1,189 @@
-// Serviço de integração com LLM (Google Gemini API)
-// Documentação: https://ai.google.dev/gemini-api/docs
+// Serviço de integração com LLM (Groq API - Llama 3.3 70B)
+// Documentação: https://console.groq.com/docs/quickstart
 
-import { GEMINI_API_KEY, GEMINI_API_URL, LLM_MODEL } from '../config/api';
+import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
 import { getContextoRAG, buscarConhecimentoRAG } from './ragService';
+
+/**
+ * Limpa e corrige JSON malformado retornado pela API
+ * @param {string} jsonString - String JSON potencialmente malformada
+ * @returns {string} - String JSON corrigida
+ */
+function sanitizeJsonString(jsonString) {
+  let cleaned = jsonString.trim();
+  
+  // 1. Remover marcadores markdown de código
+  cleaned = cleaned.replace(/^```json\s*/i, '');
+  cleaned = cleaned.replace(/^```\s*/i, '');
+  cleaned = cleaned.replace(/\s*```$/i, '');
+  
+  // 2. Remover possíveis prefixos de texto antes do JSON
+  const jsonStart = cleaned.indexOf('{');
+  if (jsonStart > 0) {
+    cleaned = cleaned.substring(jsonStart);
+  }
+  
+  // 3. Remover possíveis sufixos de texto após o JSON
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (lastBrace !== -1 && lastBrace < cleaned.length - 1) {
+    cleaned = cleaned.substring(0, lastBrace + 1);
+  }
+  
+  // 4. Remover caracteres de controle (exceto \n, \r, \t)
+  cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  
+  // 5. Corrigir quebras de linha dentro de strings JSON
+  // Substituir quebras de linha literais dentro de valores por \n escapado
+  cleaned = cleaned.replace(/:\s*"([^"]*)\n([^"]*)"/g, (match, p1, p2) => {
+    return `: "${p1}\\n${p2}"`;
+  });
+  
+  // 6. Corrigir aspas simples usadas como delimitadores de string
+  // Isso é mais complexo - precisamos identificar aspas simples que delimitam valores
+  // Primeiro, vamos tentar parsear. Se falhar, tentamos corrigir aspas
+  
+  // 7. Remover vírgulas extras antes de } ou ]
+  cleaned = cleaned.replace(/,\s*}/g, '}');
+  cleaned = cleaned.replace(/,\s*]/g, ']');
+  
+  // 8. Adicionar aspas em propriedades não quotadas (comum em respostas de IA)
+  // Padrão: palavra seguida de : sem aspas
+  cleaned = cleaned.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+  
+  return cleaned.trim();
+}
+
+/**
+ * Tenta parsear JSON com múltiplas estratégias de correção
+ * @param {string} content - Conteúdo retornado pela API
+ * @returns {object} - Objeto JSON parseado
+ */
+function parseJsonSafely(content) {
+  // Primeira tentativa: limpar e parsear
+  let jsonString = sanitizeJsonString(content);
+  
+  try {
+    return JSON.parse(jsonString);
+  } catch (firstError) {
+    console.warn('Primeira tentativa de parse falhou, tentando correções adicionais...');
+    
+    // Segunda tentativa: corrigir aspas simples para duplas em propriedades
+    try {
+      // Substituir aspas simples por duplas (cuidado com apóstrofos em texto)
+      let fixed = jsonString;
+      
+      // Corrigir propriedades com aspas simples: 'prop': -> "prop":
+      fixed = fixed.replace(/'([^']+)'(\s*:)/g, '"$1"$2');
+      
+      // Corrigir valores string com aspas simples no início/fim de valor
+      // Isso é arriscado, então só fazemos se o parse anterior falhou
+      fixed = fixed.replace(/:\s*'([^']*)'/g, ': "$1"');
+      
+      return JSON.parse(fixed);
+    } catch (secondError) {
+      console.warn('Segunda tentativa falhou, tentando extrair JSON válido...');
+      
+      // Terceira tentativa: usar regex para extrair estrutura JSON
+      try {
+        // Tentar encontrar o objeto principal
+        const match = jsonString.match(/\{[\s\S]*\}/);
+        if (match) {
+          return JSON.parse(match[0]);
+        }
+      } catch (thirdError) {
+        // Falhou todas as tentativas
+      }
+      
+      // Lançar erro original com mais contexto
+      const errorPosition = firstError.message.match(/position (\d+)/);
+      const pos = errorPosition ? parseInt(errorPosition[1]) : 0;
+      const context = jsonString.substring(Math.max(0, pos - 50), pos + 50);
+      
+      throw new Error(
+        `Erro ao parsear JSON da API: ${firstError.message}\n` +
+        `Contexto próximo ao erro: ...${context}...\n` +
+        `Tente gerar novamente ou reduza o número de questões.`
+      );
+    }
+  }
+}
 
 /**
  * Obtém a API Key configurada
  */
 export function getApiKey() {
-  return GEMINI_API_KEY;
+  return GROQ_API_KEY;
 }
 
 /**
  * Verifica se a API está configurada
  */
 export function isApiConfigured() {
-  return Boolean(GEMINI_API_KEY && GEMINI_API_KEY.length > 10);
+  return Boolean(GROQ_API_KEY && GROQ_API_KEY.length > 10);
 }
 
 /**
- * Faz chamada à API do Gemini
+ * Faz chamada à API do Groq (formato OpenAI)
  * @param {string} systemPrompt - Prompt do sistema
  * @param {string} userPrompt - Prompt do usuário
  * @param {number} maxTokens - Máximo de tokens na resposta
  * @returns {Promise<string>} - Conteúdo da resposta
  */
-async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 65536) {
-  const apiKey = GEMINI_API_KEY;
+async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  const apiKey = GROQ_API_KEY;
   
   if (!apiKey) {
-    throw new Error('API Key não configurada. Configure a variável VITE_GEMINI_API_KEY no arquivo .env');
+    throw new Error('API Key não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
   }
 
-  const url = `${GEMINI_API_URL}/${LLM_MODEL}:generateContent?key=${apiKey}`;
-
-  const response = await fetch(url, {
+  const response = await fetch(GROQ_API_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      contents: [
+      model: LLM_MODEL,
+      messages: [
         {
-          parts: [
-            { text: `${systemPrompt}\n\n${userPrompt}` }
-          ]
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: userPrompt
         }
       ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: maxTokens,
-        thinkingConfig: {
-          thinkingBudget: 0
-        }
-      }
+      temperature: 0.7,
+      max_tokens: maxTokens,
+      response_format: { type: 'json_object' }
     })
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error?.message || `Erro na API Gemini: ${response.status}`);
+    throw new Error(error.error?.message || `Erro na API Groq: ${response.status}`);
   }
 
   const data = await response.json();
   
   // Verificar se a resposta foi truncada
-  const finishReason = data.candidates?.[0]?.finishReason;
-  if (finishReason === 'MAX_TOKENS') {
+  const finishReason = data.choices?.[0]?.finish_reason;
+  if (finishReason === 'length') {
     throw new Error('Resposta truncada. Tente gerar menos questões.');
   }
   
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const content = data.choices?.[0]?.message?.content;
 
   if (!content) {
-    throw new Error('Resposta vazia da API Gemini');
+    throw new Error('Resposta vazia da API Groq');
   }
 
   return content;
 }
 
 /**
- * Gera questões usando a API do Gemini com RAG integrado
+ * Gera questões usando a API do Groq (Llama 3.3) com RAG integrado
  * @param {object} dadosProva - Dados da prova
  * @returns {Promise<object>} - JSON com as questões geradas
  */
@@ -203,25 +306,10 @@ IMPORTANTE:
 - Questões Difíceis: análise, síntese, avaliação crítica, problemas complexos`;
 
   try {
-    const content = await callGeminiAPI(systemPrompt, userPrompt);
+    const content = await callGroqAPI(systemPrompt, userPrompt);
 
-    // Limpar possíveis marcadores de código markdown e caracteres inválidos
-    let jsonString = content.trim();
-    
-    // Remover marcadores markdown
-    jsonString = jsonString.replace(/^```json\s*/i, '');
-    jsonString = jsonString.replace(/^```\s*/i, '');
-    jsonString = jsonString.replace(/\s*```$/i, '');
-    
-    // Remover caracteres de controle que podem quebrar o JSON
-    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, (char) => {
-      if (char === '\n' || char === '\r' || char === '\t') return char;
-      return '';
-    });
-    
-    jsonString = jsonString.trim();
-
-    return JSON.parse(jsonString);
+    // Usar parser seguro com múltiplas estratégias de correção
+    return parseJsonSafely(content);
   } catch (error) {
     console.error('Erro ao gerar questões:', error);
     throw error;
@@ -258,18 +346,10 @@ Retorne um JSON com a estrutura:
 }`;
 
   try {
-    const content = await callGeminiAPI(systemPrompt, userPrompt);
+    const content = await callGroqAPI(systemPrompt, userPrompt);
 
-    let jsonString = content.trim();
-    jsonString = jsonString.replace(/^```json\s*/i, '');
-    jsonString = jsonString.replace(/^```\s*/i, '');
-    jsonString = jsonString.replace(/\s*```$/i, '');
-    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, (char) => {
-      if (char === '\n' || char === '\r' || char === '\t') return char;
-      return '';
-    });
-
-    const result = JSON.parse(jsonString.trim());
+    // Usar parser seguro com múltiplas estratégias de correção
+    const result = parseJsonSafely(content);
     return result.sugestoes || [];
   } catch (error) {
     console.error('Erro ao sugerir questões:', error);
@@ -431,18 +511,10 @@ IMPORTANTE:
 - A contextualização deve parecer uma situação REAL de trabalho, não genérica`;
 
   try {
-    const content = await callGeminiAPI(systemPrompt, userPrompt);
+    const content = await callGroqAPI(systemPrompt, userPrompt);
 
-    let jsonString = content.trim();
-    jsonString = jsonString.replace(/^```json\s*/i, '');
-    jsonString = jsonString.replace(/^```\s*/i, '');
-    jsonString = jsonString.replace(/\s*```$/i, '');
-    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, (char) => {
-      if (char === '\n' || char === '\r' || char === '\t') return char;
-      return '';
-    });
-
-    const result = JSON.parse(jsonString.trim());
+    // Usar parser seguro com múltiplas estratégias de correção
+    const result = parseJsonSafely(content);
     return result.avaliacao_pratica;
   } catch (error) {
     console.error('Erro ao gerar avaliação prática:', error);

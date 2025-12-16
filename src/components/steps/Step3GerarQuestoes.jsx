@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, Loader2, Copy, Check, Edit3, X, Save, Trash2, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, Loader2, Copy, Check, Edit3, X, Save, Trash2, Plus, Image, Code, Upload, Link, Eye, EyeOff } from 'lucide-react';
 import { useProva } from '../../context/ProvaContext';
 import { gerarQuestoes, isApiConfigured } from '../../services/llmService';
 
@@ -22,6 +22,16 @@ export default function Step3GerarQuestoes() {
   const [manualJson, setManualJson] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingQuestao, setEditingQuestao] = useState(null);
+  
+  // Estados para criação de nova questão
+  const [showNovaQuestao, setShowNovaQuestao] = useState(false);
+  const [novaQuestao, setNovaQuestao] = useState(null);
+  const [showImagemModal, setShowImagemModal] = useState(false);
+  const [imagemUrl, setImagemUrl] = useState('');
+  const [showCodigoModal, setShowCodigoModal] = useState(false);
+  const [codigoBloco, setCodigoBloco] = useState({ linguagem: 'javascript', codigo: '' });
+  const [previewMode, setPreviewMode] = useState(false);
+  const fileInputRef = useRef(null);
   
   // Verificar se API está configurada
   const apiConfigurada = isApiConfigured();
@@ -63,7 +73,7 @@ Gere as questões no formato JSON.`;
 
   const handleGerarComIA = async () => {
     if (!apiConfigurada) {
-      setError('API não configurada. Configure a variável VITE_GEMINI_API_KEY no GitHub Secrets');
+      setError('API não configurada. Configure a variável VITE_GROQ_API_KEY no GitHub Secrets');
       return;
     }
 
@@ -180,6 +190,194 @@ Gere as questões no formato JSON.`;
     }));
   };
 
+  // ========== FUNÇÕES PARA NOVA QUESTÃO ==========
+  
+  // Iniciar criação de nova questão
+  const handleNovaQuestao = () => {
+    const proximoNumero = questoesGeradas?.prova?.questoes?.length 
+      ? questoesGeradas.prova.questoes.length + 1 
+      : 1;
+    
+    setNovaQuestao({
+      numero: proximoNumero,
+      [termoCapacidade.toLowerCase()]: dadosProva.capacidades[0]?.codigo || '',
+      dificuldade: 'Médio',
+      contexto: '',
+      comando: '',
+      alternativas: { a: '', b: '', c: '', d: '' },
+      resposta_correta: 'a',
+      imagens: [], // Array de URLs de imagens
+      codigos: []  // Array de blocos de código
+    });
+    setShowNovaQuestao(true);
+    setPreviewMode(false);
+  };
+
+  // Atualizar campo da nova questão
+  const handleUpdateNovaQuestaoField = (field, value) => {
+    setNovaQuestao(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Atualizar alternativa da nova questão
+  const handleUpdateNovaAlternativa = (letra, valor) => {
+    setNovaQuestao(prev => ({
+      ...prev,
+      alternativas: {
+        ...prev.alternativas,
+        [letra]: valor
+      }
+    }));
+  };
+
+  // Adicionar imagem por URL
+  const handleAdicionarImagemUrl = () => {
+    if (!imagemUrl.trim()) return;
+    
+    setNovaQuestao(prev => ({
+      ...prev,
+      imagens: [...(prev.imagens || []), { tipo: 'url', src: imagemUrl.trim(), descricao: '' }]
+    }));
+    setImagemUrl('');
+    setShowImagemModal(false);
+  };
+
+  // Adicionar imagem por upload (base64)
+  const handleUploadImagem = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setNovaQuestao(prev => ({
+        ...prev,
+        imagens: [...(prev.imagens || []), { 
+          tipo: 'base64', 
+          src: event.target.result, 
+          nome: file.name,
+          descricao: '' 
+        }]
+      }));
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // Reset input
+  };
+
+  // Remover imagem
+  const handleRemoverImagem = (index) => {
+    setNovaQuestao(prev => ({
+      ...prev,
+      imagens: prev.imagens.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Atualizar descrição da imagem
+  const handleUpdateImagemDescricao = (index, descricao) => {
+    setNovaQuestao(prev => ({
+      ...prev,
+      imagens: prev.imagens.map((img, i) => 
+        i === index ? { ...img, descricao } : img
+      )
+    }));
+  };
+
+  // Adicionar bloco de código
+  const handleAdicionarCodigo = () => {
+    if (!codigoBloco.codigo.trim()) return;
+    
+    setNovaQuestao(prev => ({
+      ...prev,
+      codigos: [...(prev.codigos || []), { ...codigoBloco }]
+    }));
+    setCodigoBloco({ linguagem: 'javascript', codigo: '' });
+    setShowCodigoModal(false);
+  };
+
+  // Remover bloco de código
+  const handleRemoverCodigo = (index) => {
+    setNovaQuestao(prev => ({
+      ...prev,
+      codigos: prev.codigos.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Salvar nova questão
+  const handleSalvarNovaQuestao = () => {
+    // Validação básica
+    if (!novaQuestao.contexto.trim() || !novaQuestao.comando.trim()) {
+      setError('Preencha o contexto e o comando da questão.');
+      return;
+    }
+    
+    const alternativasPreenchidas = Object.values(novaQuestao.alternativas).filter(a => a.trim()).length;
+    if (alternativasPreenchidas < 4) {
+      setError('Preencha todas as 4 alternativas.');
+      return;
+    }
+
+    // Se não existem questões ainda, criar estrutura
+    if (!questoesGeradas) {
+      const capacidadesJSON = {};
+      dadosProva.capacidades.forEach(c => {
+        capacidadesJSON[c.codigo] = c.descricao;
+      });
+
+      setQuestoesGeradas({
+        prova: {
+          data: formatarData(dadosProva.data),
+          docente: dadosProva.professor,
+          curso: dadosProva.curso,
+          unidade_curricular: dadosProva.unidadeCurricular,
+          turma: dadosProva.turma,
+          [`${termoCapacidade.toLowerCase()}s`]: capacidadesJSON,
+          questoes: [novaQuestao]
+        }
+      });
+    } else {
+      // Adicionar à lista existente
+      const novasQuestoes = [...(questoesGeradas.prova.questoes || []), novaQuestao];
+      setQuestoesGeradas({
+        ...questoesGeradas,
+        prova: {
+          ...questoesGeradas.prova,
+          questoes: novasQuestoes
+        }
+      });
+    }
+
+    setNovaQuestao(null);
+    setShowNovaQuestao(false);
+    setError(null);
+  };
+
+  // Cancelar criação de nova questão
+  const handleCancelarNovaQuestao = () => {
+    setNovaQuestao(null);
+    setShowNovaQuestao(false);
+    setPreviewMode(false);
+  };
+
+  // Linguagens disponíveis para blocos de código
+  const linguagensDisponiveis = [
+    { value: 'javascript', label: 'JavaScript' },
+    { value: 'python', label: 'Python' },
+    { value: 'java', label: 'Java' },
+    { value: 'csharp', label: 'C#' },
+    { value: 'cpp', label: 'C++' },
+    { value: 'c', label: 'C' },
+    { value: 'php', label: 'PHP' },
+    { value: 'sql', label: 'SQL' },
+    { value: 'html', label: 'HTML' },
+    { value: 'css', label: 'CSS' },
+    { value: 'typescript', label: 'TypeScript' },
+    { value: 'bash', label: 'Bash/Shell' },
+    { value: 'json', label: 'JSON' },
+    { value: 'xml', label: 'XML' },
+    { value: 'plaintext', label: 'Texto Simples' }
+  ];
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-xl shadow-lg p-8">
@@ -265,10 +463,10 @@ Gere as questões no formato JSON.`;
                 Para usar a geração automática, crie um arquivo <code className="bg-amber-100 px-1 rounded">.env</code> na raiz do projeto com:
               </p>
               <pre className="mt-2 bg-amber-100 p-2 rounded text-xs text-amber-900">
-                VITE_GEMINI_API_KEY=sua_chave_aqui
+                VITE_GROQ_API_KEY=sua_chave_aqui
               </pre>
               <p className="text-amber-600 text-xs mt-2">
-                Obtenha sua chave gratuita em: aistudio.google.com/app/apikey
+                Obtenha sua chave gratuita em: console.groq.com/keys
               </p>
             </div>
           )}
@@ -329,7 +527,460 @@ Gere as questões no formato JSON.`;
               </button>
             </div>
           )}
+
+          {/* Divisor - Criar Questão Manual */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <span className="text-gray-400 text-sm">ou crie manualmente</span>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
+
+          {/* Botão Nova Questão */}
+          <button
+            onClick={handleNovaQuestao}
+            disabled={showNovaQuestao}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 border-2 border-dashed border-green-400 rounded-lg font-semibold text-lg transition-all hover:border-green-500 hover:bg-green-50 text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus size={24} />
+            Criar Nova Questão Manualmente
+          </button>
         </div>
+
+        {/* ========== FORMULÁRIO NOVA QUESTÃO ========== */}
+        {showNovaQuestao && novaQuestao && (
+          <div className="mt-8 border-2 border-green-400 rounded-xl overflow-hidden">
+            {/* Cabeçalho */}
+            <div className="bg-green-600 text-white px-6 py-4 flex items-center justify-between">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <Plus size={20} />
+                Nova Questão #{novaQuestao.numero}
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPreviewMode(!previewMode)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-sm"
+                >
+                  {previewMode ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {previewMode ? 'Editar' : 'Pré-visualizar'}
+                </button>
+                <button
+                  onClick={handleCancelarNovaQuestao}
+                  className="p-1.5 hover:bg-white/20 rounded transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo do formulário */}
+            <div className="p-6 bg-green-50 space-y-6">
+              {/* Modo Edição */}
+              {!previewMode && (
+                <>
+                  {/* Capacidade e Dificuldade */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {termoCapacidade} <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={novaQuestao[termoCapacidade.toLowerCase()] || ''}
+                        onChange={(e) => handleUpdateNovaQuestaoField(termoCapacidade.toLowerCase(), e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                      >
+                        {dadosProva.capacidades.map(cap => (
+                          <option key={cap.codigo} value={cap.codigo}>
+                            {cap.codigo} - {cap.descricao.substring(0, 50)}...
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Dificuldade <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={novaQuestao.dificuldade}
+                        onChange={(e) => handleUpdateNovaQuestaoField('dificuldade', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                      >
+                        <option value="Fácil">Fácil</option>
+                        <option value="Médio">Médio</option>
+                        <option value="Difícil">Difícil</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Contexto */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contexto <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={novaQuestao.contexto}
+                      onChange={(e) => handleUpdateNovaQuestaoField('contexto', e.target.value)}
+                      placeholder="Descreva a situação-problema do mundo do trabalho..."
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                    />
+                  </div>
+
+                  {/* Seção de Imagens */}
+                  <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <Image size={16} className="text-blue-600" />
+                        Imagens (opcional)
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowImagemModal(true)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                        >
+                          <Link size={14} />
+                          URL
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        >
+                          <Upload size={14} />
+                          Upload
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleUploadImagem}
+                          className="hidden"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Lista de imagens adicionadas */}
+                    {novaQuestao.imagens?.length > 0 && (
+                      <div className="space-y-3">
+                        {novaQuestao.imagens.map((img, idx) => (
+                          <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <img 
+                              src={img.src} 
+                              alt={img.descricao || `Imagem ${idx + 1}`}
+                              className="w-20 h-20 object-cover rounded border"
+                            />
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                value={img.descricao}
+                                onChange={(e) => handleUpdateImagemDescricao(idx, e.target.value)}
+                                placeholder="Descrição da imagem (alt text)..."
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                {img.tipo === 'url' ? 'URL externa' : img.nome || 'Upload local'}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleRemoverImagem(idx)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {novaQuestao.imagens?.length === 0 && (
+                      <p className="text-sm text-gray-400 italic">Nenhuma imagem adicionada</p>
+                    )}
+                  </div>
+
+                  {/* Seção de Código */}
+                  <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <Code size={16} className="text-purple-600" />
+                        Blocos de Código (opcional)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowCodigoModal(true)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                      >
+                        <Plus size={14} />
+                        Adicionar Código
+                      </button>
+                    </div>
+
+                    {/* Lista de blocos de código */}
+                    {novaQuestao.codigos?.length > 0 && (
+                      <div className="space-y-3">
+                        {novaQuestao.codigos.map((cod, idx) => (
+                          <div key={idx} className="relative">
+                            <div className="flex items-center justify-between bg-gray-800 text-white px-3 py-1.5 rounded-t-lg">
+                              <span className="text-xs font-mono">{cod.linguagem}</span>
+                              <button
+                                onClick={() => handleRemoverCodigo(idx)}
+                                className="p-1 text-red-400 hover:text-red-300"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                            <pre className="bg-gray-900 text-green-400 p-3 rounded-b-lg text-sm font-mono overflow-x-auto max-h-40">
+                              <code>{cod.codigo}</code>
+                            </pre>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {novaQuestao.codigos?.length === 0 && (
+                      <p className="text-sm text-gray-400 italic">Nenhum bloco de código adicionado</p>
+                    )}
+                  </div>
+
+                  {/* Comando */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Comando <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={novaQuestao.comando}
+                      onChange={(e) => handleUpdateNovaQuestaoField('comando', e.target.value)}
+                      placeholder="Pergunta relacionada ao contexto..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                    />
+                  </div>
+
+                  {/* Alternativas */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Alternativas <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      {['a', 'b', 'c', 'd'].map(letra => (
+                        <div key={letra} className="flex items-center gap-2">
+                          <label className="flex items-center gap-2 min-w-[80px]">
+                            <input
+                              type="radio"
+                              name="nova-resposta"
+                              checked={novaQuestao.resposta_correta === letra}
+                              onChange={() => handleUpdateNovaQuestaoField('resposta_correta', letra)}
+                              className="text-green-600"
+                            />
+                            <span className={`font-medium ${novaQuestao.resposta_correta === letra ? 'text-green-700' : 'text-gray-700'}`}>
+                              {letra.toUpperCase()})
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            value={novaQuestao.alternativas[letra]}
+                            onChange={(e) => handleUpdateNovaAlternativa(letra, e.target.value)}
+                            placeholder={`Alternativa ${letra.toUpperCase()}`}
+                            className={`flex-1 px-3 py-2 border rounded-lg text-sm ${
+                              novaQuestao.resposta_correta === letra 
+                                ? 'border-green-300 bg-green-50' 
+                                : 'border-gray-300 bg-white'
+                            }`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Selecione o radio button para marcar a resposta correta
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Modo Preview */}
+              {previewMode && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="font-bold text-[#004b8d]">Questão {novaQuestao.numero}</span>
+                    <span className="text-sm text-gray-600">{novaQuestao[termoCapacidade.toLowerCase()]}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      novaQuestao.dificuldade === 'Fácil' ? 'bg-green-100 text-green-700' :
+                      novaQuestao.dificuldade === 'Médio' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {novaQuestao.dificuldade}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <span className="font-medium text-blue-600">Contexto:</span>
+                      <p className="text-gray-700 mt-1">{novaQuestao.contexto || <em className="text-gray-400">Não preenchido</em>}</p>
+                    </div>
+
+                    {/* Imagens no preview */}
+                    {novaQuestao.imagens?.length > 0 && (
+                      <div className="flex flex-wrap gap-3">
+                        {novaQuestao.imagens.map((img, idx) => (
+                          <img 
+                            key={idx}
+                            src={img.src} 
+                            alt={img.descricao || `Imagem ${idx + 1}`}
+                            className="max-w-xs rounded-lg border shadow-sm"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Códigos no preview */}
+                    {novaQuestao.codigos?.length > 0 && (
+                      <div className="space-y-3">
+                        {novaQuestao.codigos.map((cod, idx) => (
+                          <div key={idx}>
+                            <div className="bg-gray-800 text-white px-3 py-1 rounded-t-lg text-xs font-mono">
+                              {cod.linguagem}
+                            </div>
+                            <pre className="bg-gray-900 text-green-400 p-3 rounded-b-lg text-sm font-mono overflow-x-auto">
+                              <code>{cod.codigo}</code>
+                            </pre>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div>
+                      <span className="font-medium text-blue-600">Comando:</span>
+                      <p className="text-gray-700 mt-1">{novaQuestao.comando || <em className="text-gray-400">Não preenchido</em>}</p>
+                    </div>
+
+                    <div>
+                      <span className="font-medium text-blue-600">Alternativas:</span>
+                      <div className="mt-2 space-y-1">
+                        {['a', 'b', 'c', 'd'].map(letra => (
+                          <p key={letra} className={`${novaQuestao.resposta_correta === letra ? 'font-medium text-green-700 bg-green-50 px-2 py-1 rounded' : 'text-gray-600'}`}>
+                            {letra}) {novaQuestao.alternativas[letra] || <em className="text-gray-400">Não preenchido</em>}
+                            {novaQuestao.resposta_correta === letra && ' ✓'}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botões de ação */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-green-200">
+                <button
+                  onClick={handleCancelarNovaQuestao}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <X size={16} />
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSalvarNovaQuestao}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-semibold"
+                >
+                  <Save size={16} />
+                  Salvar Questão
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para adicionar imagem por URL */}
+        {showImagemModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Link size={20} className="text-blue-600" />
+                Adicionar Imagem por URL
+              </h4>
+              <input
+                type="url"
+                value={imagemUrl}
+                onChange={(e) => setImagemUrl(e.target.value)}
+                placeholder="https://exemplo.com/imagem.png"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4"
+              />
+              {imagemUrl && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 mb-2">Pré-visualização:</p>
+                  <img 
+                    src={imagemUrl} 
+                    alt="Preview" 
+                    className="max-h-40 rounded border"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                </div>
+              )}
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => { setShowImagemModal(false); setImagemUrl(''); }}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAdicionarImagemUrl}
+                  disabled={!imagemUrl.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para adicionar bloco de código */}
+        {showCodigoModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 shadow-2xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <Code size={20} className="text-purple-600" />
+                Adicionar Bloco de Código
+              </h4>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Linguagem</label>
+                <select
+                  value={codigoBloco.linguagem}
+                  onChange={(e) => setCodigoBloco(prev => ({ ...prev, linguagem: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                >
+                  {linguagensDisponiveis.map(lang => (
+                    <option key={lang.value} value={lang.value}>{lang.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                <textarea
+                  value={codigoBloco.codigo}
+                  onChange={(e) => setCodigoBloco(prev => ({ ...prev, codigo: e.target.value }))}
+                  placeholder="Digite ou cole o código aqui..."
+                  rows={10}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm bg-gray-50"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => { setShowCodigoModal(false); setCodigoBloco({ linguagem: 'javascript', codigo: '' }); }}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAdicionarCodigo}
+                  disabled={!codigoBloco.codigo.trim()}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Lista de questões geradas - Editável */}
         {questoesGeradas && (
