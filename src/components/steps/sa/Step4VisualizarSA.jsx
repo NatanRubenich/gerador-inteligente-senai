@@ -1,11 +1,34 @@
 import { useState, useRef } from 'react';
-import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain, FileText, AlertTriangle, Award } from 'lucide-react';
+import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain, FileText, AlertTriangle, Award, Edit3, Save, X } from 'lucide-react';
 import { useProva } from '../../../context/ProvaContext';
 
 export default function Step4VisualizarSA() {
-  const { situacaoAprendizagemGerada, prevStep, resetProva, termoCapacidade, dadosProva } = useProva();
+  const { situacaoAprendizagemGerada, setSituacaoAprendizagemGerada, prevStep, resetProva, termoCapacidade, dadosProva } = useProva();
   const printRef = useRef();
   const [abaAtiva, setAbaAtiva] = useState('sa'); // 'sa' ou 'rubrica'
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState(null);
+
+  // Funções de edição
+  const handleStartEdit = () => {
+    setEditData({ ...situacaoAprendizagemGerada });
+    setEditMode(true);
+  };
+
+  const handleSaveEdit = () => {
+    setSituacaoAprendizagemGerada(editData);
+    setEditMode(false);
+    setEditData(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setEditData(null);
+  };
+
+  const updateField = (field, value) => {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  };
 
   if (!situacaoAprendizagemGerada) {
     return (
@@ -75,9 +98,37 @@ export default function Step4VisualizarSA() {
               </button>
             </div>
 
+            {!editMode ? (
+              <button
+                onClick={handleStartEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Edit3 size={18} />
+                Editar
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Save size={18} />
+                  Salvar
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  <X size={18} />
+                  Cancelar
+                </button>
+              </>
+            )}
+
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors"
+              disabled={editMode}
+              className="flex items-center gap-2 px-4 py-2 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors disabled:opacity-50"
             >
               <Printer size={18} />
               Imprimir
@@ -85,7 +136,8 @@ export default function Step4VisualizarSA() {
 
             <button
               onClick={resetProva}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              disabled={editMode}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               <RotateCcw size={18} />
               Nova SA
@@ -94,8 +146,64 @@ export default function Step4VisualizarSA() {
         </div>
       </div>
 
+      {/* Formulário de Edição */}
+      {editMode && editData && (
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 no-print">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Edit3 size={20} className="text-blue-600" />
+            Editar Situação de Aprendizagem
+          </h3>
+          
+          <div className="space-y-4">
+            {/* Título */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+              <input
+                type="text"
+                value={editData.titulo || ''}
+                onChange={(e) => updateField('titulo', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+            </div>
+
+            {/* Contextualização */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contextualização</label>
+              <textarea
+                value={editData.contextualizacao || ''}
+                onChange={(e) => updateField('contextualizacao', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                rows={4}
+              />
+            </div>
+
+            {/* Desafio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Desafio</label>
+              <textarea
+                value={editData.desafio || ''}
+                onChange={(e) => updateField('desafio', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                rows={4}
+              />
+            </div>
+
+            {/* Resultados Esperados */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Resultados Esperados</label>
+              <textarea
+                value={editData.resultados_esperados || ''}
+                onChange={(e) => updateField('resultados_esperados', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                rows={3}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Documento da SA */}
-      {abaAtiva === 'sa' && (
+      {abaAtiva === 'sa' && !editMode && (
         <div ref={printRef} className="bg-white rounded-xl shadow-lg prova-container" id="sa-print">
           {/* Cabeçalho */}
           <table className="w-full border-collapse border border-black text-sm">

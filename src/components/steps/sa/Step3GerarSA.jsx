@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Loader2, AlertCircle, Clock, FileText, Target, BookOpen, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Loader2, AlertCircle, Clock, FileText, Target, BookOpen, ClipboardList, PenLine, Plus, Trash2 } from 'lucide-react';
 import { useProva } from '../../../context/ProvaContext';
 import { 
   gerarSituacaoAprendizagem, 
@@ -27,6 +27,17 @@ export default function Step3GerarSA() {
   const [estrategiaPedagogica, setEstrategiaPedagogica] = useState('Projeto');
   const [nivelDificuldade, setNivelDificuldade] = useState('intermediario');
   const [tipoRubrica, setTipoRubrica] = useState('gradual');
+  const [modoManual, setModoManual] = useState(false);
+  
+  // Estado para criação manual
+  const [saManual, setSaManual] = useState({
+    titulo: '',
+    contextualizacao: '',
+    desafio: '',
+    resultados_esperados: '',
+    etapas: [{ nome: '', descricao: '', duracao: '' }],
+    criterios_rubrica: [{ descricao: '', peso: 1 }]
+  });
 
   // Preparar capacidades para exibição
   const capacidadesSelecionadas = dadosProva.capacidades.map(cap => ({
@@ -76,6 +87,85 @@ export default function Step3GerarSA() {
     if (situacaoAprendizagemGerada) {
       nextStep();
     }
+  };
+
+  // Funções para criação manual
+  const handleSalvarManual = () => {
+    if (!saManual.titulo.trim() || !saManual.contextualizacao.trim() || !saManual.desafio.trim()) {
+      setError('Preencha o título, contextualização e desafio.');
+      return;
+    }
+
+    const saCompleta = {
+      titulo: saManual.titulo,
+      curso: dadosProva.curso,
+      unidadeCurricular: dadosProva.unidadeCurricular,
+      docente: dadosProva.professor,
+      turma: dadosProva.turma,
+      data: dadosProva.data,
+      cargaHoraria,
+      estrategiaPedagogica,
+      capacidades: capacidadesSelecionadas,
+      contextualizacao: saManual.contextualizacao,
+      desafio: saManual.desafio,
+      resultados_esperados: saManual.resultados_esperados,
+      etapas: saManual.etapas.filter(e => e.nome.trim()),
+      rubrica: {
+        criterios: saManual.criterios_rubrica.filter(c => c.descricao.trim()).map(c => ({
+          ...c,
+          capacidade: capacidadesSelecionadas[0]?.codigo || 'C1'
+        }))
+      }
+    };
+
+    setSituacaoAprendizagemGerada(saCompleta);
+    nextStep();
+  };
+
+  const adicionarEtapa = () => {
+    setSaManual(prev => ({
+      ...prev,
+      etapas: [...prev.etapas, { nome: '', descricao: '', duracao: '' }]
+    }));
+  };
+
+  const removerEtapa = (idx) => {
+    if (saManual.etapas.length > 1) {
+      setSaManual(prev => ({
+        ...prev,
+        etapas: prev.etapas.filter((_, i) => i !== idx)
+      }));
+    }
+  };
+
+  const atualizarEtapa = (idx, campo, valor) => {
+    setSaManual(prev => ({
+      ...prev,
+      etapas: prev.etapas.map((e, i) => i === idx ? { ...e, [campo]: valor } : e)
+    }));
+  };
+
+  const adicionarCriterio = () => {
+    setSaManual(prev => ({
+      ...prev,
+      criterios_rubrica: [...prev.criterios_rubrica, { descricao: '', peso: 1 }]
+    }));
+  };
+
+  const removerCriterio = (idx) => {
+    if (saManual.criterios_rubrica.length > 1) {
+      setSaManual(prev => ({
+        ...prev,
+        criterios_rubrica: prev.criterios_rubrica.filter((_, i) => i !== idx)
+      }));
+    }
+  };
+
+  const atualizarCriterio = (idx, campo, valor) => {
+    setSaManual(prev => ({
+      ...prev,
+      criterios_rubrica: prev.criterios_rubrica.map((c, i) => i === idx ? { ...c, [campo]: valor } : c)
+    }));
   };
 
   return (
@@ -129,7 +219,30 @@ export default function Step3GerarSA() {
           </ul>
         </div>
 
-        {/* Configurações da SA */}
+        {/* Toggle IA / Manual */}
+        <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+          <button
+            onClick={() => setModoManual(false)}
+            className={`flex-1 px-4 py-2 rounded-md text-base font-semibold transition-colors flex items-center justify-center gap-2 ${
+              !modoManual ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Sparkles size={18} />
+            Gerar com IA
+          </button>
+          <button
+            onClick={() => setModoManual(true)}
+            className={`flex-1 px-4 py-2 rounded-md text-base font-semibold transition-colors flex items-center justify-center gap-2 ${
+              modoManual ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <PenLine size={18} />
+            Criar Manualmente
+          </button>
+        </div>
+
+        {/* Configurações da SA - Modo IA */}
+        {!modoManual && (
         <div className="space-y-5 mb-6">
           {/* Linha 1: Tema e Carga Horária */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -229,6 +342,139 @@ export default function Step3GerarSA() {
             />
           </div>
         </div>
+        )}
+
+        {/* Modo Manual */}
+        {modoManual && (
+          <div className="space-y-5 mb-6">
+            {/* Título */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Título da SA *</label>
+              <input
+                type="text"
+                value={saManual.titulo}
+                onChange={(e) => setSaManual(prev => ({ ...prev, titulo: e.target.value }))}
+                placeholder="Ex: Desenvolvimento de Sistema Web para Gestão de Estoque"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              />
+            </div>
+
+            {/* Contextualização */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Contextualização *</label>
+              <textarea
+                value={saManual.contextualizacao}
+                onChange={(e) => setSaManual(prev => ({ ...prev, contextualizacao: e.target.value }))}
+                placeholder="Descreva a situação-problema do mundo do trabalho..."
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              />
+            </div>
+
+            {/* Desafio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Desafio *</label>
+              <textarea
+                value={saManual.desafio}
+                onChange={(e) => setSaManual(prev => ({ ...prev, desafio: e.target.value }))}
+                placeholder="Descreva o desafio proposto aos estudantes..."
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              />
+            </div>
+
+            {/* Resultados Esperados */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Resultados Esperados</label>
+              <textarea
+                value={saManual.resultados_esperados}
+                onChange={(e) => setSaManual(prev => ({ ...prev, resultados_esperados: e.target.value }))}
+                placeholder="Descreva os resultados e entregas esperados..."
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004b8d] focus:border-[#004b8d]"
+              />
+            </div>
+
+            {/* Etapas */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Etapas</label>
+                <button onClick={adicionarEtapa} className="text-sm text-[#004b8d] hover:text-blue-700 flex items-center gap-1">
+                  <Plus size={14} /> Adicionar Etapa
+                </button>
+              </div>
+              {saManual.etapas.map((etapa, idx) => (
+                <div key={idx} className="border border-gray-200 rounded-lg p-3 mb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">Etapa {idx + 1}</span>
+                    {saManual.etapas.length > 1 && (
+                      <button onClick={() => removerEtapa(idx)} className="text-red-500 hover:text-red-700">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      value={etapa.nome}
+                      onChange={(e) => atualizarEtapa(idx, 'nome', e.target.value)}
+                      placeholder="Nome da etapa"
+                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={etapa.duracao}
+                      onChange={(e) => atualizarEtapa(idx, 'duracao', e.target.value)}
+                      placeholder="Duração (ex: 4h)"
+                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={etapa.descricao}
+                      onChange={(e) => atualizarEtapa(idx, 'descricao', e.target.value)}
+                      placeholder="Descrição"
+                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Critérios da Rubrica */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Critérios da Rubrica</label>
+                <button onClick={adicionarCriterio} className="text-sm text-[#004b8d] hover:text-blue-700 flex items-center gap-1">
+                  <Plus size={14} /> Adicionar Critério
+                </button>
+              </div>
+              {saManual.criterios_rubrica.map((criterio, idx) => (
+                <div key={idx} className="flex items-center gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={criterio.descricao}
+                    onChange={(e) => atualizarCriterio(idx, 'descricao', e.target.value)}
+                    placeholder="Descrição do critério"
+                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                  />
+                  <input
+                    type="number"
+                    value={criterio.peso}
+                    onChange={(e) => atualizarCriterio(idx, 'peso', Number(e.target.value))}
+                    className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center"
+                    min="1"
+                    max="5"
+                  />
+                  {saManual.criterios_rubrica.length > 1 && (
+                    <button onClick={() => removerCriterio(idx)} className="text-red-400 hover:text-red-600">
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Erro */}
         {error && (
@@ -306,25 +552,35 @@ export default function Step3GerarSA() {
           </button>
 
           <div className="flex gap-3">
-            <button
-              onClick={handleGerarSA}
-              disabled={isLoading || !apiConfigured}
-              className="flex items-center gap-2 px-6 py-3 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Gerando SA...
-                </>
-              ) : (
-                <>
-                  <Sparkles size={20} />
-                  {situacaoAprendizagemGerada ? 'Gerar Novamente' : 'Gerar com IA'}
-                </>
-              )}
-            </button>
+            {!modoManual ? (
+              <button
+                onClick={handleGerarSA}
+                disabled={isLoading || !apiConfigured}
+                className="flex items-center gap-2 px-6 py-3 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Gerando SA...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} />
+                    {situacaoAprendizagemGerada ? 'Gerar Novamente' : 'Gerar com IA'}
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={handleSalvarManual}
+                className="flex items-center gap-2 px-6 py-3 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors"
+              >
+                <PenLine size={20} />
+                Salvar SA
+              </button>
+            )}
 
-            {situacaoAprendizagemGerada && (
+            {situacaoAprendizagemGerada && !modoManual && (
               <button
                 onClick={handleProximo}
                 className="flex items-center gap-2 px-6 py-3 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors"

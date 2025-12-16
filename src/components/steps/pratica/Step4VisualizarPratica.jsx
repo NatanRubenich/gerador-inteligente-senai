@@ -5,13 +5,42 @@ import {
   Eye, 
   ClipboardList,
   ArrowLeft,
-  AlertCircle
+  AlertCircle,
+  Edit3,
+  Save,
+  X
 } from 'lucide-react';
 
 export default function Step4VisualizarPratica() {
-  const { dadosProva, avaliacaoPraticaGerada, prevStep, resetProva } = useProva();
+  const { dadosProva, avaliacaoPraticaGerada, setAvaliacaoPraticaGerada, prevStep, resetProva } = useProva();
   const [viewMode, setViewMode] = useState('prova'); // 'prova' ou 'checklist'
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState(null);
   const printRef = useRef();
+
+  // Iniciar edição
+  const handleStartEdit = () => {
+    setEditData({ ...avaliacaoPraticaGerada });
+    setEditMode(true);
+  };
+
+  // Salvar edição
+  const handleSaveEdit = () => {
+    setAvaliacaoPraticaGerada(editData);
+    setEditMode(false);
+    setEditData(null);
+  };
+
+  // Cancelar edição
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setEditData(null);
+  };
+
+  // Atualizar campo
+  const updateField = (field, value) => {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handlePrint = () => {
     window.print();
@@ -88,16 +117,44 @@ export default function Step4VisualizarPratica() {
 
           {/* Ações */}
           <div className="flex items-center gap-2">
+            {!editMode ? (
+              <button
+                onClick={handleStartEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Edit3 size={18} />
+                Editar
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Save size={18} />
+                  Salvar
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  <X size={18} />
+                  Cancelar
+                </button>
+              </>
+            )}
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              disabled={editMode}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               <Printer size={18} />
               Imprimir
             </button>
             <button
               onClick={resetProva}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              disabled={editMode}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
             >
               <ArrowLeft size={18} />
               Nova Avaliação
@@ -106,8 +163,88 @@ export default function Step4VisualizarPratica() {
         </div>
       </div>
 
+      {/* Formulário de Edição */}
+      {editMode && editData && (
+        <div className="bg-white rounded-xl shadow-lg p-6 no-print">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Edit3 size={20} className="text-blue-600" />
+            Editar Avaliação Prática
+          </h3>
+          
+          <div className="space-y-4">
+            {/* Contextualização */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contextualização</label>
+              <textarea
+                value={editData.contextualizacao || ''}
+                onChange={(e) => updateField('contextualizacao', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                rows={4}
+              />
+            </div>
+
+            {/* Desafio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Desafio</label>
+              <textarea
+                value={editData.desafio || ''}
+                onChange={(e) => updateField('desafio', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                rows={4}
+              />
+            </div>
+
+            {/* Resultados e Entregas */}
+            {editData.resultados_entregas && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Resultados e Entregas</label>
+                {editData.resultados_entregas.map((item, idx) => (
+                  <div key={idx} className="border border-gray-200 rounded-lg p-3 mb-2">
+                    <div className="grid md:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        value={item.atividade || ''}
+                        onChange={(e) => {
+                          const newItems = [...editData.resultados_entregas];
+                          newItems[idx] = { ...newItems[idx], atividade: e.target.value };
+                          updateField('resultados_entregas', newItems);
+                        }}
+                        placeholder="Atividade"
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={item.tempo || ''}
+                        onChange={(e) => {
+                          const newItems = [...editData.resultados_entregas];
+                          newItems[idx] = { ...newItems[idx], tempo: e.target.value };
+                          updateField('resultados_entregas', newItems);
+                        }}
+                        placeholder="Tempo"
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={item.entregas || ''}
+                        onChange={(e) => {
+                          const newItems = [...editData.resultados_entregas];
+                          newItems[idx] = { ...newItems[idx], entregas: e.target.value };
+                          updateField('resultados_entregas', newItems);
+                        }}
+                        placeholder="Entregas"
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Visualização da Prova Prática! */}
-      {viewMode === 'prova' && (
+      {viewMode === 'prova' && !editMode && (
         <div className="bg-white rounded-xl shadow-lg prova-container" id="prova-print" ref={printRef}>
           {/* Cabeçalho */}
           <table className="w-full border-collapse border border-black">
