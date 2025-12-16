@@ -22,7 +22,7 @@ jobs:
     - name: Build with API Key
       run: npm run build
       env:
-        VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+        VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
