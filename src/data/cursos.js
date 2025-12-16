@@ -10,7 +10,7 @@ export const cursos = [
   {
     id: 'desi',
     nome: 'Técnico em Desenvolvimento de Sistemas',
-    tipo: TIPO_ENSINO.TECNICO,
+    tipoEnsino: TIPO_ENSINO.TECNICO,
     competenciaGeral: 'Desenvolver e programar sistemas computacionais, atendendo normas e padrão de qualidade, usabilidade, integridade e segurança da informação.',
     unidadesCurriculares: [
       // 1º Período - Módulo Introdutório (340h)
@@ -499,7 +499,7 @@ export const cursos = [
   {
     id: 'info-internet',
     nome: 'Técnico em Informática para Internet',
-    tipo: TIPO_ENSINO.TECNICO,
+    tipoEnsino: TIPO_ENSINO.TECNICO,
     competenciaGeral: 'Desenvolver e administrar sistemas e aplicações para internet, seguindo as especificações e paradigmas da lógica de programação e das linguagens de programação, utilizando ferramentas de desenvolvimento, modelagem, banco de dados e servidores.',
     unidadesCurriculares: [
       // 1º Período
@@ -723,7 +723,7 @@ export const cursos = [
   {
     id: 'multimidia',
     nome: 'Técnico em Multimídia',
-    tipo: TIPO_ENSINO.TECNICO,
+    tipoEnsino: TIPO_ENSINO.TECNICO,
     competenciaGeral: 'Coordenar e Executar projetos para mídias digitais, seguindo padrões e normas técnicas, referentes à propriedade intelectual, acessibilidade, usabilidade e sustentabilidade.',
     unidadesCurriculares: [
       // Módulo BÁSICO (160h)

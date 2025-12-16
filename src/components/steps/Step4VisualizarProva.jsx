@@ -255,66 +255,92 @@ export default function Step4VisualizarProva() {
 
       {/* Visualização do Gabarito */}
       {viewMode === 'gabarito' && (
-        <div className="bg-white rounded-xl shadow-lg p-8 prova-container" id="gabarito-print">
-          <div className="text-center mb-8">
-            <img 
-              src={`${import.meta.env.BASE_URL}senai.png`} 
-              alt="SENAI" 
-              className="h-16 mx-auto mb-4"
-            />
-            <h1 className="text-2xl font-bold text-[#004b8d]">GABARITO - AVALIAÇÃO OBJETIVA</h1>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
-            <div>
-              <p><strong>Curso:</strong> {prova.curso}</p>
-              <p><strong>Unidade Curricular:</strong> {prova.unidade_curricular}</p>
-            </div>
-            <div>
-              <p><strong>Turma:</strong> {prova.turma}</p>
-              <p><strong>Data:</strong> {prova.data}</p>
-            </div>
-          </div>
-
+        <div className="bg-white rounded-xl shadow-lg prova-container" id="gabarito-print">
+          {/* Cabeçalho no mesmo padrão das outras avaliações */}
           <table className="w-full border-collapse border border-black">
-            <thead>
-              <tr className="bg-[#004b8d] text-white">
-                <th className="border border-black p-3 text-center">Questão</th>
-                <th className="border border-black p-3 text-center">{termoCapacidade}</th>
-                <th className="border border-black p-3 text-center">Dificuldade</th>
-                <th className="border border-black p-3 text-center">Resposta Correta</th>
-              </tr>
-            </thead>
             <tbody>
-              {prova.questoes?.map((questao, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                  <td className="border border-black p-3 text-center font-bold">
-                    {questao.numero}
-                  </td>
-                  <td className="border border-black p-3 text-center">
-                    {getCapacidadeQuestao(questao)}
-                  </td>
-                  <td className="border border-black p-3 text-center">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      questao.dificuldade === 'Fácil' ? 'bg-green-100 text-green-800' :
-                      questao.dificuldade === 'Médio' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {questao.dificuldade || '-'}
-                    </span>
-                  </td>
-                  <td className="border border-black p-3 text-center font-bold text-lg text-green-700">
-                    {questao.resposta_correta?.toUpperCase()}
-                  </td>
-                </tr>
-              ))}
+              <tr>
+                <td rowSpan="5" className="border border-black p-4 w-48 text-center align-middle">
+                  <img 
+                    src={`${import.meta.env.BASE_URL}senai.png`} 
+                    alt="SENAI" 
+                    className="w-full max-w-[150px] mx-auto mb-2"
+                  />
+                  <p className="font-bold text-sm">Serviço Nacional de</p>
+                  <p className="font-bold text-sm">Aprendizagem Industrial</p>
+                  <p className="text-sm">Santa Catarina</p>
+                </td>
+                <td className="border border-black p-3 text-center font-bold text-lg bg-[#004b8d] text-white">
+                  GABARITO - AVALIAÇÃO OBJETIVA
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black p-2">
+                  <strong>Curso Técnico em:</strong> <span className="text-blue-700">{prova.curso}</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black p-2">
+                  <strong>Unidade Curricular:</strong> <span className="text-blue-700">{prova.unidade_curricular}</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black p-2">
+                  <strong>Turma:</strong> <span className="text-blue-700">{prova.turma}</span> | <strong>Data:</strong> <span className="text-blue-700">{prova.data}</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-black p-2">
+                  <strong>Docente:</strong> <span className="text-blue-700">{prova.docente}</span>
+                </td>
+              </tr>
             </tbody>
           </table>
 
-          <div className="mt-8 pt-4 border-t">
-            <p className="text-sm text-gray-500 text-center">
-              Docente: {prova.docente}
-            </p>
+          {/* Tabela de Respostas */}
+          <div className="mt-4 border border-black">
+            <div className="bg-[#004b8d] text-white p-3 font-bold uppercase text-sm">
+              RESPOSTAS CORRETAS
+            </div>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-3 text-center">Questão</th>
+                  <th className="border border-gray-300 p-3 text-center">{termoCapacidade}</th>
+                  <th className="border border-gray-300 p-3 text-center">Dificuldade</th>
+                  <th className="border border-gray-300 p-3 text-center">Resposta Correta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prova.questoes?.map((questao, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="border border-gray-300 p-3 text-center font-bold">
+                      {questao.numero}
+                    </td>
+                    <td className="border border-gray-300 p-3 text-center text-sm">
+                      {getCapacidadeQuestao(questao)}
+                    </td>
+                    <td className="border border-gray-300 p-3 text-center">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        questao.dificuldade === 'Fácil' ? 'bg-green-100 text-green-800' :
+                        questao.dificuldade === 'Médio' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {questao.dificuldade || '-'}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 p-3 text-center font-bold text-lg text-green-700">
+                      {questao.resposta_correta?.toUpperCase()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Rodapé */}
+          <div className="mt-6 p-4 text-center text-xs text-gray-500 border-t">
+            <p>Gabarito gerado pelo Sistema Gerador de Provas SENAI - Metodologia SENAI de Educação Profissional (MSEP)</p>
           </div>
         </div>
       )}

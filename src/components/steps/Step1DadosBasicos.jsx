@@ -8,7 +8,7 @@ export default function Step1DadosBasicos() {
   const [errors, setErrors] = useState({});
 
   // Filtrar cursos por tipo de ensino
-  const cursosFiltrados = cursos.filter(c => c.tipo === dadosProva.tipoEnsino);
+  const cursosFiltrados = cursos.filter(c => c.tipoEnsino === dadosProva.tipoEnsino);
 
   // Obter unidades curriculares do curso selecionado
   const cursoSelecionado = cursos.find(c => c.id === dadosProva.cursoId);
@@ -18,7 +18,7 @@ export default function Step1DadosBasicos() {
   useEffect(() => {
     if (dadosProva.cursoId) {
       const cursoAtual = cursos.find(c => c.id === dadosProva.cursoId);
-      if (cursoAtual && cursoAtual.tipo !== dadosProva.tipoEnsino) {
+      if (cursoAtual && cursoAtual.tipoEnsino !== dadosProva.tipoEnsino) {
         updateDadosProva({ cursoId: '', curso: '', unidadeCurricular: '', capacidades: [] });
       }
     }
