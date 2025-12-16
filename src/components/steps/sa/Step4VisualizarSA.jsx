@@ -57,20 +57,20 @@ export default function Step4VisualizarSA() {
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setAbaAtiva('sa')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
                   abaAtiva === 'sa' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                <FileText size={16} className="inline mr-1" />
+                <FileText size={18} className="inline mr-1" />
                 SA
               </button>
               <button
                 onClick={() => setAbaAtiva('rubrica')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
                   abaAtiva === 'rubrica' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                <CheckSquare size={16} className="inline mr-1" />
+                <CheckSquare size={18} className="inline mr-1" />
                 Rubrica
               </button>
             </div>
@@ -397,15 +397,15 @@ export default function Step4VisualizarSA() {
             </div>
 
             {/* Assinatura */}
-            <div className="mt-6 flex justify-between">
+            <div className="mt-16 flex justify-between px-8">
               <div className="text-center">
-                <div className="border-t-2 border-gray-400 w-48 pt-1">
-                  <span className="text-xs text-gray-600">Assinatura do Docente</span>
+                <div className="border-t-2 border-gray-700 w-64 pt-2">
+                  <span className="text-sm text-gray-700 font-medium">Assinatura do Docente</span>
                 </div>
               </div>
               <div className="text-center">
-                <div className="border-t-2 border-gray-400 w-48 pt-1">
-                  <span className="text-xs text-gray-600">Assinatura do Estudante</span>
+                <div className="border-t-2 border-gray-700 w-64 pt-2">
+                  <span className="text-sm text-gray-700 font-medium">Assinatura do Estudante</span>
                 </div>
               </div>
             </div>

@@ -17,6 +17,14 @@ export default function Step4VisualizarPratica() {
     window.print();
   };
 
+  // Formatar data para Dia/Mês/Ano
+  const formatarData = (dataISO) => {
+    if (!dataISO) return '';
+    if (dataISO.includes('/')) return dataISO; // Já está formatada
+    const [ano, mes, dia] = dataISO.split('-');
+    return `${dia}/${mes}/${ano}`;
+  };
+
   if (!avaliacaoPraticaGerada) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-8 text-center">
@@ -56,24 +64,24 @@ export default function Step4VisualizarPratica() {
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('prova')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
                 viewMode === 'prova'
                   ? 'bg-white text-[#004b8d] shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              <Eye size={16} className="inline mr-1" />
+              <Eye size={18} className="inline mr-1" />
               Prova
             </button>
             <button
               onClick={() => setViewMode('checklist')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
                 viewMode === 'checklist'
                   ? 'bg-white text-[#004b8d] shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              <ClipboardList size={16} className="inline mr-1" />
+              <ClipboardList size={18} className="inline mr-1" />
               Lista de Verificação
             </button>
           </div>
@@ -125,7 +133,7 @@ export default function Step4VisualizarPratica() {
               </tr>
               <tr>
                 <td className="border border-black p-2">
-                  <strong>Data:</strong> <span className="text-blue-700">{prova.data || dadosProva.data}</span>
+                  <strong>Data:</strong> <span className="text-blue-700">{formatarData(prova.data || dadosProva.data)}</span>
                 </td>
               </tr>
               <tr>
@@ -279,7 +287,7 @@ export default function Step4VisualizarPratica() {
             </div>
             <div>
               <p><strong>Turma:</strong> {prova.turma || dadosProva.turma}</p>
-              <p><strong>Data:</strong> {prova.data || dadosProva.data}</p>
+              <p><strong>Data:</strong> {formatarData(prova.data || dadosProva.data)}</p>
             </div>
           </div>
 

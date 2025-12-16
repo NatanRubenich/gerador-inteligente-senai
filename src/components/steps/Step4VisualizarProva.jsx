@@ -55,6 +55,14 @@ export default function Step4VisualizarProva() {
     downloadMoodleXml(prova, termoCapacidade);
   };
 
+  // Formatar data para Dia/Mês/Ano
+  const formatarData = (dataStr) => {
+    if (!dataStr) return '';
+    if (dataStr.includes('/')) return dataStr; // Já está formatada
+    const [ano, mes, dia] = dataStr.split('-');
+    return `${dia}/${mes}/${ano}`;
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Controles - não aparecem na impressão */}
@@ -153,7 +161,7 @@ export default function Step4VisualizarProva() {
               <tr>
                 <td className="border border-black py-1 px-2">
                   <strong>Data:</strong>{' '}
-                  <span className="text-blue-600 italic">{prova.data}</span>
+                  <span className="text-blue-600 italic">{formatarData(prova.data)}</span>
                 </td>
               </tr>
               <tr>
@@ -327,7 +335,7 @@ export default function Step4VisualizarProva() {
               </tr>
               <tr>
                 <td className="border border-black p-2">
-                  <strong>Turma:</strong> <span className="text-blue-700">{prova.turma}</span> | <strong>Data:</strong> <span className="text-blue-700">{prova.data}</span>
+                  <strong>Turma:</strong> <span className="text-blue-700">{prova.turma}</span> | <strong>Data:</strong> <span className="text-blue-700">{formatarData(prova.data)}</span>
                 </td>
               </tr>
               <tr>
