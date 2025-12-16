@@ -63,7 +63,7 @@ Gere as questões no formato JSON.`;
 
   const handleGerarComIA = async () => {
     if (!apiConfigurada) {
-      setError('API não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
+      setError('API não configurada. Configure a variável VITE_GEMINI_API_KEY no GitHub Secrets');
       return;
     }
 
@@ -265,10 +265,10 @@ Gere as questões no formato JSON.`;
                 Para usar a geração automática, crie um arquivo <code className="bg-amber-100 px-1 rounded">.env</code> na raiz do projeto com:
               </p>
               <pre className="mt-2 bg-amber-100 p-2 rounded text-xs text-amber-900">
-                VITE_GROQ_API_KEY=sua_chave_aqui
+                VITE_GEMINI_API_KEY=sua_chave_aqui
               </pre>
               <p className="text-amber-600 text-xs mt-2">
-                Obtenha sua chave gratuita em: console.groq.com/keys
+                Obtenha sua chave gratuita em: aistudio.google.com/app/apikey
               </p>
             </div>
           )}

@@ -469,8 +469,8 @@ export default function Step3GerarPlano() {
         {!apiConfigured && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <p className="text-yellow-800 text-sm">
-              <strong>Atenção:</strong> A API Groq não está configurada. 
-              Configure a variável VITE_GROQ_API_KEY no arquivo .env para usar a geração com IA.
+              <strong>Atenção:</strong> A API Gemini não está configurada. 
+              Configure a variável VITE_GEMINI_API_KEY no GitHub Secrets para usar a geração com IA.
             </p>
           </div>
         )}
