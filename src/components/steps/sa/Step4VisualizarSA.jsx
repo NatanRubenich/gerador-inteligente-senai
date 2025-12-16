@@ -179,12 +179,12 @@ export default function Step4VisualizarSA() {
 
           {/* DESAFIO */}
           <div className="mt-4">
-            <div className="bg-amber-500 text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
               <AlertTriangle size={16} />
               DESAFIO
             </div>
-            <div className="border border-black border-t-0 p-3 bg-amber-50">
-              <p className="text-sm text-gray-800 text-justify leading-relaxed font-medium">
+            <div className="border border-black border-t-0 p-3">
+              <p className="text-sm text-gray-700 text-justify leading-relaxed">
                 {sa.desafio}
               </p>
             </div>
@@ -192,12 +192,12 @@ export default function Step4VisualizarSA() {
 
           {/* RESULTADO (Entrega Final) */}
           <div className="mt-4">
-            <div className="bg-green-600 text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
               <Award size={16} />
               RESULTADO (ENTREGA FINAL)
             </div>
-            <div className="border border-black border-t-0 p-3 bg-green-50">
-              <p className="text-sm text-gray-800 font-medium">
+            <div className="border border-black border-t-0 p-3">
+              <p className="text-sm text-gray-700 text-justify leading-relaxed">
                 {sa.resultado}
               </p>
             </div>
