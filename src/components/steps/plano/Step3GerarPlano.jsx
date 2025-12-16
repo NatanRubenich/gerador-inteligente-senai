@@ -59,7 +59,7 @@ export default function Step3GerarPlano() {
   const [instrumentosSelecionados, setInstrumentosSelecionados] = useState(['Exercícios teóricos e práticos', 'Avaliações objetivas', 'Avaliações práticas']);
   const [ferramentasSelecionadas, setFerramentasSelecionadas] = useState([]);
   const [ferramentaCustom, setFerramentaCustom] = useState('');
-  const [quantidadeModulos, setQuantidadeModulos] = useState(3);
+  const [quantidadeBlocos, setQuantidadeBlocos] = useState(null); // null = automático baseado na CH
   const [contextoAdicional, setContextoAdicional] = useState('');
 
   // Preparar capacidades para exibição
@@ -133,6 +133,9 @@ export default function Step3GerarPlano() {
     setError(null);
 
     try {
+      // Buscar conhecimentos da UC selecionada
+      const conhecimentosUC = ucSelecionada?.conhecimentos || [];
+      
       const plano = await gerarPlanoEnsino({
         curso: dadosProva.curso,
         unidadeCurricular: dadosProva.unidadeCurricular,
@@ -145,7 +148,8 @@ export default function Step3GerarPlano() {
         ferramentas: ferramentasSelecionadas,
         contextoAdicional,
         termoCapacidade,
-        quantidadeModulos
+        quantidadeBlocos,
+        conhecimentosUC
       });
 
       setPlanoEnsinoGerado({
@@ -270,21 +274,24 @@ export default function Step3GerarPlano() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantidade de Módulos (Planos de Aula)
+                Quantidade de Blocos de Aula
               </label>
               <select
-                value={quantidadeModulos}
-                onChange={(e) => setQuantidadeModulos(parseInt(e.target.value))}
+                value={quantidadeBlocos || ''}
+                onChange={(e) => setQuantidadeBlocos(e.target.value ? parseInt(e.target.value) : null)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
-                <option value={2}>2 Módulos</option>
-                <option value={3}>3 Módulos</option>
-                <option value={4}>4 Módulos</option>
-                <option value={5}>5 Módulos</option>
-                <option value={6}>6 Módulos</option>
+                <option value="">Automático (mínimo 20h por bloco)</option>
+                <option value={2}>2 Blocos</option>
+                <option value={3}>3 Blocos</option>
+                <option value={4}>4 Blocos</option>
+                <option value={5}>5 Blocos</option>
+                <option value={6}>6 Blocos</option>
+                <option value={8}>8 Blocos</option>
+                <option value={10}>10 Blocos</option>
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                Cada módulo é um bloco de aulas com capacidades específicas
+                Cada bloco tem no mínimo 20h de aula. Automático: {Math.max(1, Math.floor(cargaHoraria / 20))} blocos para {cargaHoraria}h
               </p>
             </div>
           </div>
@@ -477,10 +484,10 @@ export default function Step3GerarPlano() {
             <p className="text-green-700 font-medium">
               {planoEnsinoGerado.unidadeCurricular}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-sm">
               <div className="bg-white rounded px-2 py-1">
-                <span className="text-gray-500">Módulos gerados:</span>
-                <span className="ml-1 font-medium">{planoEnsinoGerado.planosAula?.length || 0}</span>
+                <span className="text-gray-500">Blocos de Aula:</span>
+                <span className="ml-1 font-medium">{planoEnsinoGerado.blocosAula?.length || 0}</span>
               </div>
               <div className="bg-white rounded px-2 py-1">
                 <span className="text-gray-500">Carga Horária:</span>
@@ -490,7 +497,17 @@ export default function Step3GerarPlano() {
                 <span className="text-gray-500">{termoCapacidade}s:</span>
                 <span className="ml-1 font-medium">{planoEnsinoGerado.capacidades?.length || 0}</span>
               </div>
+              <div className="bg-white rounded px-2 py-1">
+                <span className="text-gray-500">SA:</span>
+                <span className="ml-1 font-medium">{planoEnsinoGerado.situacaoAprendizagem ? '✓' : '—'}</span>
+              </div>
             </div>
+            {planoEnsinoGerado.situacaoAprendizagem && (
+              <div className="mt-2 p-2 bg-white rounded">
+                <span className="text-gray-500 text-xs">Situação de Aprendizagem:</span>
+                <p className="text-green-800 font-medium text-sm">{planoEnsinoGerado.situacaoAprendizagem.titulo}</p>
+              </div>
+            )}
           </div>
         )}
 

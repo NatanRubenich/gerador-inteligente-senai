@@ -92,9 +92,43 @@ export const ESTRATEGIAS_ENSINO = [
 ];
 
 /**
+ * Função auxiliar para formatar conhecimentos da matriz curricular em texto
+ */
+function formatarConhecimentos(conhecimentos, nivel = 0) {
+  if (!conhecimentos || conhecimentos.length === 0) return '';
+  
+  return conhecimentos.map(c => {
+    const indent = '  '.repeat(nivel);
+    let texto = `${indent}${c.codigo} ${c.titulo}`;
+    if (c.subitens && c.subitens.length > 0) {
+      texto += '\n' + formatarConhecimentos(c.subitens, nivel + 1);
+    }
+    return texto;
+  }).join('\n');
+}
+
+/**
+ * Função auxiliar para extrair lista plana de conhecimentos
+ */
+function extrairConhecimentosPlanos(conhecimentos, resultado = []) {
+  if (!conhecimentos) return resultado;
+  
+  conhecimentos.forEach(c => {
+    resultado.push({ codigo: c.codigo, titulo: c.titulo });
+    if (c.subitens && c.subitens.length > 0) {
+      extrairConhecimentosPlanos(c.subitens, resultado);
+    }
+  });
+  
+  return resultado;
+}
+
+/**
  * Gera um Plano de Ensino completo usando IA
  * Compatível com os campos do sistema SGN
- * Inclui Planos de Aula (Módulos) conforme estrutura do SGN
+ * Inclui Planos de Aula (Blocos) conforme estrutura do SGN
+ * Cada bloco tem no mínimo 20h de aula
+ * Os conhecimentos relacionados vêm da matriz curricular
  */
 export async function gerarPlanoEnsino({
   curso,
@@ -108,11 +142,17 @@ export async function gerarPlanoEnsino({
   ferramentas,
   contextoAdicional,
   termoCapacidade = 'Capacidade',
-  quantidadeModulos = 3
+  quantidadeBlocos = null,
+  conhecimentosUC = [] // Conhecimentos da matriz curricular
 }) {
   if (!API_KEY) {
     throw new Error('API Key não configurada. Configure VITE_GROQ_API_KEY no arquivo .env');
   }
+
+  // Calcular quantidade de blocos automaticamente (mínimo 20h por bloco)
+  const numBlocos = quantidadeBlocos || Math.max(1, Math.floor(cargaHoraria / 20));
+  const chPorBloco = Math.floor(cargaHoraria / numBlocos);
+  const numAulasPorBloco = Math.floor(chPorBloco / 4); // 4h por aula
 
   // Formatar capacidades para o prompt
   const capacidadesTexto = capacidades.map((cap, i) => 
@@ -125,12 +165,17 @@ export async function gerarPlanoEnsino({
   // Formatar instrumentos
   const instrumentosTexto = instrumentosAvaliacao.join(';\n');
 
-  // Calcular carga horária por módulo (aproximada)
-  const chPorModulo = Math.floor(cargaHoraria / quantidadeModulos);
+  // Formatar conhecimentos da matriz curricular
+  const conhecimentosTexto = conhecimentosUC.length > 0 
+    ? formatarConhecimentos(conhecimentosUC)
+    : 'Não especificados - gerar com base nas capacidades';
+
+  // Lista plana de conhecimentos para referência
+  const conhecimentosPlanos = extrairConhecimentosPlanos(conhecimentosUC);
 
   const prompt = `Você é um especialista em educação profissional do SENAI, seguindo a Metodologia SENAI de Educação Profissional (MSEP).
 
-Gere um PLANO DE ENSINO para preencher o sistema SGN do SENAI com os seguintes dados:
+Gere um PLANO DE ENSINO para preencher o sistema SGN do SENAI.
 
 DADOS DO CURSO:
 - Curso: ${curso}
@@ -139,8 +184,11 @@ DADOS DO CURSO:
 - Período: ${periodo}
 - Competência Geral do Curso: ${competenciaGeral}
 
-${termoCapacidade.toUpperCase()}S/HABILIDADES A DESENVOLVER (índice começa em 0):
+${termoCapacidade.toUpperCase()}S A DESENVOLVER (índice começa em 0):
 ${capacidadesTexto}
+
+CONHECIMENTOS DA MATRIZ CURRICULAR (USE ESTES EXATAMENTE):
+${conhecimentosTexto}
 
 AMBIENTES PEDAGÓGICOS DISPONÍVEIS:
 ${ambientesTexto}
@@ -148,63 +196,97 @@ ${ambientesTexto}
 FERRAMENTAS/SOFTWARES DISPONÍVEIS:
 ${ferramentas.join(', ')}
 
-INSTRUMENTOS DE AVALIAÇÃO A UTILIZAR:
+INSTRUMENTOS DE AVALIAÇÃO:
 ${instrumentosTexto}
 
 ${contextoAdicional ? `ORIENTAÇÕES ADICIONAIS DO DOCENTE: ${contextoAdicional}` : ''}
 
-Gere ${quantidadeModulos} PLANOS DE AULA (MÓDULOS) para dividir a UC.
-Carga horária aproximada por módulo: ${chPorModulo}h (pode variar conforme conteúdo).
+=== ESTRUTURA DO PLANO DE ENSINO ===
 
-ESTRUTURA DE CADA PLANO DE AULA (MÓDULO) - CONFORME SGN:
+1. INFORMAÇÕES GERAIS DO PLANO:
+   - Objetivo da UC (texto descritivo do objetivo geral)
+   - Número de capacidades básicas, técnicas e socioemocionais
 
-1. TÍTULO: Formato "MÓDULO X - [Tema principal do módulo]"
-   Exemplo: "MÓDULO 1 - Introdução à lógica e algoritmo com pseudocódigo em Portugol"
+2. PLANOS DE AULA (BLOCOS):
+   Gere ${numBlocos} BLOCOS DE AULA para dividir a UC.
+   REGRA: Cada bloco deve ter no MÍNIMO 20 horas (${numAulasPorBloco} aulas de 4h).
+   Carga horária por bloco: aproximadamente ${chPorBloco}h.
 
-2. C.H. PLANEJADA: Carga horária do módulo em horas (formato "XX:00")
+ESTRUTURA DE CADA BLOCO DE AULA:
 
-3. CAPACIDADES A SEREM TRABALHADAS: Índices das capacidades que serão desenvolvidas neste módulo
+1. TÍTULO DO BLOCO: Título descritivo do tema principal
+   Exemplo: "Fundamentos de Banco de Dados e Modelagem"
 
-4. CONHECIMENTOS RELACIONADOS: Lista de conhecimentos/conteúdos que serão abordados
+2. NÚMERO DE AULAS E CARGA HORÁRIA: 
+   Formato: "X aulas - XXh"
+   Exemplo: "5 aulas - 20 horas"
 
-5. ESTRATÉGIAS DE ENSINO: Escolha entre: Exposição Dialogada, Atividade Prática, Gamificação, Trabalho em Grupo, Dinâmica de Grupo, Visita Técnica, Workshop, Seminário, Sala de Aula Invertida, Design Thinking
+3. CAPACIDADES A SEREM TRABALHADAS: 
+   Índices das capacidades que serão desenvolvidas neste bloco
 
-6. CRITÉRIOS DE AVALIAÇÃO: Perguntas no formato "Verbo + complemento ?" para avaliar o aluno
-   Exemplo: "Aplicou lógica de programação para resolução dos problemas ?"
+4. CONHECIMENTOS RELACIONADOS:
+   IMPORTANTE: Use EXATAMENTE os conhecimentos da matriz curricular fornecida acima.
+   Distribua os conhecimentos entre os blocos de forma lógica.
+   Use o formato "código - título" (ex: "3.1.1 - Definições")
+   TODOS os conhecimentos da matriz devem ser contemplados em algum bloco.
 
-7. INSTRUMENTOS DE AVALIAÇÃO DA APRENDIZAGEM: Como será avaliado
-   Exemplo: "AV1-Avaliação objetiva múltipla escolha sobre Portugol"
-   Se não houver avaliação neste módulo, use: "Será avaliado no próximo bloco"
+5. ESTRATÉGIAS DE ENSINO E DESCRIÇÃO DAS ATIVIDADES:
+   Descrição DETALHADA de cada aula do bloco, incluindo:
+   - Número da aula e duração
+   - Estratégia utilizada (Exposição Dialogada, Atividade Prática, Gamificação, etc.)
+   - Descrição da atividade
+   - Atividades práticas ou entregas quando houver
+   
+   Exemplo:
+   "Aula 1 (4h): Apresentação da UC e introdução aos conceitos de banco de dados. Exposição dialogada sobre definições e tipos de SGBD.
+   Aula 2 (4h): Aula prática - Instalação e configuração do MySQL. Primeiros comandos DDL.
+   Aula 3-5 (12h): Modelagem conceitual - Criação de diagramas ER. Atividade prática em grupo."
 
-8. RECURSOS E AMBIENTES PEDAGÓGICOS: Recursos e ambientes utilizados
-   Exemplo: "Laboratório de informática; Projetor multimídia; VSCode; Git/GitHub"
+6. RECURSOS E AMBIENTES PEDAGÓGICOS:
+   Lista de recursos, ferramentas e ambientes utilizados
+
+7. CRITÉRIOS DE AVALIAÇÃO:
+   Perguntas no formato "Verbo + complemento ?" ou referência ao anexo
+   Exemplo: "Anexo ao formulário da Avaliação Prática 1"
+
+8. INSTRUMENTOS DE AVALIAÇÃO DA APRENDIZAGEM:
+   Instrumentos específicos do bloco
+   Exemplo: "Avaliação Prática 1: Modelagem de banco de dados"
+   Se não houver avaliação neste bloco: "Será avaliado no próximo bloco"
 
 REGRAS IMPORTANTES:
-- Divida as ${termoCapacidade}s de forma lógica entre os módulos
-- Cada ${termoCapacidade} deve aparecer em pelo menos um módulo
-- Os módulos devem ter progressão lógica de complexidade
-- O último módulo pode ser um "Projeto Final" integrando todas as capacidades
-- Os critérios de avaliação devem ser perguntas mensuráveis
+- Cada bloco deve ter NO MÍNIMO 20 horas
+- Divida as ${termoCapacidade}s de forma lógica entre os blocos
+- Cada ${termoCapacidade} deve aparecer em pelo menos um bloco
+- TODOS os conhecimentos da matriz curricular devem ser contemplados
+- Os blocos devem ter progressão lógica de complexidade
+- O último bloco pode ser "Finalização e Projeto Integrador"
+- As estratégias de ensino devem ser DETALHADAS aula por aula
+- A soma das cargas horárias deve ser ${cargaHoraria}h
 - Use as ferramentas fornecidas nos recursos pedagógicos
-- A soma das cargas horárias deve ser aproximadamente ${cargaHoraria}h
 
 Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a estrutura:
 {
+  "objetivoUC": "Texto descritivo do objetivo da UC",
+  "numCapacidadesBasicas": 0,
+  "numCapacidadesTecnicas": 0,
+  "numCapacidadesSocioemocionais": 3,
   "ambientesPedagogicos": "texto formatado para o campo do SGN",
   "outrosInstrumentos": "texto formatado para o campo do SGN",
   "referenciasBasicas": "texto formatado para o campo do SGN",
   "referenciasComplementares": "texto formatado para o campo do SGN",
-  "observacoes": "texto para observações ou string vazia",
-  "planosAula": [
+  "observacoes": "",
+  "blocosAula": [
     {
-      "titulo": "MÓDULO 1 - Título descritivo",
-      "cargaHoraria": "40:00",
+      "titulo": "Título descritivo do bloco",
+      "numAulas": 5,
+      "cargaHoraria": 20,
       "capacidadesIndices": [0, 1, 2],
-      "conhecimentosRelacionados": ["Conhecimento 1", "Conhecimento 2"],
-      "estrategiasEnsino": ["Exposição Dialogada", "Atividade Prática"],
-      "criteriosAvaliacao": "Pergunta 1 ?\\nPergunta 2 ?\\nPergunta 3 ?",
-      "instrumentosAvaliacao": "AV1-Descrição do instrumento",
-      "recursosPedagogicos": "Laboratório de informática; VSCode; Git/GitHub"
+      "conhecimentosRelacionados": ["3.1.1 - Definições", "3.1.2 - Tipos", "3.1.3 - Características"],
+      "estrategiasDetalhadas": "Aula 1 (4h): Descrição detalhada...\\nAula 2 (4h): Descrição...",
+      "recursosPedagogicos": "Laboratório de informática; MySQL; DBeaver",
+      "criteriosAvaliacao": "Anexo ao formulário da Avaliação Prática 1",
+      "instrumentosAvaliacao": "Avaliação Prática 1: Descrição do instrumento"
     }
   ]
 }`;
@@ -255,11 +337,11 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
 
     const planoEnsino = JSON.parse(jsonStr);
 
-    // Mapear índices de capacidades para os códigos reais nos Planos de Aula
-    if (planoEnsino.planosAula) {
-      planoEnsino.planosAula = planoEnsino.planosAula.map(modulo => ({
-        ...modulo,
-        capacidadesTrabalhadas: (modulo.capacidadesIndices || []).map(idx => 
+    // Mapear índices de capacidades para os códigos reais nos Blocos de Aula
+    if (planoEnsino.blocosAula) {
+      planoEnsino.blocosAula = planoEnsino.blocosAula.map(bloco => ({
+        ...bloco,
+        capacidadesTrabalhadas: (bloco.capacidadesIndices || []).map(idx => 
           capacidades[idx] ? { codigo: capacidades[idx].codigo, descricao: capacidades[idx].descricao } : null
         ).filter(Boolean)
       }));
@@ -274,6 +356,7 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
       cargaHoraria,
       periodo,
       competenciaGeral,
+      numBlocos,
       // Capacidades originais
       capacidades: capacidades.map((cap, i) => ({
         indice: i,

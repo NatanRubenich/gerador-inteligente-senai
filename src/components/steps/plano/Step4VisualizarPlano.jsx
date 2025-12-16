@@ -1,11 +1,25 @@
-import { useState } from 'react';
-import { ChevronLeft, RotateCcw, Target, FileText, Copy, Check, Building2, BookOpen, ClipboardList } from 'lucide-react';
-import { useProva } from '../../../context/ProvaContext';
+import { useState, useRef } from 'react';
+import { ChevronLeft, RotateCcw, Target, FileText, Copy, Check, BookOpen, ClipboardList, Printer, RefreshCw, Sparkles } from 'lucide-react';
+import { useProva, TIPO_AVALIACAO } from '../../../context/ProvaContext';
+import { gerarPlanoEnsino } from '../../../services/planoEnsinoService';
 
 export default function Step4VisualizarPlano() {
-  const { planoEnsinoGerado, prevStep, resetProva, termoCapacidade, dadosProva } = useProva();
+  const { 
+    planoEnsinoGerado, 
+    setPlanoEnsinoGerado,
+    prevStep, 
+    resetProva, 
+    termoCapacidade, 
+    dadosProva,
+    selectTipoAvaliacao,
+    goToStep,
+    setIsLoading,
+    isLoading
+  } = useProva();
   const [copiedField, setCopiedField] = useState(null);
-  const [abaAtiva, setAbaAtiva] = useState('campos'); // 'campos', 'modulos'
+  const [abaAtiva, setAbaAtiva] = useState('campos'); // 'campos', 'blocos'
+  const [regenerandoBlocos, setRegenerandoBlocos] = useState(false);
+  const printRef = useRef(null);
 
   if (!planoEnsinoGerado) {
     return (
@@ -24,6 +38,47 @@ export default function Step4VisualizarPlano() {
   }
 
   const plano = planoEnsinoGerado;
+
+  // Função para imprimir o plano
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Função para regenerar apenas os blocos de aula
+  const handleRegenerarBlocos = async () => {
+    if (regenerandoBlocos) return;
+    
+    setRegenerandoBlocos(true);
+    try {
+      const novoPlano = await gerarPlanoEnsino({
+        curso: plano.curso,
+        unidadeCurricular: plano.unidadeCurricular,
+        capacidades: dadosProva.capacidades,
+        cargaHoraria: plano.cargaHoraria,
+        periodo: plano.periodo,
+        competenciaGeral: plano.competenciaGeral,
+        ambientesPedagogicos: plano.configAmbientes,
+        instrumentosAvaliacao: plano.configInstrumentos,
+        ferramentas: plano.configFerramentas,
+        termoCapacidade,
+        quantidadeBlocos: plano.numBlocos
+      });
+      
+      setPlanoEnsinoGerado(novoPlano);
+    } catch (error) {
+      console.error('Erro ao regenerar blocos:', error);
+      alert('Erro ao regenerar blocos de aula. Tente novamente.');
+    } finally {
+      setRegenerandoBlocos(false);
+    }
+  };
+
+  // Função para navegar para gerar Situação de Aprendizagem
+  const handleGerarSA = () => {
+    // Muda para o tipo SA e vai para o step 3 (geração)
+    selectTipoAvaliacao(TIPO_AVALIACAO.SITUACAO_APRENDIZAGEM);
+    goToStep(3);
+  };
 
   // Função para copiar texto
   const copyToClipboard = async (text, fieldName) => {
@@ -86,7 +141,7 @@ export default function Step4VisualizarPlano() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Abas */}
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
@@ -99,15 +154,32 @@ export default function Step4VisualizarPlano() {
                 Campos SGN
               </button>
               <button
-                onClick={() => setAbaAtiva('modulos')}
+                onClick={() => setAbaAtiva('blocos')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  abaAtiva === 'modulos' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
+                  abaAtiva === 'blocos' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
                 <Target size={14} className="inline mr-1" />
-                Planos de Aula (Módulos)
+                Blocos de Aula
               </button>
             </div>
+
+            {/* Botões de ação */}
+            <button
+              onClick={handleGerarSA}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Sparkles size={18} />
+              Gerar SA
+            </button>
+
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Printer size={18} />
+              Imprimir
+            </button>
 
             <button
               onClick={resetProva}
@@ -213,28 +285,45 @@ export default function Step4VisualizarPlano() {
         </div>
       )}
 
-      {/* Aba: Planos de Aula (Módulos) */}
-      {abaAtiva === 'modulos' && (
+      
+      {/* Aba: Blocos de Aula */}
+      {abaAtiva === 'blocos' && (
         <div className="space-y-6">
-          {plano.planosAula?.map((modulo, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden">
-              {/* Cabeçalho do Módulo */}
+          {/* Botão para regenerar blocos */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleRegenerarBlocos}
+              disabled={regenerandoBlocos}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                regenerandoBlocos 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-orange-600 text-white hover:bg-orange-700'
+              }`}
+            >
+              <RefreshCw size={18} className={regenerandoBlocos ? 'animate-spin' : ''} />
+              {regenerandoBlocos ? 'Regenerando...' : 'Regenerar Blocos de Aula'}
+            </button>
+          </div>
+
+          {plano.blocosAula?.map((bloco, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden print-block">
+              {/* Cabeçalho do Bloco */}
               <div className="bg-purple-600 text-white p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-lg font-bold">
-                    {modulo.titulo}
+                    {bloco.titulo}
                   </h3>
                   <div className="flex items-center gap-3">
                     <span className="bg-purple-500 px-3 py-1 rounded text-sm">
-                      C.H.: {modulo.cargaHoraria}
+                      {bloco.numAulas} aulas - {bloco.cargaHoraria}h
                     </span>
                     <button
-                      onClick={() => copyToClipboard(modulo.titulo, `modulo_titulo_${i}`)}
+                      onClick={() => copyToClipboard(bloco.titulo, `bloco_titulo_${i}`)}
                       className={`px-3 py-1 rounded text-sm transition-colors ${
-                        copiedField === `modulo_titulo_${i}` ? 'bg-green-500' : 'bg-purple-500 hover:bg-purple-400'
+                        copiedField === `bloco_titulo_${i}` ? 'bg-green-500' : 'bg-purple-500 hover:bg-purple-400'
                       }`}
                     >
-                      {copiedField === `modulo_titulo_${i}` ? 'Copiado!' : 'Copiar Título'}
+                      {copiedField === `bloco_titulo_${i}` ? 'Copiado!' : 'Copiar Título'}
                     </button>
                   </div>
                 </div>
@@ -242,7 +331,7 @@ export default function Step4VisualizarPlano() {
 
               <div className="p-6 space-y-4">
                 {/* Capacidades a serem trabalhadas */}
-                {modulo.capacidadesTrabalhadas && modulo.capacidadesTrabalhadas.length > 0 && (
+                {bloco.capacidadesTrabalhadas && bloco.capacidadesTrabalhadas.length > 0 && (
                   <div className="p-3 bg-purple-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-purple-800 text-sm">
@@ -250,20 +339,22 @@ export default function Step4VisualizarPlano() {
                       </h4>
                       <button
                         onClick={() => copyToClipboard(
-                          modulo.capacidadesTrabalhadas.map(c => c.descricao).join('\n'), 
-                          `modulo_caps_${i}`
+                          bloco.capacidadesTrabalhadas.map(c => `${c.codigo} - ${c.descricao}`).join('\n'), 
+                          `bloco_caps_${i}`
                         )}
                         className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                          copiedField === `modulo_caps_${i}` ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                          copiedField === `bloco_caps_${i}` ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                         }`}
                       >
-                        {copiedField === `modulo_caps_${i}` ? <Check size={12} /> : <Copy size={12} />}
-                        {copiedField === `modulo_caps_${i}` ? 'Copiado!' : 'Copiar'}
+                        {copiedField === `bloco_caps_${i}` ? <Check size={12} /> : <Copy size={12} />}
+                        {copiedField === `bloco_caps_${i}` ? 'Copiado!' : 'Copiar'}
                       </button>
                     </div>
                     <ul className="text-sm space-y-1">
-                      {modulo.capacidadesTrabalhadas.map((cap, j) => (
-                        <li key={j} className="text-purple-700">• {cap.descricao}</li>
+                      {bloco.capacidadesTrabalhadas.map((cap, j) => (
+                        <li key={j} className="text-purple-700">
+                          <strong>{cap.codigo}</strong> - {cap.descricao}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -272,49 +363,49 @@ export default function Step4VisualizarPlano() {
                 {/* Conhecimentos Relacionados */}
                 <CopyableField
                   label="Conhecimentos Relacionados"
-                  value={modulo.conhecimentosRelacionados?.join('\n') || ''}
-                  fieldName={`modulo_conhecimentos_${i}`}
+                  value={bloco.conhecimentosRelacionados?.join('\n') || ''}
+                  fieldName={`bloco_conhecimentos_${i}`}
                   rows={4}
                 />
 
-                {/* Estratégias de Ensino */}
+                {/* Estratégias de Ensino e Descrição das Atividades */}
                 <CopyableField
-                  label="Estratégias de Ensino"
-                  value={modulo.estrategiasEnsino?.join('; ') || ''}
-                  fieldName={`modulo_estrategias_${i}`}
-                  rows={2}
-                />
-
-                {/* Critérios de Avaliação */}
-                <CopyableField
-                  label="Critérios de Avaliação (como vou avaliar)"
-                  value={modulo.criteriosAvaliacao || ''}
-                  fieldName={`modulo_criterios_${i}`}
-                  rows={5}
-                />
-
-                {/* Instrumentos de Avaliação */}
-                <CopyableField
-                  label="Instrumentos de Avaliação da Aprendizagem"
-                  value={modulo.instrumentosAvaliacao || ''}
-                  fieldName={`modulo_instrumentos_${i}`}
-                  rows={2}
+                  label="Estratégias de Ensino e Descrição das Atividades"
+                  value={bloco.estrategiasDetalhadas || ''}
+                  fieldName={`bloco_estrategias_${i}`}
+                  rows={10}
                 />
 
                 {/* Recursos e Ambientes Pedagógicos */}
                 <CopyableField
                   label="Recursos e Ambientes Pedagógicos"
-                  value={modulo.recursosPedagogicos || ''}
-                  fieldName={`modulo_recursos_${i}`}
+                  value={bloco.recursosPedagogicos || ''}
+                  fieldName={`bloco_recursos_${i}`}
                   rows={3}
+                />
+
+                {/* Critérios de Avaliação */}
+                <CopyableField
+                  label="Critérios de Avaliação (como vou avaliar)"
+                  value={bloco.criteriosAvaliacao || ''}
+                  fieldName={`bloco_criterios_${i}`}
+                  rows={3}
+                />
+
+                {/* Instrumentos de Avaliação */}
+                <CopyableField
+                  label="Instrumentos de Avaliação da Aprendizagem"
+                  value={bloco.instrumentosAvaliacao || ''}
+                  fieldName={`bloco_instrumentos_${i}`}
+                  rows={2}
                 />
               </div>
             </div>
           ))}
 
-          {(!plano.planosAula || plano.planosAula.length === 0) && (
+          {(!plano.blocosAula || plano.blocosAula.length === 0) && (
             <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-              <p className="text-gray-500">Nenhum Plano de Aula (Módulo) gerado.</p>
+              <p className="text-gray-500">Nenhum Bloco de Aula gerado.</p>
             </div>
           )}
         </div>
@@ -332,26 +423,35 @@ export default function Step4VisualizarPlano() {
             <li>Vá para a aba "Plano de Ensino"</li>
             <li>Clique em "Copiar" ao lado de cada campo acima</li>
             <li>Cole (Ctrl+V) no campo correspondente do SGN</li>
-            <li>Para os Planos de Aula, use a aba "Planos de Aula (Módulos)" e adicione cada módulo no SGN</li>
+            <li>Para os Blocos de Aula, use a aba "Blocos de Aula" e adicione cada bloco no SGN</li>
           </ol>
+          <p className="text-sm text-blue-600 mt-3 italic">
+            💡 Para gerar uma Situação de Aprendizagem, clique no botão "Gerar SA" acima.
+          </p>
         </div>
       )}
       
-      {/* Dica de uso para Módulos */}
-      {abaAtiva === 'modulos' && (
+      {/* Dica de uso para Blocos */}
+      {abaAtiva === 'blocos' && (
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 no-print">
           <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
             <BookOpen size={18} />
-            Como adicionar Planos de Aula no SGN
+            Como adicionar Blocos de Aula no SGN
           </h4>
           <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
             <li>No SGN, vá para a seção "Plano de Aulas"</li>
-            <li>Digite o título do módulo e clique em "Adicionar Plano de Aula"</li>
-            <li>Preencha a C.H. Planejada (formato XX:00)</li>
-            <li>Selecione as Capacidades a serem trabalhadas</li>
-            <li>Copie e cole os demais campos: Conhecimentos, Estratégias, Critérios, Instrumentos e Recursos</li>
-            <li>Repita para cada módulo</li>
+            <li>Digite o título do bloco e clique em "Adicionar Plano de Aula"</li>
+            <li>Preencha a C.H. Planejada (cada bloco tem no mínimo 20h)</li>
+            <li>Selecione as Capacidades a serem trabalhadas no bloco</li>
+            <li>Copie e cole os Conhecimentos Relacionados (da matriz curricular)</li>
+            <li>Copie e cole as Estratégias de Ensino (descrição detalhada de cada aula)</li>
+            <li>Copie e cole os Recursos e Ambientes Pedagógicos</li>
+            <li>Copie e cole os Critérios e Instrumentos de Avaliação</li>
+            <li>Repita para cada bloco de aula</li>
           </ol>
+          <p className="text-sm text-blue-600 mt-3 italic">
+            💡 Se os blocos não ficaram como esperado, clique em "Regenerar Blocos de Aula" para gerar uma nova sugestão.
+          </p>
         </div>
       )}
 
