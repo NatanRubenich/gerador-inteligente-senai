@@ -4,8 +4,61 @@
  * Baseado na Metodologia SENAI de Educação Profissional (MSEP)
  */
 
-const API_KEY = import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
-const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+import { GEMINI_API_KEY, GEMINI_API_URL, LLM_MODEL } from '../config/api';
+
+/**
+ * Faz chamada à API do Gemini
+ */
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 65536) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('API Key não configurada. Configure VITE_GEMINI_API_KEY no arquivo .env');
+  }
+
+  const url = `${GEMINI_API_URL}/${LLM_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            { text: `${systemPrompt}\n\n${userPrompt}` }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: maxTokens,
+        thinkingConfig: {
+          thinkingBudget: 0
+        }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Erro na API Gemini: ${response.status}`);
+  }
+
+  const data = await response.json();
+  
+  const finishReason = data.candidates?.[0]?.finishReason;
+  if (finishReason === 'MAX_TOKENS') {
+    throw new Error('Resposta truncada. Tente reduzir a complexidade.');
+  }
+  
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!content) {
+    throw new Error('Resposta vazia da API Gemini');
+  }
+
+  return content;
+}
 
 // Ambientes Pedagógicos comuns
 export const AMBIENTES_PEDAGOGICOS = [
@@ -145,10 +198,6 @@ export async function gerarPlanoEnsino({
   quantidadeBlocos = null,
   conhecimentosUC = [] // Conhecimentos da matriz curricular
 }) {
-  if (!API_KEY) {
-    throw new Error('API Key não configurada. Configure VITE_GROQ_API_KEY no arquivo .env');
-  }
-
   // Calcular quantidade de blocos automaticamente (mínimo 20h por bloco)
   const numBlocos = quantidadeBlocos || Math.max(1, Math.floor(cargaHoraria / 20));
   const chPorBloco = Math.floor(cargaHoraria / numBlocos);
@@ -292,48 +341,20 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
 }`;
 
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content: 'Você é um especialista em educação profissional do SENAI. Gere conteúdo para preencher o sistema SGN. Responda APENAS com JSON válido, sem markdown ou texto adicional.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 8000
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `Erro na API: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('Resposta vazia da API');
-    }
+    const systemPrompt = 'Você é um especialista em educação profissional do SENAI. Gere conteúdo para preencher o sistema SGN. Responda APENAS com JSON válido, sem markdown ou texto adicional.';
+    
+    const content = await callGeminiAPI(systemPrompt, prompt);
 
     // Limpar e parsear JSON
     let jsonStr = content.trim();
-    
-    // Remover markdown se presente
-    if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```\n?$/g, '');
-    }
+    jsonStr = jsonStr.replace(/^```json\s*/i, '');
+    jsonStr = jsonStr.replace(/^```\s*/i, '');
+    jsonStr = jsonStr.replace(/\s*```$/i, '');
+    jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, (char) => {
+      if (char === '\n' || char === '\r' || char === '\t') return char;
+      return '';
+    });
+    jsonStr = jsonStr.trim();
 
     const planoEnsino = JSON.parse(jsonStr);
 

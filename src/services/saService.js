@@ -1,25 +1,71 @@
 /**
  * Serviço para geração de Situação de Aprendizagem (SA)
  * Baseado no Guia Prático SENAI - Etapas para elaboração do Plano de Ensino e SA
- * Utiliza a API Groq para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
+ * Utiliza a API Gemini para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
  */
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-
-/**
- * Obtém a API key do ambiente
- */
-const getApiKey = () => {
-  return import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY || '';
-};
+import { GEMINI_API_KEY, GEMINI_API_URL, LLM_MODEL } from '../config/api';
 
 /**
  * Verifica se a API está configurada
  */
 export const isApiConfigured = () => {
-  const apiKey = getApiKey();
-  return apiKey && apiKey.length > 0 && apiKey !== 'sua_chave_aqui';
+  return GEMINI_API_KEY && GEMINI_API_KEY.length > 0 && GEMINI_API_KEY !== 'sua_chave_aqui';
 };
+
+/**
+ * Faz chamada à API do Gemini
+ */
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 65536) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('API Key não configurada. Configure a variável VITE_GEMINI_API_KEY no arquivo .env');
+  }
+
+  const url = `${GEMINI_API_URL}/${LLM_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            { text: `${systemPrompt}\n\n${userPrompt}` }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: maxTokens,
+        thinkingConfig: {
+          thinkingBudget: 0
+        }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Erro na API Gemini: ${response.status}`);
+  }
+
+  const data = await response.json();
+  
+  const finishReason = data.candidates?.[0]?.finishReason;
+  if (finishReason === 'MAX_TOKENS') {
+    throw new Error('Resposta truncada. Tente reduzir a complexidade.');
+  }
+  
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!content) {
+    throw new Error('Resposta vazia da API Gemini');
+  }
+
+  return content;
+}
 
 /**
  * Estratégias pedagógicas disponíveis conforme MSEP
@@ -71,12 +117,6 @@ export async function gerarSituacaoAprendizagem({
   nivelDificuldade = 'intermediario',
   tipoRubrica = 'gradual'
 }) {
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    throw new Error('API Key não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
-  }
-
   // Formatar capacidades numeradas
   const capacidadesTexto = capacidades
     .map((cap, idx) => `C${idx + 1} - ${cap.codigo}: ${cap.descricao}`)
@@ -228,48 +268,17 @@ IMPORTANTE:
 - Os critérios devem ser em formato de pergunta no pretérito`;
 
   try {
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 6000,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `Erro na API: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('Resposta vazia da API');
-    }
+    const content = await callGeminiAPI(systemPrompt, userPrompt);
 
     // Limpar e parsear JSON
     let jsonContent = content.trim();
-    
-    // Remover possíveis marcadores de código
-    if (jsonContent.startsWith('```json')) {
-      jsonContent = jsonContent.slice(7);
-    }
-    if (jsonContent.startsWith('```')) {
-      jsonContent = jsonContent.slice(3);
-    }
-    if (jsonContent.endsWith('```')) {
-      jsonContent = jsonContent.slice(0, -3);
-    }
+    jsonContent = jsonContent.replace(/^```json\s*/i, '');
+    jsonContent = jsonContent.replace(/^```\s*/i, '');
+    jsonContent = jsonContent.replace(/\s*```$/i, '');
+    jsonContent = jsonContent.replace(/[\x00-\x1F\x7F]/g, (char) => {
+      if (char === '\n' || char === '\r' || char === '\t') return char;
+      return '';
+    });
     jsonContent = jsonContent.trim();
 
     const sa = JSON.parse(jsonContent);

@@ -1,34 +1,90 @@
-// Serviço de integração com LLM (Groq API - gratuita)
-// Documentação: https://console.groq.com/docs/quickstart
+// Serviço de integração com LLM (Google Gemini API)
+// Documentação: https://ai.google.dev/gemini-api/docs
 
-import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
+import { GEMINI_API_KEY, GEMINI_API_URL, LLM_MODEL } from '../config/api';
 import { getContextoRAG, buscarConhecimentoRAG } from './ragService';
 
 /**
  * Obtém a API Key configurada
  */
 export function getApiKey() {
-  return GROQ_API_KEY;
+  return GEMINI_API_KEY;
 }
 
 /**
  * Verifica se a API está configurada
  */
 export function isApiConfigured() {
-  return Boolean(GROQ_API_KEY && GROQ_API_KEY.length > 10);
+  return Boolean(GEMINI_API_KEY && GEMINI_API_KEY.length > 10);
 }
 
 /**
- * Gera questões usando a API do Groq com RAG integrado
+ * Faz chamada à API do Gemini
+ * @param {string} systemPrompt - Prompt do sistema
+ * @param {string} userPrompt - Prompt do usuário
+ * @param {number} maxTokens - Máximo de tokens na resposta
+ * @returns {Promise<string>} - Conteúdo da resposta
+ */
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 65536) {
+  const apiKey = GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('API Key não configurada. Configure a variável VITE_GEMINI_API_KEY no arquivo .env');
+  }
+
+  const url = `${GEMINI_API_URL}/${LLM_MODEL}:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            { text: `${systemPrompt}\n\n${userPrompt}` }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: maxTokens,
+        thinkingConfig: {
+          thinkingBudget: 0
+        }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || `Erro na API Gemini: ${response.status}`);
+  }
+
+  const data = await response.json();
+  
+  // Verificar se a resposta foi truncada
+  const finishReason = data.candidates?.[0]?.finishReason;
+  if (finishReason === 'MAX_TOKENS') {
+    throw new Error('Resposta truncada. Tente gerar menos questões.');
+  }
+  
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!content) {
+    throw new Error('Resposta vazia da API Gemini');
+  }
+
+  return content;
+}
+
+/**
+ * Gera questões usando a API do Gemini com RAG integrado
  * @param {object} dadosProva - Dados da prova
  * @returns {Promise<object>} - JSON com as questões geradas
  */
 export async function gerarQuestoes(dadosProva) {
-  const apiKey = GROQ_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error('API Key não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
-  }
 
   // Buscar contexto do RAG baseado na UC e assunto
   const contextoRAG = buscarConhecimentoRAG(
@@ -147,48 +203,25 @@ IMPORTANTE:
 - Questões Difíceis: análise, síntese, avaliação crítica, problemas complexos`;
 
   try {
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: LLM_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 8000
-      })
-    });
+    const content = await callGeminiAPI(systemPrompt, userPrompt);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Erro ao chamar a API do Groq');
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    // Limpar possíveis marcadores de código markdown
+    // Limpar possíveis marcadores de código markdown e caracteres inválidos
     let jsonString = content.trim();
-    if (jsonString.startsWith('```json')) {
-      jsonString = jsonString.slice(7);
-    }
-    if (jsonString.startsWith('```')) {
-      jsonString = jsonString.slice(3);
-    }
-    if (jsonString.endsWith('```')) {
-      jsonString = jsonString.slice(0, -3);
-    }
+    
+    // Remover marcadores markdown
+    jsonString = jsonString.replace(/^```json\s*/i, '');
+    jsonString = jsonString.replace(/^```\s*/i, '');
+    jsonString = jsonString.replace(/\s*```$/i, '');
+    
+    // Remover caracteres de controle que podem quebrar o JSON
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, (char) => {
+      if (char === '\n' || char === '\r' || char === '\t') return char;
+      return '';
+    });
+    
+    jsonString = jsonString.trim();
 
-    return JSON.parse(jsonString.trim());
+    return JSON.parse(jsonString);
   } catch (error) {
     console.error('Erro ao gerar questões:', error);
     throw error;
@@ -197,7 +230,7 @@ IMPORTANTE:
 
 /**
  * Sugere questões baseadas no contexto do RAG
- * @param {string} apiKey - Chave da API do Groq
+ * @param {string} apiKey - Chave da API (mantido para compatibilidade)
  * @param {object} dadosContexto - Dados do contexto
  * @returns {Promise<array>} - Array com sugestões de questões
  */
@@ -225,41 +258,16 @@ Retorne um JSON com a estrutura:
 }`;
 
   try {
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: LLM_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.8,
-        max_tokens: 2000
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Erro ao chamar a API do Groq');
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
+    const content = await callGeminiAPI(systemPrompt, userPrompt);
 
     let jsonString = content.trim();
-    if (jsonString.startsWith('```json')) {
-      jsonString = jsonString.slice(7);
-    }
-    if (jsonString.startsWith('```')) {
-      jsonString = jsonString.slice(3);
-    }
-    if (jsonString.endsWith('```')) {
-      jsonString = jsonString.slice(0, -3);
-    }
+    jsonString = jsonString.replace(/^```json\s*/i, '');
+    jsonString = jsonString.replace(/^```\s*/i, '');
+    jsonString = jsonString.replace(/\s*```$/i, '');
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, (char) => {
+      if (char === '\n' || char === '\r' || char === '\t') return char;
+      return '';
+    });
 
     const result = JSON.parse(jsonString.trim());
     return result.sugestoes || [];
@@ -270,17 +278,11 @@ Retorne um JSON com a estrutura:
 }
 
 /**
- * Gera avaliação prática usando a API do Groq com RAG integrado
+ * Gera avaliação prática usando a API do Gemini com RAG integrado
  * @param {object} dadosProva - Dados da prova
  * @returns {Promise<object>} - JSON com a avaliação prática gerada
  */
 export async function gerarAvaliacaoPratica(dadosProva) {
-  const apiKey = GROQ_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error('API Key não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
-  }
-
   // Buscar contexto do RAG
   const contextoRAG = buscarConhecimentoRAG(
     dadosProva.unidadeCurricular, 
@@ -429,46 +431,16 @@ IMPORTANTE:
 - A contextualização deve parecer uma situação REAL de trabalho, não genérica`;
 
   try {
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: LLM_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 8000
-      })
-    });
+    const content = await callGeminiAPI(systemPrompt, userPrompt);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Erro ao chamar a API do Groq');
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('Resposta vazia da API');
-    }
-
-    // Limpar possíveis marcadores de código markdown
     let jsonString = content.trim();
-    if (jsonString.startsWith('```json')) {
-      jsonString = jsonString.slice(7);
-    }
-    if (jsonString.startsWith('```')) {
-      jsonString = jsonString.slice(3);
-    }
-    if (jsonString.endsWith('```')) {
-      jsonString = jsonString.slice(0, -3);
-    }
+    jsonString = jsonString.replace(/^```json\s*/i, '');
+    jsonString = jsonString.replace(/^```\s*/i, '');
+    jsonString = jsonString.replace(/\s*```$/i, '');
+    jsonString = jsonString.replace(/[\x00-\x1F\x7F]/g, (char) => {
+      if (char === '\n' || char === '\r' || char === '\t') return char;
+      return '';
+    });
 
     const result = JSON.parse(jsonString.trim());
     return result.avaliacao_pratica;
