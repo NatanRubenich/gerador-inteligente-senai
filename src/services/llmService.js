@@ -1,8 +1,23 @@
 // Serviço de integração com LLM (Groq API - Llama 3.3 70B)
 // Documentação: https://console.groq.com/docs/quickstart
+// v1.2.0 - Integração com RAG aprimorado
 
 import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
-import { getContextoRAG, buscarConhecimentoRAG } from './ragService';
+import { 
+  getContextoRAG, 
+  buscarConhecimentoRAG, 
+  gerarContextoRAGCompleto,
+  getRAGStats,
+  initializeRAGIndex
+} from './ragService';
+
+// Inicializar índice RAG ao carregar o serviço
+try {
+  initializeRAGIndex();
+  console.log('[LLM Service] RAG inicializado:', getRAGStats());
+} catch (e) {
+  console.warn('[LLM Service] Erro ao inicializar RAG:', e);
+}
 
 /**
  * Limpa e corrige JSON malformado retornado pela API
@@ -189,12 +204,16 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
  */
 export async function gerarQuestoes(dadosProva) {
 
-  // Buscar contexto do RAG baseado na UC e assunto
-  const contextoRAG = buscarConhecimentoRAG(
-    dadosProva.unidadeCurricular, 
-    dadosProva.assunto,
-    dadosProva.capacidades
-  );
+  // Buscar contexto do RAG aprimorado (v1.2.0)
+  const contextoRAG = gerarContextoRAGCompleto({
+    curso: dadosProva.curso,
+    unidadeCurricular: dadosProva.unidadeCurricular,
+    capacidades: dadosProva.capacidades,
+    tipoConteudo: 'questoes',
+    assunto: dadosProva.assunto
+  });
+  
+  console.log('[RAG] Contexto gerado para questões:', contextoRAG.length, 'caracteres');
   const { 
     turma, 
     professor, 

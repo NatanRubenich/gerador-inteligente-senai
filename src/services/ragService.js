@@ -1,8 +1,195 @@
 // Serviço RAG (Retrieval-Augmented Generation) - Especialista SENAI
 // Base de conhecimento da metodologia SENAI para elaboração de avaliações
+// v1.2.0 - Implementação com busca textual e base de conhecimento estruturada
+
+import matrizesData from '../data/knowledge-base/matrizes-curriculares.json';
+import metodologiaData from '../data/knowledge-base/metodologia-senai.json';
 
 /**
- * Base de conhecimento da metodologia SENAI
+ * Índice de busca textual para RAG
+ * Implementação de TF-IDF simplificado para busca por relevância
+ */
+class RAGSearchIndex {
+  constructor() {
+    this.documents = [];
+    this.invertedIndex = {};
+  }
+
+  // Tokenizar texto em palavras
+  tokenize(text) {
+    if (!text) return [];
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2);
+  }
+
+  // Adicionar documento ao índice
+  addDocument(id, content, metadata = {}) {
+    const tokens = this.tokenize(content);
+    const doc = { id, content, metadata, tokens };
+    this.documents.push(doc);
+
+    // Construir índice invertido
+    tokens.forEach(token => {
+      if (!this.invertedIndex[token]) {
+        this.invertedIndex[token] = [];
+      }
+      if (!this.invertedIndex[token].includes(id)) {
+        this.invertedIndex[token].push(id);
+      }
+    });
+  }
+
+  // Buscar documentos relevantes
+  search(query, maxResults = 5) {
+    const queryTokens = this.tokenize(query);
+    const scores = {};
+
+    // Calcular score de relevância (TF-IDF simplificado)
+    queryTokens.forEach(token => {
+      const matchingDocs = this.invertedIndex[token] || [];
+      const idf = Math.log(this.documents.length / (matchingDocs.length + 1));
+
+      matchingDocs.forEach(docId => {
+        if (!scores[docId]) scores[docId] = 0;
+        const doc = this.documents.find(d => d.id === docId);
+        const tf = doc.tokens.filter(t => t === token).length / doc.tokens.length;
+        scores[docId] += tf * idf;
+      });
+    });
+
+    // Ordenar por relevância e retornar top resultados
+    return Object.entries(scores)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, maxResults)
+      .map(([docId, score]) => ({
+        ...this.documents.find(d => d.id === docId),
+        score
+      }));
+  }
+}
+
+// Instância global do índice RAG
+const ragIndex = new RAGSearchIndex();
+let indexInitialized = false;
+
+/**
+ * Inicializar índice RAG com a base de conhecimento
+ */
+export function initializeRAGIndex() {
+  if (indexInitialized) return;
+
+  // Indexar matrizes curriculares
+  matrizesData.cursos.forEach(curso => {
+    // Indexar curso
+    ragIndex.addDocument(
+      `curso-${curso.id}`,
+      `${curso.nome} ${curso.perfilProfissional} ${curso.competenciaGeral}`,
+      { type: 'curso', curso: curso.nome }
+    );
+
+    // Indexar unidades curriculares
+    curso.unidadesCurriculares.forEach(uc => {
+      const capacidadesText = uc.capacidadesTecnicas?.map(c => `${c.codigo} ${c.descricao}`).join(' ') || '';
+      
+      // Processar conhecimentos (podem ser strings simples ou objetos hierárquicos)
+      let conhecimentosText = '';
+      if (uc.conhecimentos) {
+        conhecimentosText = uc.conhecimentos.map(c => {
+          if (typeof c === 'string') return c;
+          if (typeof c === 'object' && c.topico) {
+            return `${c.topico} ${c.subtopicos?.join(' ') || ''}`;
+          }
+          return '';
+        }).join(' ');
+      }
+      
+      // Adicionar conhecimentos resumidos se existirem
+      if (uc.conhecimentosResumidos) {
+        conhecimentosText += ' ' + uc.conhecimentosResumidos.join(' ');
+      }
+      
+      ragIndex.addDocument(
+        `uc-${curso.id}-${uc.nome.replace(/\s+/g, '-').toLowerCase()}`,
+        `${uc.nome} ${uc.objetivo} ${capacidadesText} ${conhecimentosText}`,
+        { type: 'unidadeCurricular', curso: curso.nome, uc: uc.nome, cargaHoraria: uc.cargaHoraria }
+      );
+
+      // Indexar capacidades individualmente
+      uc.capacidadesTecnicas?.forEach(cap => {
+        ragIndex.addDocument(
+          `cap-${curso.id}-${uc.nome}-${cap.codigo}`,
+          `${cap.codigo} ${cap.descricao}`,
+          { type: 'capacidade', curso: curso.nome, uc: uc.nome, codigo: cap.codigo }
+        );
+      });
+
+      // Indexar conhecimentos hierárquicos individualmente (para Plano de Ensino)
+      if (uc.conhecimentos && Array.isArray(uc.conhecimentos)) {
+        uc.conhecimentos.forEach((conhecimento, idx) => {
+          if (typeof conhecimento === 'object' && conhecimento.topico) {
+            ragIndex.addDocument(
+              `conhecimento-${curso.id}-${uc.nome}-${idx}`,
+              `${conhecimento.topico} ${conhecimento.subtopicos?.join(' ') || ''}`,
+              { 
+                type: 'conhecimento', 
+                curso: curso.nome, 
+                uc: uc.nome, 
+                topico: conhecimento.topico,
+                subtopicos: conhecimento.subtopicos 
+              }
+            );
+          }
+        });
+      }
+    });
+  });
+
+  // Indexar metodologia SENAI
+  const metodologia = metodologiaData.metodologia;
+  
+  // Indexar SA
+  ragIndex.addDocument(
+    'metodologia-sa',
+    `${metodologia.situacaoAprendizagem.definicao} ${JSON.stringify(metodologia.situacaoAprendizagem.estrutura)} ${metodologia.situacaoAprendizagem.caracteristicas.join(' ')}`,
+    { type: 'metodologia', tema: 'Situação de Aprendizagem' }
+  );
+
+  // Indexar avaliação prática
+  ragIndex.addDocument(
+    'metodologia-avaliacao-pratica',
+    `${metodologia.avaliacaoPratica.definicao} ${JSON.stringify(metodologia.avaliacaoPratica.estrutura)}`,
+    { type: 'metodologia', tema: 'Avaliação Prática' }
+  );
+
+  // Indexar taxonomia de Bloom
+  metodologia.taxonomiaBloom.niveis.forEach(nivel => {
+    ragIndex.addDocument(
+      `bloom-${nivel.nome.toLowerCase()}`,
+      `${nivel.nome} ${nivel.descricao} ${nivel.verbos.join(' ')}`,
+      { type: 'taxonomia', nivel: nivel.nivel, nome: nivel.nome }
+    );
+  });
+
+  // Indexar estratégias pedagógicas
+  metodologia.estrategiasPedagogicas.forEach(estrategia => {
+    ragIndex.addDocument(
+      `estrategia-${estrategia.nome.toLowerCase()}`,
+      `${estrategia.nome} ${estrategia.descricao} ${estrategia.quando_usar}`,
+      { type: 'estrategia', nome: estrategia.nome }
+    );
+  });
+
+  indexInitialized = true;
+  console.log(`[RAG] Índice inicializado com ${ragIndex.documents.length} documentos`);
+}
+
+/**
+ * Base de conhecimento da metodologia SENAI (legado - mantido para compatibilidade)
  * Extraído do Guia Prático SENAI e metodologia SAEP
  */
 const baseConhecimento = {
@@ -367,9 +554,346 @@ export function getContextoRAG(unidadeCurricular, assunto) {
   return buscarConhecimentoRAG(unidadeCurricular, assunto, []);
 }
 
+// ============================================
+// NOVAS FUNÇÕES RAG v1.2.0
+// ============================================
+
+/**
+ * Busca avançada no RAG usando índice TF-IDF
+ * @param {string} query - Consulta de busca
+ * @param {object} options - Opções de busca
+ * @returns {object} - Resultados da busca com contexto
+ */
+export function searchRAG(query, options = {}) {
+  initializeRAGIndex();
+  
+  const { maxResults = 5, types = null } = options;
+  let results = ragIndex.search(query, maxResults * 2);
+  
+  // Filtrar por tipo se especificado
+  if (types && Array.isArray(types)) {
+    results = results.filter(r => types.includes(r.metadata?.type));
+  }
+  
+  return results.slice(0, maxResults);
+}
+
+/**
+ * Buscar informações de curso específico
+ * @param {string} cursoNome - Nome do curso
+ * @returns {object|null} - Dados do curso
+ */
+export function getCursoInfo(cursoNome) {
+  initializeRAGIndex();
+  
+  const cursoLower = cursoNome.toLowerCase();
+  return matrizesData.cursos.find(c => 
+    c.nome.toLowerCase().includes(cursoLower) ||
+    c.id.toLowerCase().includes(cursoLower.replace(/\s+/g, '-'))
+  );
+}
+
+/**
+ * Buscar informações de UC específica
+ * @param {string} cursoNome - Nome do curso
+ * @param {string} ucNome - Nome da UC
+ * @returns {object|null} - Dados da UC
+ */
+export function getUCInfo(cursoNome, ucNome) {
+  const curso = getCursoInfo(cursoNome);
+  if (!curso) return null;
+  
+  const ucLower = ucNome.toLowerCase();
+  return curso.unidadesCurriculares.find(uc => 
+    uc.nome.toLowerCase().includes(ucLower)
+  );
+}
+
+/**
+ * Obter conhecimentos detalhados de uma UC para Plano de Ensino
+ * @param {string} cursoNome - Nome do curso
+ * @param {string} ucNome - Nome da UC
+ * @returns {object} - Conhecimentos formatados para blocos de aula
+ */
+export function getConhecimentosUC(cursoNome, ucNome) {
+  const uc = getUCInfo(cursoNome, ucNome);
+  if (!uc) return null;
+  
+  const resultado = {
+    uc: uc.nome,
+    cargaHoraria: uc.cargaHoraria,
+    objetivo: uc.objetivo,
+    conhecimentos: [],
+    conhecimentosTexto: ''
+  };
+  
+  if (uc.conhecimentos) {
+    resultado.conhecimentos = uc.conhecimentos.map(c => {
+      if (typeof c === 'string') {
+        return { topico: c, subtopicos: [] };
+      }
+      return c;
+    });
+    
+    // Formatar texto para prompt
+    resultado.conhecimentosTexto = resultado.conhecimentos.map(c => {
+      if (c.subtopicos && c.subtopicos.length > 0) {
+        return `${c.topico}\n  ${c.subtopicos.join('\n  ')}`;
+      }
+      return c.topico || c;
+    }).join('\n');
+  }
+  
+  if (uc.conhecimentosResumidos) {
+    resultado.conhecimentosResumidos = uc.conhecimentosResumidos;
+  }
+  
+  return resultado;
+}
+
+/**
+ * Gerar contexto RAG específico para Plano de Ensino
+ * @param {object} params - Parâmetros
+ * @returns {string} - Contexto formatado para geração de Plano de Ensino
+ */
+export function gerarContextoPlanoEnsino(params) {
+  initializeRAGIndex();
+  
+  const { curso, unidadeCurricular, capacidades } = params;
+  let contexto = '';
+  
+  // 1. Informações do curso
+  const cursoInfo = getCursoInfo(curso);
+  if (cursoInfo) {
+    contexto += `=== CURSO ===\n`;
+    contexto += `Nome: ${cursoInfo.nome}\n`;
+    contexto += `Competência Geral: ${cursoInfo.competenciaGeral}\n\n`;
+  }
+  
+  // 2. Conhecimentos detalhados da UC
+  const conhecimentosUC = getConhecimentosUC(curso, unidadeCurricular);
+  if (conhecimentosUC) {
+    contexto += `=== UNIDADE CURRICULAR ===\n`;
+    contexto += `UC: ${conhecimentosUC.uc}\n`;
+    contexto += `Carga Horária: ${conhecimentosUC.cargaHoraria}h\n`;
+    contexto += `Objetivo: ${conhecimentosUC.objetivo}\n\n`;
+    
+    contexto += `=== CONHECIMENTOS DA MATRIZ CURRICULAR ===\n`;
+    contexto += `Os blocos de aula devem ser baseados nos seguintes conhecimentos:\n\n`;
+    contexto += conhecimentosUC.conhecimentosTexto;
+    contexto += '\n\n';
+    
+    if (conhecimentosUC.conhecimentosResumidos) {
+      contexto += `=== RESUMO DOS CONHECIMENTOS ===\n`;
+      conhecimentosUC.conhecimentosResumidos.forEach(c => {
+        contexto += `- ${c}\n`;
+      });
+      contexto += '\n';
+    }
+  }
+  
+  // 3. Capacidades selecionadas
+  if (capacidades && capacidades.length > 0) {
+    contexto += `=== CAPACIDADES A DESENVOLVER ===\n`;
+    capacidades.forEach(cap => {
+      contexto += `- ${cap.codigo}: ${cap.descricao}\n`;
+    });
+    contexto += '\n';
+  }
+  
+  // 4. Metodologia de Plano de Ensino
+  const planoEnsino = metodologiaData.metodologia.planoEnsino;
+  if (planoEnsino) {
+    contexto += `=== METODOLOGIA SENAI - PLANO DE ENSINO ===\n`;
+    contexto += `${planoEnsino.definicao}\n\n`;
+    contexto += `Elementos do Plano de Ensino:\n`;
+    planoEnsino.elementos.forEach(el => {
+      contexto += `- ${el.elemento}: ${el.descricao}\n`;
+    });
+  }
+  
+  return contexto;
+}
+
+/**
+ * Obter metodologia SENAI para SA
+ * @returns {object} - Dados da metodologia de SA
+ */
+export function getMetodologiaSA() {
+  return metodologiaData.metodologia.situacaoAprendizagem;
+}
+
+/**
+ * Obter metodologia SENAI para Avaliação Prática
+ * @returns {object} - Dados da metodologia de avaliação prática
+ */
+export function getMetodologiaAvaliacaoPratica() {
+  return metodologiaData.metodologia.avaliacaoPratica;
+}
+
+/**
+ * Obter taxonomia de Bloom
+ * @param {string} nivel - Nome do nível (opcional)
+ * @returns {object|array} - Dados da taxonomia
+ */
+export function getTaxonomiaBloom(nivel = null) {
+  const taxonomia = metodologiaData.metodologia.taxonomiaBloom;
+  if (nivel) {
+    return taxonomia.niveis.find(n => 
+      n.nome.toLowerCase() === nivel.toLowerCase()
+    );
+  }
+  return taxonomia;
+}
+
+/**
+ * Obter estratégias pedagógicas
+ * @param {string} nome - Nome da estratégia (opcional)
+ * @returns {object|array} - Dados das estratégias
+ */
+export function getEstrategiasPedagogicas(nome = null) {
+  const estrategias = metodologiaData.metodologia.estrategiasPedagogicas;
+  if (nome) {
+    return estrategias.find(e => 
+      e.nome.toLowerCase() === nome.toLowerCase()
+    );
+  }
+  return estrategias;
+}
+
+/**
+ * Gerar contexto RAG completo para geração de conteúdo
+ * @param {object} params - Parâmetros da busca
+ * @returns {string} - Contexto formatado para LLM
+ */
+export function gerarContextoRAGCompleto(params) {
+  initializeRAGIndex();
+  
+  const { curso, unidadeCurricular, capacidades, tipoConteudo, assunto } = params;
+  let contexto = '';
+  
+  // 1. Buscar informações do curso e UC
+  const cursoInfo = getCursoInfo(curso);
+  const ucInfo = cursoInfo ? getUCInfo(curso, unidadeCurricular) : null;
+  
+  if (cursoInfo) {
+    contexto += `\n=== INFORMAÇÕES DO CURSO ===\n`;
+    contexto += `Curso: ${cursoInfo.nome}\n`;
+    contexto += `Perfil Profissional: ${cursoInfo.perfilProfissional}\n`;
+    contexto += `Competência Geral: ${cursoInfo.competenciaGeral}\n`;
+  }
+  
+  if (ucInfo) {
+    contexto += `\n=== UNIDADE CURRICULAR ===\n`;
+    contexto += `UC: ${ucInfo.nome}\n`;
+    contexto += `Carga Horária: ${ucInfo.cargaHoraria}h\n`;
+    contexto += `Objetivo: ${ucInfo.objetivo}\n`;
+    
+    if (ucInfo.capacidadesTecnicas) {
+      contexto += `\nCapacidades Técnicas:\n`;
+      ucInfo.capacidadesTecnicas.forEach(cap => {
+        contexto += `- ${cap.codigo}: ${cap.descricao}\n`;
+      });
+    }
+    
+    if (ucInfo.conhecimentos) {
+      contexto += `\nConhecimentos:\n`;
+      ucInfo.conhecimentos.forEach(c => {
+        contexto += `- ${c}\n`;
+      });
+    }
+  }
+  
+  // 2. Buscar metodologia relevante
+  if (tipoConteudo === 'sa' || tipoConteudo === 'situacao_aprendizagem') {
+    const metodologiaSA = getMetodologiaSA();
+    contexto += `\n=== METODOLOGIA SENAI - SITUAÇÃO DE APRENDIZAGEM ===\n`;
+    contexto += `Definição: ${metodologiaSA.definicao}\n`;
+    contexto += `\nEstrutura da SA:\n`;
+    Object.entries(metodologiaSA.estrutura).forEach(([key, value]) => {
+      contexto += `- ${key}: ${value}\n`;
+    });
+    contexto += `\nCaracterísticas:\n`;
+    metodologiaSA.caracteristicas.forEach(c => {
+      contexto += `- ${c}\n`;
+    });
+  }
+  
+  if (tipoConteudo === 'pratica' || tipoConteudo === 'avaliacao_pratica') {
+    const metodologiaPratica = getMetodologiaAvaliacaoPratica();
+    contexto += `\n=== METODOLOGIA SENAI - AVALIAÇÃO PRÁTICA ===\n`;
+    contexto += `Definição: ${metodologiaPratica.definicao}\n`;
+    contexto += `\nEstrutura:\n`;
+    Object.entries(metodologiaPratica.estrutura).forEach(([key, value]) => {
+      contexto += `- ${key}: ${value}\n`;
+    });
+  }
+  
+  // 3. Buscar por relevância textual
+  if (assunto) {
+    const resultadosBusca = searchRAG(assunto, { maxResults: 3 });
+    if (resultadosBusca.length > 0) {
+      contexto += `\n=== CONTEÚDO RELEVANTE (RAG) ===\n`;
+      resultadosBusca.forEach(r => {
+        contexto += `[${r.metadata?.type || 'doc'}] ${r.content.substring(0, 300)}...\n\n`;
+      });
+    }
+  }
+  
+  // 4. Incluir base de conhecimento legada
+  contexto += '\n' + buscarConhecimentoRAG(unidadeCurricular, assunto || '', capacidades || []);
+  
+  return contexto;
+}
+
+/**
+ * Obter estatísticas do índice RAG
+ * @returns {object} - Estatísticas do índice
+ */
+export function getRAGStats() {
+  initializeRAGIndex();
+  
+  const stats = {
+    totalDocumentos: ragIndex.documents.length,
+    totalTermos: Object.keys(ragIndex.invertedIndex).length,
+    documentosPorTipo: {}
+  };
+  
+  ragIndex.documents.forEach(doc => {
+    const type = doc.metadata?.type || 'unknown';
+    stats.documentosPorTipo[type] = (stats.documentosPorTipo[type] || 0) + 1;
+  });
+  
+  return stats;
+}
+
+/**
+ * Obter dados brutos da base de conhecimento
+ */
+export function getKnowledgeBase() {
+  return {
+    matrizes: matrizesData,
+    metodologia: metodologiaData
+  };
+}
+
 export default {
   buscarConhecimentoRAG,
   getSugestoesTemas,
   getContextoRAG,
-  baseConhecimento
+  baseConhecimento,
+  // Novas funções RAG v1.2.0
+  searchRAG,
+  getCursoInfo,
+  getUCInfo,
+  getConhecimentosUC,
+  gerarContextoPlanoEnsino,
+  getMetodologiaSA,
+  getMetodologiaAvaliacaoPratica,
+  getTaxonomiaBloom,
+  getEstrategiasPedagogicas,
+  gerarContextoRAGCompleto,
+  getRAGStats,
+  getKnowledgeBase,
+  initializeRAGIndex
 };

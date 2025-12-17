@@ -2,9 +2,16 @@
  * Serviço para geração de Situação de Aprendizagem (SA)
  * Baseado no Guia Prático SENAI - Etapas para elaboração do Plano de Ensino e SA
  * Utiliza a API Groq (Llama 3.3) para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
+ * v1.2.0 - Integração com RAG aprimorado
  */
 
 import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
+import { 
+  gerarContextoRAGCompleto, 
+  getMetodologiaSA,
+  getTaxonomiaBloom,
+  getEstrategiasPedagogicas
+} from './ragService';
 
 /**
  * Verifica se a API está configurada
@@ -110,6 +117,17 @@ export async function gerarSituacaoAprendizagem({
   nivelDificuldade = 'intermediario',
   tipoRubrica = 'gradual'
 }) {
+  // Buscar contexto RAG aprimorado (v1.2.0)
+  const contextoRAG = gerarContextoRAGCompleto({
+    curso,
+    unidadeCurricular,
+    capacidades,
+    tipoConteudo: 'sa',
+    assunto: tema
+  });
+  
+  console.log('[RAG] Contexto gerado para SA:', contextoRAG.length, 'caracteres');
+
   // Formatar capacidades numeradas
   const capacidadesTexto = capacidades
     .map((cap, idx) => `C${idx + 1} - ${cap.codigo}: ${cap.descricao}`)
@@ -191,6 +209,9 @@ ${termoCapacidade.toUpperCase()}S A SEREM DESENVOLVIDAS (numeradas):
 ${capacidadesTexto}
 
 ${contextoAdicional ? `ORIENTAÇÕES ADICIONAIS DO DOCENTE:\n${contextoAdicional}\n` : ''}
+
+=== BASE DE CONHECIMENTO RAG ===
+${contextoRAG}
 
 TIPO DE RUBRICA: ${rubricaInstrucao}
 

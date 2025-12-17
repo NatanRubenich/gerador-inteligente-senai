@@ -1,0 +1,224 @@
+{
+  "metodologia": {
+    "nome": "Metodologia SENAI de Educação Profissional (MSEP)",
+    "versao": "2019",
+    "principios": [
+      "Aprendizagem baseada em competências",
+      "Contextualização do conhecimento",
+      "Integração teoria-prática",
+      "Desenvolvimento de capacidades técnicas, sociais, organizativas e metodológicas",
+      "Avaliação formativa e somativa"
+    ],
+    "situacaoAprendizagem": {
+      "definicao": "A Situação de Aprendizagem é uma estratégia de ensino que contextualiza os conhecimentos em situações reais ou simuladas do mundo do trabalho, promovendo o desenvolvimento de competências profissionais.",
+      "estrutura": {
+        "titulo": "Nome que identifica a SA, deve ser claro e relacionado ao contexto profissional",
+        "contextualizacao": "Descrição do cenário profissional que contextualiza a situação-problema. Deve apresentar uma empresa, setor ou situação real do mundo do trabalho.",
+        "desafio": "Problema ou tarefa que o estudante deve resolver. Deve ser claro, mensurável e relacionado às capacidades a serem desenvolvidas.",
+        "resultadosEsperados": "Entregas e evidências que o estudante deve produzir ao final da SA.",
+        "etapas": "Sequência de atividades que o estudante realizará para resolver o desafio.",
+        "recursos": "Materiais, equipamentos e ambientes necessários para a realização da SA.",
+        "avaliacao": "Critérios e instrumentos de avaliação (rubrica, lista de verificação)."
+      },
+      "caracteristicas": [
+        "Contextualizada no mundo do trabalho",
+        "Desafiadora e motivadora",
+        "Integradora de conhecimentos",
+        "Promotora de autonomia",
+        "Avaliável por critérios claros"
+      ],
+      "etapasElaboracao": [
+        {
+          "etapa": 1,
+          "nome": "Análise do Perfil Profissional",
+          "descricao": "Identificar as competências e capacidades do perfil profissional que serão desenvolvidas na SA."
+        },
+        {
+          "etapa": 2,
+          "nome": "Definição do Contexto",
+          "descricao": "Criar um cenário realista do mundo do trabalho que contextualize a situação-problema."
+        },
+        {
+          "etapa": 3,
+          "nome": "Elaboração do Desafio",
+          "descricao": "Formular o problema ou tarefa que o estudante deverá resolver, relacionando às capacidades."
+        },
+        {
+          "etapa": 4,
+          "nome": "Planejamento das Etapas",
+          "descricao": "Definir a sequência de atividades e o tempo estimado para cada uma."
+        },
+        {
+          "etapa": 5,
+          "nome": "Definição dos Critérios de Avaliação",
+          "descricao": "Elaborar os critérios e instrumentos de avaliação (rubrica ou lista de verificação)."
+        }
+      ]
+    },
+    "avaliacaoPratica": {
+      "definicao": "A Avaliação Prática é um instrumento de avaliação que verifica o desenvolvimento de capacidades técnicas através da execução de tarefas práticas em situações reais ou simuladas.",
+      "estrutura": {
+        "capacidades": "Lista das capacidades técnicas que serão avaliadas",
+        "contextualizacao": "Cenário que contextualiza a tarefa prática",
+        "desafio": "Descrição da tarefa que o estudante deve executar",
+        "resultadosEntregas": "Evidências e produtos que o estudante deve entregar",
+        "listaVerificacao": "Critérios de avaliação com indicadores de desempenho"
+      },
+      "criteriosAvaliacao": {
+        "tipos": [
+          {
+            "nome": "Rubrica Gradual",
+            "descricao": "Escala de desempenho com níveis progressivos (Insuficiente, Regular, Bom, Excelente)",
+            "niveis": [
+              {"nivel": 1, "nome": "Insuficiente", "descricao": "Não atende aos critérios mínimos"},
+              {"nivel": 2, "nome": "Regular", "descricao": "Atende parcialmente aos critérios"},
+              {"nivel": 3, "nome": "Bom", "descricao": "Atende aos critérios de forma satisfatória"},
+              {"nivel": 4, "nome": "Excelente", "descricao": "Supera os critérios estabelecidos"}
+            ]
+          },
+          {
+            "nome": "Rubrica Dicotômica",
+            "descricao": "Avaliação binária (Atende/Não Atende)",
+            "niveis": [
+              {"nivel": 0, "nome": "Não Atende", "descricao": "O critério não foi satisfeito"},
+              {"nivel": 1, "nome": "Atende", "descricao": "O critério foi satisfeito"}
+            ]
+          }
+        ]
+      }
+    },
+    "planoEnsino": {
+      "definicao": "O Plano de Ensino é o documento que organiza e orienta o trabalho pedagógico do docente, detalhando objetivos, conteúdos, estratégias e avaliação.",
+      "elementos": [
+        {
+          "elemento": "Identificação",
+          "descricao": "Dados do curso, unidade curricular, carga horária, docente"
+        },
+        {
+          "elemento": "Competência",
+          "descricao": "Competência geral e específicas do curso/UC"
+        },
+        {
+          "elemento": "Capacidades",
+          "descricao": "Capacidades técnicas, sociais, organizativas e metodológicas"
+        },
+        {
+          "elemento": "Conhecimentos",
+          "descricao": "Conteúdos a serem trabalhados"
+        },
+        {
+          "elemento": "Situações de Aprendizagem",
+          "descricao": "SAs que serão desenvolvidas"
+        },
+        {
+          "elemento": "Estratégias de Ensino",
+          "descricao": "Metodologias e técnicas de ensino"
+        },
+        {
+          "elemento": "Avaliação",
+          "descricao": "Instrumentos e critérios de avaliação"
+        },
+        {
+          "elemento": "Recursos",
+          "descricao": "Materiais, equipamentos e ambientes"
+        },
+        {
+          "elemento": "Bibliografia",
+          "descricao": "Referências bibliográficas"
+        }
+      ]
+    },
+    "taxonomiaBloom": {
+      "descricao": "A Taxonomia de Bloom é utilizada para classificar objetivos educacionais e capacidades em níveis cognitivos.",
+      "niveis": [
+        {
+          "nivel": 1,
+          "nome": "Lembrar",
+          "descricao": "Recordar informações, fatos e conceitos",
+          "verbos": ["listar", "definir", "identificar", "nomear", "reconhecer", "reproduzir"]
+        },
+        {
+          "nivel": 2,
+          "nome": "Entender",
+          "descricao": "Compreender e interpretar significados",
+          "verbos": ["explicar", "descrever", "interpretar", "classificar", "comparar", "exemplificar"]
+        },
+        {
+          "nivel": 3,
+          "nome": "Aplicar",
+          "descricao": "Usar conhecimento em situações novas",
+          "verbos": ["aplicar", "executar", "implementar", "resolver", "utilizar", "demonstrar"]
+        },
+        {
+          "nivel": 4,
+          "nome": "Analisar",
+          "descricao": "Dividir em partes e identificar relações",
+          "verbos": ["analisar", "diferenciar", "organizar", "relacionar", "comparar", "examinar"]
+        },
+        {
+          "nivel": 5,
+          "nome": "Avaliar",
+          "descricao": "Julgar com base em critérios e padrões",
+          "verbos": ["avaliar", "criticar", "julgar", "justificar", "argumentar", "validar"]
+        },
+        {
+          "nivel": 6,
+          "nome": "Criar",
+          "descricao": "Produzir algo novo ou reorganizar elementos",
+          "verbos": ["criar", "desenvolver", "projetar", "elaborar", "construir", "planejar"]
+        }
+      ]
+    },
+    "estrategiasPedagogicas": [
+      {
+        "nome": "Projeto",
+        "descricao": "Desenvolvimento de um produto ou solução ao longo de um período, integrando conhecimentos e capacidades.",
+        "quando_usar": "Para desenvolver competências complexas que exigem integração de conhecimentos e trabalho em equipe."
+      },
+      {
+        "nome": "Estudo de Caso",
+        "descricao": "Análise de uma situação real ou simulada para identificar problemas e propor soluções.",
+        "quando_usar": "Para desenvolver capacidades de análise, tomada de decisão e resolução de problemas."
+      },
+      {
+        "nome": "Simulação",
+        "descricao": "Reprodução de situações reais do mundo do trabalho em ambiente controlado.",
+        "quando_usar": "Para praticar procedimentos e desenvolver habilidades técnicas sem riscos."
+      },
+      {
+        "nome": "Pesquisa Aplicada",
+        "descricao": "Investigação de um tema ou problema com aplicação prática dos resultados.",
+        "quando_usar": "Para desenvolver autonomia, pensamento crítico e capacidade de investigação."
+      },
+      {
+        "nome": "Oficina",
+        "descricao": "Atividade prática intensiva focada no desenvolvimento de habilidades específicas.",
+        "quando_usar": "Para desenvolver habilidades técnicas específicas de forma intensiva."
+      },
+      {
+        "nome": "Aula Expositiva Dialogada",
+        "descricao": "Exposição de conteúdos com participação ativa dos estudantes através de questionamentos e discussões.",
+        "quando_usar": "Para introduzir conceitos teóricos e fundamentar conhecimentos."
+      }
+    ],
+    "boasPraticas": {
+      "elaboracaoSA": [
+        "Contextualizar sempre no mundo do trabalho real",
+        "Usar verbos de ação alinhados à Taxonomia de Bloom",
+        "Definir critérios de avaliação claros e mensuráveis",
+        "Prever tempo adequado para cada etapa",
+        "Considerar recursos disponíveis",
+        "Promover autonomia e protagonismo do estudante",
+        "Integrar capacidades técnicas e socioemocionais"
+      ],
+      "elaboracaoAvaliacao": [
+        "Alinhar critérios às capacidades desenvolvidas",
+        "Usar linguagem clara e objetiva",
+        "Definir indicadores observáveis",
+        "Prever diferentes níveis de desempenho",
+        "Considerar o contexto de aplicação",
+        "Permitir feedback formativo"
+      ]
+    }
+  }
+}
