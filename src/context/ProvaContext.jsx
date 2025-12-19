@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { TIPO_ENSINO, getTermoCapacidade } from '../data/cursos';
+import { TIPO_ENSINO, getTermoCapacidade } from '../services/apiService';
 import { isApiConfigured } from '../services/llmService';
 
 const ProvaContext = createContext(null);
@@ -24,6 +24,7 @@ export function ProvaProvider({ children }) {
     turma: '',
     professor: '',
     unidadeCurricular: '',
+    unidadeCurricularId: '',
     data: '',
     curso: '',
     cursoId: '',
@@ -69,6 +70,7 @@ export function ProvaProvider({ children }) {
       turma: '',
       professor: '',
       unidadeCurricular: '',
+      unidadeCurricularId: '',
       data: '',
       curso: '',
       cursoId: '',

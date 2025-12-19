@@ -1,0 +1,21 @@
+{
+  "name": "gerador-provas-senai-server",
+  "version": "1.0.0",
+  "description": "Backend API para o Gerador de Provas SENAI com MongoDB Atlas",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "migrate": "node src/scripts/migrate.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "mongodb": "^6.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -8,7 +8,7 @@ import {
   FERRAMENTAS_COMUNS,
   ESTRATEGIAS_ENSINO
 } from '../../../services/planoEnsinoService';
-import { cursos } from '../../../data/cursos';
+import { getCursoById, getUnidadeById } from '../../../services/apiService';
 
 export default function Step3GerarPlano() {
   const { 
@@ -23,37 +23,49 @@ export default function Step3GerarPlano() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  // Buscar competência geral do curso selecionado
-  const cursoSelecionado = useMemo(() => 
-    cursos.find(c => c.id === dadosProva.cursoId), 
-    [dadosProva.cursoId]
-  );
-  
-  // Buscar carga horária da UC selecionada
-  const ucSelecionada = useMemo(() => 
-    cursoSelecionado?.unidadesCurriculares.find(uc => uc.nome === dadosProva.unidadeCurricular),
-    [cursoSelecionado, dadosProva.unidadeCurricular]
-  );
+  const [cursoSelecionado, setCursoSelecionado] = useState(null);
+  const [ucSelecionada, setUcSelecionada] = useState(null);
   
   // Campos do SGN
-  const [cargaHoraria, setCargaHoraria] = useState(ucSelecionada?.cargaHoraria || 80);
+  const [cargaHoraria, setCargaHoraria] = useState(80);
   const [periodo, setPeriodo] = useState('2025/1');
-  const [competenciaGeral, setCompetenciaGeral] = useState(cursoSelecionado?.competenciaGeral || '');
+  const [competenciaGeral, setCompetenciaGeral] = useState('');
   
-  // Atualizar competência geral quando o curso mudar
+  // Carregar dados do curso e UC do banco de dados
   useEffect(() => {
-    if (cursoSelecionado?.competenciaGeral) {
-      setCompetenciaGeral(cursoSelecionado.competenciaGeral);
+    async function loadCursoData() {
+      if (dadosProva.cursoId) {
+        try {
+          const curso = await getCursoById(dadosProva.cursoId);
+          setCursoSelecionado(curso);
+          if (curso?.competenciaGeral) {
+            setCompetenciaGeral(curso.competenciaGeral);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar curso:', error);
+        }
+      }
     }
-  }, [cursoSelecionado]);
+    loadCursoData();
+  }, [dadosProva.cursoId]);
   
-  // Atualizar carga horária quando a UC mudar
+  // Carregar dados da UC
   useEffect(() => {
-    if (ucSelecionada?.cargaHoraria) {
-      setCargaHoraria(ucSelecionada.cargaHoraria);
+    async function loadUCData() {
+      if (dadosProva.unidadeCurricularId) {
+        try {
+          const uc = await getUnidadeById(dadosProva.unidadeCurricularId);
+          setUcSelecionada(uc);
+          if (uc?.cargaHoraria) {
+            setCargaHoraria(uc.cargaHoraria);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar UC:', error);
+        }
+      }
     }
-  }, [ucSelecionada]);
+    loadUCData();
+  }, [dadosProva.unidadeCurricularId]);
   const [ambientesSelecionados, setAmbientesSelecionados] = useState(['Sala de Aula', 'Laboratório de informática']);
   const [ambienteCustom, setAmbienteCustom] = useState('');
   const [instrumentosSelecionados, setInstrumentosSelecionados] = useState(['Exercícios teóricos e práticos', 'Avaliações objetivas', 'Avaliações práticas']);

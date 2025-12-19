@@ -12,6 +12,242 @@
       "competenciaGeral": "Desenvolver sistemas computacionais de informação utilizando metodologias, ferramentas e linguagens de programação específicas, atendendo normas e padrões de qualidade, usabilidade, robustez, integridade e segurança.",
       "unidadesCurriculares": [
         {
+          "nome": "Introdução a Tecnologia da Informação e Comunicação",
+          "modulo": "Básico da Indústria",
+          "periodo": "1º Período",
+          "cargaHoraria": 40,
+          "objetivo": "Proporcionar o desenvolvimento de capacidades básicas e socioemocionais relativas à comunicação e ao uso de ferramentas de TIC na interpretação de normas e ou textos técnicos e uso seguro de recursos informatizados nos processos de comunicação no trabalho.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Empregar os princípios, padrões e normas técnicas que estabelecem as condições e requisitos para uma comunicação oral e escrita clara, assertiva e eficaz, condizente com o ambiente de trabalho"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Interpretar dados, informações técnicas e terminologias de textos técnicos relacionados aos processos industriais"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer características e aplicabilidade de hardware e software de sistemas informatizados utilizados na indústria"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Utilizar recursos e funcionalidades da web nos processos de comunicação no trabalho, de busca, armazenamento e compartilhamento de informação"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Aplicar os recursos e procedimentos de segurança da informação"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 ELEMENTOS DA COMUNICAÇÃO",
+              "subtopicos": [
+                "1.1 Emissor",
+                "1.2 Receptor",
+                "1.3 Mensagem",
+                "1.4 Canal",
+                "1.5 Ruído",
+                "1.6 Código",
+                "1.7 Feedback"
+              ]
+            },
+            {
+              "topico": "2 NÍVEIS DE FALA",
+              "subtopicos": [
+                "2.1 Linguagem culta",
+                "2.2 Linguagem técnica"
+              ]
+            },
+            {
+              "topico": "3 COMUNICAÇÃO",
+              "subtopicos": [
+                "3.1 Identificação de textos técnicos",
+                "3.2 Relatórios",
+                "3.3 Atas",
+                "3.4 Memorandos",
+                "3.5 Resumos"
+              ]
+            },
+            {
+              "topico": "4 TEXTOS TÉCNICOS",
+              "subtopicos": [
+                "4.1 Definição",
+                "4.2 Tipos e exemplos",
+                "4.3 Normas aplicáveis",
+                "4.4 Interpretação"
+              ]
+            },
+            {
+              "topico": "5 INFORMÁTICA",
+              "subtopicos": [
+                "5.1 Fundamentos de hardware",
+                "5.2 Sistema Operacional"
+              ]
+            },
+            {
+              "topico": "6 SOFTWARE DE ESCRITÓRIO",
+              "subtopicos": [
+                "6.1 Editor de Textos",
+                "6.2 Editor de Planilhas Eletrônicas",
+                "6.3 Editor de Apresentações"
+              ]
+            },
+            {
+              "topico": "7 INTERNET",
+              "subtopicos": [
+                "7.1 Políticas de uso",
+                "7.2 Navegadores",
+                "7.3 Sites de busca",
+                "7.4 Download e gravação de arquivos",
+                "7.5 Correio eletrônico",
+                "7.6 Direitos autorais",
+                "7.7 Armazenamento em nuvem"
+              ]
+            },
+            {
+              "topico": "8 SEGURANÇA DA INFORMAÇÃO",
+              "subtopicos": [
+                "8.1 Pilares da Segurança",
+                "8.2 Leis vigentes",
+                "8.3 Tipos de golpes na internet",
+                "8.4 Contas e Senhas",
+                "8.5 Navegação segura",
+                "8.6 Backup",
+                "8.7 Códigos maliciosos"
+              ]
+            },
+            {
+              "topico": "9 COMUNICAÇÃO EM EQUIPES",
+              "subtopicos": [
+                "9.1 Dinâmica do trabalho em equipe",
+                "9.2 Busca de consenso",
+                "9.3 Gestão de Conflitos"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Introdução ao Desenvolvimento de Projetos",
+          "modulo": "Básico da Indústria",
+          "periodo": "2º Período",
+          "cargaHoraria": 12,
+          "objetivo": "Desenvolver as capacidades básicas e socioemocionais para resolução de problemas por meio da elaboração de projetos.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer as diferentes fases pertinentes à elaboração de um projeto"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer diferentes métodos aplicados ao desenvolvimento do projeto"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer os padrões de estrutura estabelecidos para a elaboração de projetos"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 PROJETOS",
+              "subtopicos": [
+                "1.1 Definição",
+                "1.2 Tipos",
+                "1.3 Características",
+                "1.4 Fases",
+                "1.5 Normas técnicas"
+              ]
+            },
+            {
+              "topico": "2 MÉTODOS DE DESENVOLVIMENTO",
+              "subtopicos": [
+                "2.1 Método indutivo",
+                "2.2 Método dedutivo",
+                "2.3 Método hipotético-dedutivo",
+                "2.4 Método dialético"
+              ]
+            },
+            {
+              "topico": "3 FORMULAÇÃO DE HIPÓTESES",
+              "subtopicos": [
+                "3.1 Argumentação",
+                "3.2 Colaboração",
+                "3.3 Comunicação"
+              ]
+            },
+            {
+              "topico": "4 POSTURA INVESTIGATIVA",
+              "subtopicos": []
+            },
+            {
+              "topico": "5 ESTRATÉGIAS DE RESOLUÇÃO DE PROBLEMAS",
+              "subtopicos": []
+            }
+          ]
+        },
+        {
+          "nome": "Sustentabilidade nos Processos Industriais",
+          "modulo": "Básico da Indústria",
+          "periodo": "3º Período",
+          "cargaHoraria": 8,
+          "objetivo": "Desenvolver capacidades básicas e socioemocionais inerentes às ações de prevenção com foco na eliminação ou redução do consumo de recursos naturais e geração de resíduos.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer alternativas de prevenção da poluição decorrentes dos processos industriais"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer as fases do ciclo de vida de um produto nos processos industriais"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer os fundamentos da logística reversa aplicados ao ciclo de vida do produto"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Reconhecer os programas de sustentabilidade aplicados aos processos industriais"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Reconhecer os princípios da economia circular nos processos industriais"
+            },
+            {
+              "codigo": "CB6",
+              "descricao": "Reconhecer a destinação dos resíduos dos processos industriais em função de sua caracterização"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 DESENVOLVIMENTO SUSTENTÁVEL",
+              "subtopicos": [
+                "1.1 Meio Ambiente",
+                "1.2 Recursos Naturais",
+                "1.3 Sustentabilidade",
+                "1.4 Produção e consumo inteligente"
+              ]
+            },
+            {
+              "topico": "2 POLUIÇÃO INDUSTRIAL",
+              "subtopicos": [
+                "2.1 Definição",
+                "2.2 Resíduos Industriais",
+                "2.3 Ações de prevenção",
+                "2.4 Alternativas para prevenção"
+              ]
+            },
+            {
+              "topico": "3 ORGANIZAÇÃO DE AMBIENTES DE TRABALHO",
+              "subtopicos": [
+                "3.1 Princípios de organização",
+                "3.2 Organização de ferramentas",
+                "3.3 Organização do espaço",
+                "3.4 Conceitos de organização e disciplina"
+              ]
+            }
+          ]
+        },
+        {
           "nome": "Introdução à Qualidade e Produtividade",
           "modulo": "Básico da Indústria",
           "cargaHoraria": 16,
@@ -2140,23 +2376,39 @@
           "nome": "Fundamentos de Teoria da Cor",
           "modulo": "Básico",
           "cargaHoraria": 40,
-          "objetivo": "Desenvolver capacidades básicas para aplicação da teoria das cores em projetos de mídias digitais.",
+          "objetivo": "Proporcionar a aquisição dos fundamentos técnicos e científicos referentes à utilização da cor na comunicação visual, considerando suas características físicas, seus aspectos técnicos e estéticos e suas influências psicológicas.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Reconhecer os fundamentos da teoria das cores"
+              "descricao": "Aplicar os princípios e normas da linguagem na comunicação oral e escrita na elaboração de diferentes tipos de textos técnicos"
             },
             {
               "codigo": "CB2",
-              "descricao": "Aplicar harmonias cromáticas em projetos visuais"
+              "descricao": "Reconhecer fundamentos de teoria da cor"
             },
             {
               "codigo": "CB3",
-              "descricao": "Identificar a psicologia das cores e sua aplicação"
+              "descricao": "Identificar princípios e ferramentas utilizados nos processos criativos"
             },
             {
               "codigo": "CB4",
-              "descricao": "Utilizar sistemas de cores (RGB, CMYK, HSB)"
+              "descricao": "Reconhecer as diferentes mídias para desenvolvimento das atividades"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Analisar as referências das pesquisas para o desenvolvimento das atividades"
+            },
+            {
+              "codigo": "CB6",
+              "descricao": "Aplicar os princípios de informática na utilização de ferramentas para o auxílio nas suas atividades"
+            },
+            {
+              "codigo": "CB7",
+              "descricao": "Aplicar fundamentos de teoria da cor"
+            },
+            {
+              "codigo": "CB8",
+              "descricao": "Aplicar fundamentos de matemática aplicada"
             }
           ],
           "conhecimentos": [
@@ -2204,19 +2456,35 @@
           "nome": "História do Design Gráfico",
           "modulo": "Básico",
           "cargaHoraria": 40,
-          "objetivo": "Desenvolver capacidades básicas para compreensão da evolução histórica do design gráfico.",
+          "objetivo": "Proporcionar a aquisição dos fundamentos técnicos e científicos referentes aos fenômenos artísticos, estéticos e culturais das artes gráficas.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Reconhecer os movimentos históricos do design gráfico"
+              "descricao": "Identificar princípios e ferramentas utilizados nos processos criativos"
             },
             {
               "codigo": "CB2",
-              "descricao": "Identificar as influências artísticas no design contemporâneo"
+              "descricao": "Analisar as referências das pesquisas para o desenvolvimento das atividades"
             },
             {
               "codigo": "CB3",
-              "descricao": "Relacionar contextos históricos com tendências de design"
+              "descricao": "Aplicar os princípios de informática na utilização de ferramentas para o auxílio nas suas atividades"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Aplicar fundamentos de história do design gráfico"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Aplicar os princípios e normas da linguagem na comunicação oral e escrita na elaboração de diferentes tipos de textos técnicos"
+            },
+            {
+              "codigo": "CB6",
+              "descricao": "Identificar as estruturas de pesquisa no desenvolvimento das atividades"
+            },
+            {
+              "codigo": "CB7",
+              "descricao": "Reconhecer fundamentos de história do design gráfico"
             }
           ],
           "conhecimentos": [
@@ -2259,23 +2527,39 @@
           "nome": "Fundamentos de Desenho e Percepção Visual",
           "modulo": "Básico",
           "cargaHoraria": 40,
-          "objetivo": "Desenvolver capacidades básicas para aplicação de técnicas de desenho e percepção visual.",
+          "objetivo": "Proporcionar a aquisição dos fundamentos técnicos e científicos referentes ao desenho e percepção visual.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Aplicar técnicas de desenho básico"
+              "descricao": "Identificar princípios e ferramentas utilizados nos processos criativos"
             },
             {
               "codigo": "CB2",
-              "descricao": "Reconhecer princípios de composição visual"
+              "descricao": "Reconhecer as diferentes mídias para desenvolvimento das atividades"
             },
             {
               "codigo": "CB3",
-              "descricao": "Identificar elementos da linguagem visual"
+              "descricao": "Analisar as referências das pesquisas para o desenvolvimento das atividades"
             },
             {
               "codigo": "CB4",
-              "descricao": "Aplicar conceitos de perspectiva"
+              "descricao": "Aplicar os princípios de informática na utilização de ferramentas para o auxílio nas suas atividades"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Aplicar fundamentos de matemática aplicada"
+            },
+            {
+              "codigo": "CB6",
+              "descricao": "Aplicar fundamentos de desenho e percepção visual"
+            },
+            {
+              "codigo": "CB7",
+              "descricao": "Aplicar os princípios e normas da linguagem na comunicação oral e escrita na elaboração de diferentes tipos de textos técnicos"
+            },
+            {
+              "codigo": "CB8",
+              "descricao": "Reconhecer fundamentos de desenho e percepção visual"
             }
           ],
           "conhecimentos": [
@@ -2324,23 +2608,43 @@
           "nome": "Fundamentos de Fotografia Digital e Semiótica",
           "modulo": "Básico",
           "cargaHoraria": 40,
-          "objetivo": "Desenvolver capacidades básicas para aplicação de técnicas de fotografia digital e conceitos de semiótica.",
+          "objetivo": "Proporcionar a aquisição dos fundamentos técnicos e científicos referentes a composição e análise de imagens aplicadas a comunicação visual.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Aplicar técnicas de fotografia digital"
+              "descricao": "Identificar princípios e ferramentas utilizados nos processos criativos"
             },
             {
               "codigo": "CB2",
-              "descricao": "Reconhecer conceitos de semiótica aplicados à comunicação visual"
+              "descricao": "Reconhecer as diferentes mídias para desenvolvimento das atividades"
             },
             {
               "codigo": "CB3",
-              "descricao": "Utilizar equipamentos fotográficos"
+              "descricao": "Analisar as referências das pesquisas para o desenvolvimento das atividades"
             },
             {
               "codigo": "CB4",
-              "descricao": "Aplicar técnicas de composição fotográfica"
+              "descricao": "Aplicar os princípios de informática na utilização de ferramentas para o auxílio nas suas atividades"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Aplicar fundamentos de matemática aplicada"
+            },
+            {
+              "codigo": "CB6",
+              "descricao": "Aplicar fundamentos de análise e construção da imagem"
+            },
+            {
+              "codigo": "CB7",
+              "descricao": "Aplicar os princípios e normas da linguagem na comunicação oral e escrita na elaboração de diferentes tipos de textos técnicos"
+            },
+            {
+              "codigo": "CB8",
+              "descricao": "Aplicar princípios de fotografia"
+            },
+            {
+              "codigo": "CB9",
+              "descricao": "Reconhecer fundamentos de análise e construção da imagem"
             }
           ],
           "conhecimentos": [
@@ -3162,32 +3466,299 @@
     {
       "id": "jogos-digitais",
       "nome": "Técnico em Programação de Jogos Digitais",
-      "cbo": "3171-10",
-      "cargaHorariaTotal": 1200,
-      "perfilProfissional": "O Técnico em Programação de Jogos Digitais é o profissional que produz elementos multimídia e desenvolve sistemas de jogos digitais.",
-      "competenciaGeral": "Produzir elementos multimídia e desenvolver sistemas de jogos digitais, de acordo com metodologia e padrões de qualidade, usabilidade, interatividade, robustez, acessibilidade e segurança da informação.",
+      "cbo": "3171-20",
+      "cargaHorariaTotal": 1000,
+      "perfilProfissional": "O Técnico em Programação de Jogos Digitais é o profissional que produz elementos multimídia e sistemas de jogos digitais, de acordo com metodologia e padrões de qualidade, usabilidade, interatividade, robustez, acessibilidade e segurança da informação.",
+      "competenciaGeral": "Produzir elementos multimídia e sistemas de jogos digitais, de acordo com metodologia e padrões de qualidade, usabilidade, interatividade, robustez, acessibilidade e segurança da informação.",
       "unidadesCurriculares": [
+        {
+          "nome": "Sustentabilidade nos Processos Industriais",
+          "modulo": "Básico da Indústria",
+          "cargaHoraria": 8,
+          "objetivo": "Desenvolver capacidades básicas e socioemocionais inerentes às ações de prevenção com foco na eliminação ou redução do consumo de recursos naturais e geração de resíduos.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer alternativas de prevenção da poluição decorrentes dos processos industriais"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer as fases do ciclo de vida de um produto nos processos industriais"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer os fundamentos da logística reversa aplicados ao ciclo de vida do produto"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Reconhecer os programas de sustentabilidade aplicados aos processos industriais"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Reconhecer os princípios da economia circular nos processos industriais"
+            },
+            {
+              "codigo": "CB6",
+              "descricao": "Reconhecer a destinação dos resíduos dos processos industriais em função de sua caracterização"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 DESENVOLVIMENTO SUSTENTÁVEL",
+              "subtopicos": [
+                "1.1 Meio Ambiente",
+                "1.2 Recursos Naturais",
+                "1.3 Sustentabilidade",
+                "1.4 Produção e consumo inteligente"
+              ]
+            },
+            {
+              "topico": "2 POLUIÇÃO INDUSTRIAL",
+              "subtopicos": [
+                "2.1 Definição",
+                "2.2 Resíduos Industriais",
+                "2.3 Ações de prevenção",
+                "2.4 Alternativas para prevenção"
+              ]
+            },
+            {
+              "topico": "3 ORGANIZAÇÃO DE AMBIENTES DE TRABALHO",
+              "subtopicos": [
+                "3.1 Princípios de organização",
+                "3.2 Organização de ferramentas",
+                "3.3 Organização do espaço"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Introdução a Indústria 4.0",
+          "modulo": "Básico da Indústria",
+          "cargaHoraria": 24,
+          "objetivo": "Propiciar o desenvolvimento das capacidades básicas e socioemocionais requeridas para compreender as aplicações das tecnologias habilitadoras para a indústria 4.0 e inserir-se em um contexto de inovação.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer os marcos que alavancaram as revoluções industriais e seus impactos nas atividades de produção"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer as tecnologias habilitadoras para indústria 4.0"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Correlacionar cada tecnologia habilitadora com impacto gerado em sua aplicação"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Compreender a inovação como ferramenta de melhoria nos processos de trabalho e resolução de problemas"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 HISTÓRICO DA EVOLUÇÃO INDUSTRIAL",
+              "subtopicos": [
+                "1.1 1ª Revolução Industrial",
+                "1.2 2ª Revolução Industrial",
+                "1.3 3ª Revolução Industrial",
+                "1.4 4ª Revolução Industrial"
+              ]
+            },
+            {
+              "topico": "2 TECNOLOGIAS HABILITADORAS",
+              "subtopicos": [
+                "2.1 Big Data",
+                "2.2 Robótica Avançada",
+                "2.3 Segurança Digital",
+                "2.4 Internet das Coisas",
+                "2.5 Computação em Nuvem",
+                "2.6 Manufatura Aditiva"
+              ]
+            },
+            {
+              "topico": "3 INOVAÇÃO",
+              "subtopicos": [
+                "3.1 Definição",
+                "3.2 Tipos",
+                "3.3 Impactos"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Saúde e Segurança no Trabalho",
+          "modulo": "Básico da Indústria",
+          "cargaHoraria": 12,
+          "objetivo": "Desenvolver as capacidades básicas e socioemocionais necessárias à compreensão dos fundamentos da saúde e segurança do trabalho.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer os princípios, normas, legislação e procedimentos de saúde e segurança nos processos industriais"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer os tipos de riscos inerentes às atividades laborais nos processos industriais"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer os conceitos, classificação e impactos de acidentes e doenças ocupacionais na indústria"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Reconhecer o papel do trabalhador no cumprimento das normas de saúde e segurança"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Reconhecer as medidas preventivas e corretivas nas atividades laborais"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 SEGURANÇA DO TRABALHO",
+              "subtopicos": [
+                "1.1 Histórico",
+                "1.2 Hierarquia das leis",
+                "1.3 Normas Regulamentadoras",
+                "1.4 CIPA",
+                "1.5 SESMT"
+              ]
+            },
+            {
+              "topico": "2 RISCOS OCUPACIONAIS",
+              "subtopicos": [
+                "2.1 Perigo e risco",
+                "2.2 Classificação de Riscos",
+                "2.3 Mapa de Riscos"
+              ]
+            },
+            {
+              "topico": "3 ACIDENTES DO TRABALHO",
+              "subtopicos": [
+                "3.1 Definição",
+                "3.2 Tipos",
+                "3.3 Causas",
+                "3.4 Consequências"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Introdução ao Desenvolvimento de Projetos",
+          "modulo": "Básico da Indústria",
+          "cargaHoraria": 12,
+          "objetivo": "Desenvolver as capacidades básicas e socioemocionais para resolução de problemas por meio da elaboração de projetos.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer as diferentes fases pertinentes à elaboração de um projeto"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer diferentes métodos aplicados ao desenvolvimento do projeto"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer os padrões de estrutura estabelecidos para a elaboração de projetos"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 PROJETOS",
+              "subtopicos": [
+                "1.1 Definição",
+                "1.2 Tipos",
+                "1.3 Características",
+                "1.4 Fases",
+                "1.5 Normas técnicas"
+              ]
+            },
+            {
+              "topico": "2 MÉTODOS DE DESENVOLVIMENTO",
+              "subtopicos": [
+                "2.1 Método indutivo",
+                "2.2 Método dedutivo",
+                "2.3 Método hipotético-dedutivo"
+              ]
+            },
+            {
+              "topico": "3 FORMULAÇÃO DE HIPÓTESES",
+              "subtopicos": [
+                "3.1 Argumentação",
+                "3.2 Colaboração",
+                "3.3 Comunicação"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Introdução a Qualidade e Produtividade",
+          "modulo": "Básico da Indústria",
+          "cargaHoraria": 16,
+          "objetivo": "Desenvolver capacidades básicas e socioemocionais relativas à qualidade nas diferentes situações profissionais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer os fundamentos da qualidade nos processos industriais"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Identificar as ferramentas da qualidade aplicadas nos processos industriais"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer as etapas da filosofia Lean para otimização de custos"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 QUALIDADE",
+              "subtopicos": [
+                "1.1 Definição",
+                "1.2 Evolução da qualidade"
+              ]
+            },
+            {
+              "topico": "2 PRINCÍPIOS DA GESTÃO DA QUALIDADE",
+              "subtopicos": [
+                "2.1 Foco no cliente",
+                "2.2 Liderança",
+                "2.3 Engajamento",
+                "2.4 Abordagem de processos"
+              ]
+            },
+            {
+              "topico": "3 MÉTODOS E FERRAMENTAS DA QUALIDADE",
+              "subtopicos": [
+                "3.1 PDCA",
+                "3.2 MASP",
+                "3.3 Brainstorming",
+                "3.4 Diagrama de Ishikawa",
+                "3.5 5W2H"
+              ]
+            }
+          ]
+        },
         {
           "nome": "Introdução à Tecnologia da Informação e Comunicação",
           "modulo": "Básico da Indústria",
           "cargaHoraria": 40,
-          "objetivo": "Proporcionar o desenvolvimento de capacidades básicas relativas à comunicação e ao uso de ferramentas de TIC.",
+          "objetivo": "Proporcionar o desenvolvimento de capacidades básicas e socioemocionais relativas à comunicação e ao uso de ferramentas de TIC.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Empregar os princípios, padrões e normas técnicas para comunicação oral e escrita"
+              "descricao": "Empregar os princípios, padrões e normas técnicas para comunicação oral e escrita clara, assertiva e eficaz"
             },
             {
               "codigo": "CB2",
-              "descricao": "Interpretar dados, informações técnicas e terminologias de textos técnicos"
+              "descricao": "Interpretar dados, informações técnicas e terminologias de textos técnicos relacionados aos processos industriais"
             },
             {
               "codigo": "CB3",
-              "descricao": "Reconhecer características de hardware e software de sistemas informatizados"
+              "descricao": "Reconhecer características e aplicabilidade de hardware e software de sistemas informatizados"
             },
             {
               "codigo": "CB4",
-              "descricao": "Utilizar recursos e funcionalidades da WEB nos processos de comunicação"
+              "descricao": "Utilizar recursos e funcionalidades da WEB nos processos de comunicação no trabalho"
             },
             {
               "codigo": "CB5",
@@ -3215,69 +3786,18 @@
               ]
             },
             {
-              "topico": "3 COMUNICAÇÃO",
+              "topico": "3 INFORMÁTICA",
               "subtopicos": [
-                "3.1 Identificação de textos técnicos",
-                "3.2 Relatórios",
-                "3.3 Atas",
-                "3.4 Memorandos",
-                "3.5 Resumos"
+                "3.1 Fundamentos de hardware",
+                "3.2 Sistema Operacional"
               ]
             },
             {
-              "topico": "4 TEXTOS TÉCNICOS",
+              "topico": "4 SEGURANÇA DA INFORMAÇÃO",
               "subtopicos": [
-                "4.1 Definição",
-                "4.2 Tipos e exemplos",
-                "4.3 Normas aplicáveis (ABNT, ISO, IEEE)",
-                "4.4 Interpretação"
-              ]
-            },
-            {
-              "topico": "5 INFORMÁTICA",
-              "subtopicos": [
-                "5.1 Fundamentos de hardware",
-                "5.2 Sistema Operacional"
-              ]
-            },
-            {
-              "topico": "6 SOFTWARE DE ESCRITÓRIO",
-              "subtopicos": [
-                "6.1 Editor de Textos",
-                "6.2 Editor de Planilhas Eletrônicas",
-                "6.3 Editor de Apresentações"
-              ]
-            },
-            {
-              "topico": "7 INTERNET",
-              "subtopicos": [
-                "7.1 Políticas de uso",
-                "7.2 Navegadores",
-                "7.3 Sites de busca",
-                "7.4 Download e gravação de arquivos",
-                "7.5 Correio eletrônico",
-                "7.6 Direitos autorais",
-                "7.7 Armazenamento em nuvem"
-              ]
-            },
-            {
-              "topico": "8 SEGURANÇA DA INFORMAÇÃO",
-              "subtopicos": [
-                "8.1 Pilares da Segurança da Informação",
-                "8.2 Leis vigentes",
-                "8.3 Tipos de golpes na internet",
-                "8.4 Contas e Senhas",
-                "8.5 Navegação segura",
-                "8.6 Backup",
-                "8.7 Códigos maliciosos (Malware)"
-              ]
-            },
-            {
-              "topico": "9 COMUNICAÇÃO EM EQUIPES DE TRABALHO",
-              "subtopicos": [
-                "9.1 Dinâmica do trabalho em equipe",
-                "9.2 Busca de consenso",
-                "9.3 Gestão de Conflitos"
+                "4.1 Pilares da Segurança",
+                "4.2 Leis vigentes",
+                "4.3 Tipos de golpes na internet"
               ]
             }
           ]
@@ -3286,11 +3806,11 @@
           "nome": "Fundamentos de UI/UX Design",
           "modulo": "Introdutório",
           "cargaHoraria": 40,
-          "objetivo": "Desenvolver capacidades básicas referente a princípios de web design para jogos.",
+          "objetivo": "Desenvolver capacidades básicas referente a princípios de web design para embasar o desenvolvimento de interfaces de jogos.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Aplicar conceitos de identidade visual e entendimento do usuário"
+              "descricao": "Aplicar conceitos de identidade visual e entendimento do usuário na criação de interfaces"
             },
             {
               "codigo": "CB2",
@@ -3298,7 +3818,7 @@
             },
             {
               "codigo": "CB3",
-              "descricao": "Empregar técnicas de processos de criação"
+              "descricao": "Empregar técnicas de processos de criação na concepção de interfaces e experiência do usuário"
             },
             {
               "codigo": "CB4",
@@ -3306,7 +3826,7 @@
             },
             {
               "codigo": "CB5",
-              "descricao": "Identificar conceito de direito autoral"
+              "descricao": "Identificar conceito de direito autoral no processo de criação de produtos gráficos"
             }
           ],
           "conhecimentos": [
@@ -3316,45 +3836,71 @@
                 "1.1 Definição",
                 "1.2 Evolução histórica",
                 "1.3 Formas geométricas",
-                "1.4 Regras de visualização",
-                "1.5 Teoria das cores",
-                "1.6 Processo de criação"
+                "1.4 Teoria das cores"
               ]
             },
             {
-              "topico": "2 DIREITO AUTORAL",
+              "topico": "2 USER EXPERIENCE",
               "subtopicos": [
                 "2.1 Definição",
-                "2.2 Anterioridade",
-                "2.3 Creative Commons",
-                "2.4 Registro"
+                "2.2 Design centrado no usuário",
+                "2.3 Jornada do usuário",
+                "2.4 Usabilidade"
               ]
             },
             {
-              "topico": "3 ESTRATÉGIAS DE COLETA DE INFORMAÇÕES",
+              "topico": "3 USER INTERFACE",
               "subtopicos": [
-                "3.1 Determinação de estratégia",
-                "3.2 Coleta de feedbacks",
-                "3.3 Determinação de escopo",
-                "3.4 Resolução de conflitos"
+                "3.1 Definição",
+                "3.2 Layout dos elementos",
+                "3.3 Navegação",
+                "3.4 Tipos"
               ]
             },
             {
-              "topico": "4 USER EXPERIENCE",
+              "topico": "4 PROTOTIPAGEM",
               "subtopicos": [
-                "4.1 Definição",
-                "4.2 Design centrado no usuário",
-                "4.3 Processo de design interativo",
-                "4.4 Jornada do usuário"
+                "4.1 Storyboard",
+                "4.2 Protótipos de papel",
+                "4.3 Mock-Ups digitais"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Arquitetura de Hardware e Software",
+          "modulo": "Introdutório",
+          "cargaHoraria": 24,
+          "objetivo": "Desenvolver as capacidades básicas para compreender os diferentes tipos de arquiteturas computacionais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer a estrutura física dos elementos computacionais"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer a arquitetura de software de computadores"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 HARDWARE",
+              "subtopicos": [
+                "1.1 Processadores",
+                "1.2 Memória",
+                "1.3 Periféricos",
+                "1.4 Rede de comunicação",
+                "1.5 Cloud",
+                "1.6 Dispositivos móveis"
               ]
             },
             {
-              "topico": "5 USER INTERFACE",
+              "topico": "2 SOFTWARE",
               "subtopicos": [
-                "5.1 Definição",
-                "5.2 Princípios de design de interface",
-                "5.3 Componentes de interface",
-                "5.4 Padrões de design"
+                "2.1 Software básico",
+                "2.2 Aplicativos",
+                "2.3 Tipos",
+                "2.4 Licenças e distribuição"
               ]
             }
           ]
@@ -3362,747 +3908,801 @@
         {
           "nome": "Lógica de Programação",
           "modulo": "Introdutório",
-          "cargaHoraria": 160,
-          "objetivo": "Propiciar o desenvolvimento das capacidades básicas para representação gráfica do raciocínio lógico e elaboração de estrutura básica de programação.",
+          "cargaHoraria": 80,
+          "objetivo": "Propiciar o desenvolvimento de capacidades básicas relativas à lógica de programação que subsidiarão o desenvolvimento das capacidades técnicas da ocupação.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Aplicar lógica de programação para resolução de problemas"
+              "descricao": "Aplicar técnicas de programação na elaboração de algoritmos inerentes aos sistemas de TI"
             },
             {
               "codigo": "CB2",
-              "descricao": "Utilizar técnicas de abstração para resolução de problemas"
+              "descricao": "Reconhecer os paradigmas de programação de computadores"
             },
             {
               "codigo": "CB3",
-              "descricao": "Interpretar a simbologia das representações gráficas"
-            },
-            {
-              "codigo": "CB4",
-              "descricao": "Identificar estruturas de dados para construção do algoritmo"
-            },
-            {
-              "codigo": "CB5",
-              "descricao": "Utilizar expressões aritméticas, relacionais e lógicos"
-            },
-            {
-              "codigo": "CB6",
-              "descricao": "Codificar algoritmos na resolução de problemas"
-            },
-            {
-              "codigo": "CB7",
-              "descricao": "Aplicar técnica de ordenação e busca de dados"
-            },
-            {
-              "codigo": "CB8",
-              "descricao": "Identificar padrão de nomenclatura para documentação"
-            },
-            {
-              "codigo": "CB9",
-              "descricao": "Utilizar estruturas de controle e repetição"
-            },
-            {
-              "codigo": "CB10",
-              "descricao": "Utilizar padrões de nomenclatura e convenções"
+              "descricao": "Aplicar linguagens de programação para elaborar programas e sistemas de TI"
             }
           ],
           "conhecimentos": [
             {
-              "topico": "1 FUNDAMENTOS DO SOFTWARE",
+              "topico": "1 LÓGICA DE PROGRAMAÇÃO E ALGORITMOS",
               "subtopicos": [
-                "1.1 Definição",
-                "1.2 Evolução",
-                "1.3 Tipos e características",
-                "1.4 Ciclo de vida"
+                "1.1 Algoritmos",
+                "1.2 Fluxogramas",
+                "1.3 Pseudocódigo",
+                "1.4 Decisões",
+                "1.5 Repetições",
+                "1.6 Funções e procedimentos",
+                "1.7 Estruturas de dados"
               ]
             },
             {
-              "topico": "2 FUNDAMENTOS DE SISTEMAS OPERACIONAIS",
+              "topico": "2 PARADIGMAS DE PROGRAMAÇÃO",
               "subtopicos": [
                 "2.1 Definição",
-                "2.2 Evolução",
-                "2.3 Função",
-                "2.4 Tipos e características"
+                "2.2 Estruturada",
+                "2.3 Orientada a objetos",
+                "2.4 Funcional"
               ]
             },
             {
-              "topico": "3 CÓDIGOS",
+              "topico": "3 PROGRAMAÇÃO",
               "subtopicos": [
-                "3.1 Modularização",
-                "3.2 Indentação",
-                "3.3 Comentários"
-              ]
-            },
-            {
-              "topico": "4 ALGORITMO DE BUSCA",
-              "subtopicos": []
-            },
-            {
-              "topico": "5 ALGORITMO DE ORDENAÇÃO",
-              "subtopicos": []
-            },
-            {
-              "topico": "6 ESTRUTURAS DE DADOS",
-              "subtopicos": [
-                "6.1 Vetores",
-                "6.2 Matrizes",
-                "6.3 Registros",
-                "6.4 Pilha",
-                "6.5 Fila"
-              ]
-            },
-            {
-              "topico": "7 RECURSIVIDADE",
-              "subtopicos": []
-            },
-            {
-              "topico": "8 TESTE DE MESA",
-              "subtopicos": []
-            },
-            {
-              "topico": "9 FERRAMENTAS PARA ALGORITMOS",
-              "subtopicos": []
-            },
-            {
-              "topico": "10 LEGIBILIDADE DE CÓDIGO",
-              "subtopicos": [
-                "10.1 Padrões de nomenclatura",
-                "10.2 Convenções de linguagem"
-              ]
-            },
-            {
-              "topico": "11 PSEUDOCÓDIGO",
-              "subtopicos": []
-            },
-            {
-              "topico": "12 EXPRESSÕES LÓGICAS E ARITMÉTICAS",
-              "subtopicos": []
-            },
-            {
-              "topico": "13 TIPOS DE DADOS",
-              "subtopicos": [
-                "13.1 Variáveis e constantes"
-              ]
-            },
-            {
-              "topico": "14 ABSTRAÇÃO LÓGICA",
-              "subtopicos": [
-                "14.1 Álgebra Booleana",
-                "14.2 Fluxogramas e representações gráficas"
+                "3.1 Linguagens de programação",
+                "3.2 Compilação",
+                "3.3 Interpretação",
+                "3.4 Bibliotecas e APIs"
               ]
             }
           ]
         },
         {
-          "nome": "Programação Orientada a Objetos",
+          "nome": "Versionamento e Colaboração",
           "modulo": "Introdutório",
-          "cargaHoraria": 120,
-          "objetivo": "Propiciar o desenvolvimento das capacidades básicas para programação orientada a objetos.",
+          "cargaHoraria": 20,
+          "objetivo": "Propiciar o desenvolvimento de capacidades básicas para utilização de ferramentas de versionamento e colaboração em projetos de software.",
           "capacidadesTecnicas": [
             {
               "codigo": "CB1",
-              "descricao": "Aplicar conceitos de programação orientada a objetos"
+              "descricao": "Reconhecer os conceitos de versionamento de código"
             },
             {
               "codigo": "CB2",
-              "descricao": "Desenvolver aplicações utilizando linguagem de programação orientada a objetos"
+              "descricao": "Utilizar ferramentas de controle de versão"
             },
             {
               "codigo": "CB3",
-              "descricao": "Implementar classes, objetos, métodos e atributos"
-            },
-            {
-              "codigo": "CB4",
-              "descricao": "Aplicar conceitos de herança, polimorfismo e encapsulamento"
+              "descricao": "Aplicar técnicas de colaboração em projetos de desenvolvimento"
             }
           ],
           "conhecimentos": [
             {
-              "topico": "1 PROGRAMAÇÃO ORIENTADA A OBJETOS",
-              "subtopicos": [
-                "1.1 Conceitos fundamentais",
-                "1.2 Classes e objetos",
-                "1.3 Atributos e métodos",
-                "1.4 Construtores e destrutores",
-                "1.5 Modificadores de acesso"
-              ]
-            },
-            {
-              "topico": "2 PILARES DA POO",
-              "subtopicos": [
-                "2.1 Encapsulamento",
-                "2.2 Herança",
-                "2.3 Polimorfismo",
-                "2.4 Abstração"
-              ]
-            },
-            {
-              "topico": "3 INTERFACES E CLASSES ABSTRATAS",
-              "subtopicos": [
-                "3.1 Definição",
-                "3.2 Implementação",
-                "3.3 Aplicações"
-              ]
-            },
-            {
-              "topico": "4 TRATAMENTO DE EXCEÇÕES",
-              "subtopicos": [
-                "4.1 Try-catch",
-                "4.2 Tipos de exceções",
-                "4.3 Criação de exceções personalizadas"
-              ]
-            }
-          ]
-        },
-        {
-          "nome": "Banco de Dados para Jogos",
-          "modulo": "Introdutório",
-          "cargaHoraria": 80,
-          "objetivo": "Propiciar o desenvolvimento de capacidades básicas para modelagem e manipulação de banco de dados aplicados a jogos digitais.",
-          "capacidadesTecnicas": [
-            {
-              "codigo": "CB1",
-              "descricao": "Modelar banco de dados para jogos digitais"
-            },
-            {
-              "codigo": "CB2",
-              "descricao": "Implementar banco de dados utilizando sistemas gerenciadores"
-            },
-            {
-              "codigo": "CB3",
-              "descricao": "Manipular dados utilizando linguagem SQL"
-            },
-            {
-              "codigo": "CB4",
-              "descricao": "Integrar banco de dados com aplicações de jogos"
-            }
-          ],
-          "conhecimentos": [
-            {
-              "topico": "1 CONCEITOS DE BANCO DE DADOS",
+              "topico": "1 CONTROLE DE VERSÃO",
               "subtopicos": [
                 "1.1 Definição",
                 "1.2 Tipos",
-                "1.3 Características",
-                "1.4 Aplicação em jogos"
+                "1.3 Ferramentas (Git)"
               ]
             },
             {
-              "topico": "2 MODELO ENTIDADE-RELACIONAMENTO",
+              "topico": "2 GIT",
               "subtopicos": [
-                "2.1 Entidades",
-                "2.2 Atributos",
-                "2.3 Relacionamentos",
-                "2.4 Cardinalidade"
+                "2.1 Instalação",
+                "2.2 Comandos básicos",
+                "2.3 Branches",
+                "2.4 Merge e conflitos"
               ]
             },
             {
-              "topico": "3 LINGUAGEM SQL",
+              "topico": "3 PLATAFORMAS DE COLABORAÇÃO",
               "subtopicos": [
-                "3.1 DDL",
-                "3.2 DML",
-                "3.3 Consultas",
-                "3.4 Junções"
-              ]
-            },
-            {
-              "topico": "4 BANCO DE DADOS PARA JOGOS",
-              "subtopicos": [
-                "4.1 Persistência de dados de jogadores",
-                "4.2 Sistemas de save/load",
-                "4.3 Leaderboards",
-                "4.4 Inventários"
+                "3.1 GitHub",
+                "3.2 GitLab",
+                "3.3 Pull requests",
+                "3.4 Code review"
               ]
             }
           ]
         },
         {
-          "nome": "Game Design",
-          "modulo": "Específico I",
-          "cargaHoraria": 100,
-          "objetivo": "Desenvolver capacidades técnicas para concepção e design de jogos digitais.",
+          "nome": "Metodologias de Desenvolvimento de Projetos",
+          "modulo": "Introdutório",
+          "cargaHoraria": 12,
+          "objetivo": "Propiciar o desenvolvimento de capacidades básicas para aplicação de metodologias ágeis no desenvolvimento de projetos.",
           "capacidadesTecnicas": [
             {
-              "codigo": "CT1",
-              "descricao": "Elaborar documentos de game design (GDD)"
+              "codigo": "CB1",
+              "descricao": "Reconhecer os conceitos de metodologias ágeis"
             },
             {
-              "codigo": "CT2",
-              "descricao": "Definir mecânicas e dinâmicas de jogos"
+              "codigo": "CB2",
+              "descricao": "Aplicar metodologias ágeis no desenvolvimento de projetos"
             },
             {
-              "codigo": "CT3",
-              "descricao": "Criar sistemas de progressão e balanceamento"
-            },
-            {
-              "codigo": "CT4",
-              "descricao": "Aplicar conceitos de narrativa em jogos"
+              "codigo": "CB3",
+              "descricao": "Utilizar ferramentas de gestão de projetos ágeis"
             }
           ],
           "conhecimentos": [
             {
-              "topico": "1 FUNDAMENTOS DE GAME DESIGN",
+              "topico": "1 METODOLOGIAS ÁGEIS",
               "subtopicos": [
                 "1.1 Definição",
-                "1.2 História dos jogos digitais",
-                "1.3 Gêneros de jogos",
-                "1.4 Plataformas"
+                "1.2 Manifesto Ágil",
+                "1.3 Scrum",
+                "1.4 Kanban"
+              ]
+            },
+            {
+              "topico": "2 SCRUM",
+              "subtopicos": [
+                "2.1 Papéis",
+                "2.2 Eventos",
+                "2.3 Artefatos",
+                "2.4 Sprints"
+              ]
+            },
+            {
+              "topico": "3 FERRAMENTAS",
+              "subtopicos": [
+                "3.1 Trello",
+                "3.2 Jira",
+                "3.3 Quadros Kanban"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Fundamentos de Jogos Digitais",
+          "modulo": "Introdutório",
+          "cargaHoraria": 36,
+          "objetivo": "Propiciar o desenvolvimento de capacidades básicas para compreender os fundamentos de jogos digitais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer a estrutura física dos elementos de dispositivos mobile e de consoles"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Reconhecer a estrutura lógica dos elementos de dispositivos mobile e de consoles"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer a evolução histórica e tecnológica dos jogos digitais"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Reconhecer os profissionais envolvidos na criação e desenvolvimento de jogos digitais"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 JOGOS DIGITAIS",
+              "subtopicos": [
+                "1.1 Gerações",
+                "1.2 Evolução",
+                "1.3 Tipos de jogos",
+                "1.4 Ciclo de produção"
+              ]
+            },
+            {
+              "topico": "2 PROFISSIONAIS DA ÁREA",
+              "subtopicos": [
+                "2.1 Designer",
+                "2.2 Artistas",
+                "2.3 Programador",
+                "2.4 Sound designer"
+              ]
+            },
+            {
+              "topico": "3 HARDWARE DE DISPOSITIVOS",
+              "subtopicos": [
+                "3.1 Mobile",
+                "3.2 Consoles",
+                "3.3 PC"
+              ]
+            },
+            {
+              "topico": "4 SOFTWARE DE DISPOSITIVOS",
+              "subtopicos": [
+                "4.1 Sistemas operacionais",
+                "4.2 Engines de jogos"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Fundamentos do Design de Elementos Gráficos de Jogos Digitais",
+          "modulo": "Introdutório",
+          "cargaHoraria": 48,
+          "objetivo": "Desenvolver as capacidades básicas para compreender os elementos gráficos fundamentais aplicados em jogos digitais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer procedimentos e recursos para elaboração de projeto conceitual"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Utilizar as ferramentas para a concepção de elementos de multimídia"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer o documento de design do jogo (GDD)"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Reconhecer os estilos e tipos de elementos gráficos do jogo"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Aplicar métodos, ferramentas e técnicas de desenho"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 GAME DESIGN DOCUMENT (GDD)",
+              "subtopicos": [
+                "1.1 Definições",
+                "1.2 Estrutura",
+                "1.3 Tipos"
+              ]
+            },
+            {
+              "topico": "2 CONCEPÇÃO CONCEITUAL",
+              "subtopicos": [
+                "2.1 Definição",
+                "2.2 Recursos",
+                "2.3 Ferramentas",
+                "2.4 Estilo Arte",
+                "2.5 Técnicas de Desenho"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Fundamentos de Programação de Jogos Digitais",
+          "modulo": "Introdutório",
+          "cargaHoraria": 60,
+          "objetivo": "Desenvolver as capacidades básicas para compreender os elementos fundamentais de programação aplicados em jogos digitais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CB1",
+              "descricao": "Reconhecer os procedimentos de preparação de ambiente de programação"
+            },
+            {
+              "codigo": "CB2",
+              "descricao": "Utilizar linguagem de programação para desenvolvimento de jogos"
+            },
+            {
+              "codigo": "CB3",
+              "descricao": "Reconhecer técnicas e algoritmos utilizados na programação de elementos em jogos"
+            },
+            {
+              "codigo": "CB4",
+              "descricao": "Reconhecer as diferentes linguagens de programação utilizadas conforme a plataforma do jogo"
+            },
+            {
+              "codigo": "CB5",
+              "descricao": "Reconhecer métodos de versionamento aplicados na produção de jogos"
+            },
+            {
+              "codigo": "CB6",
+              "descricao": "Reconhecer os processos de integração de elementos de multimídia"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 INSERÇÃO DE SPRITES E ASSETS",
+              "subtopicos": [
+                "1.1 Integração de elementos multimídia",
+                "1.2 Exemplos e aplicações"
+              ]
+            },
+            {
+              "topico": "2 TÉCNICAS E ALGORITMOS",
+              "subtopicos": [
+                "2.1 Sistemas de coordenadas 2D",
+                "2.2 Sistema de cores",
+                "2.3 Elementos de física",
+                "2.4 Colisões e colisores"
+              ]
+            },
+            {
+              "topico": "3 LINGUAGENS DE PROGRAMAÇÃO PARA JOGOS",
+              "subtopicos": [
+                "3.1 CRUD de elementos",
+                "3.2 Bibliotecas"
+              ]
+            },
+            {
+              "topico": "4 AMBIENTE DE DESENVOLVIMENTO",
+              "subtopicos": [
+                "4.1 Instalação",
+                "4.2 Ferramentas",
+                "4.3 Editor de código",
+                "4.4 Compilador"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Planejamento de Elementos Multimídia de Jogos Digitais",
+          "modulo": "Específico I",
+          "cargaHoraria": 40,
+          "objetivo": "Propiciar o desenvolvimento de capacidades técnicas para planejamento da implementação de elementos multimídia para jogos digitais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CT1",
+              "descricao": "Reconhecer procedimentos para coleta de informações do cliente"
+            },
+            {
+              "codigo": "CT2",
+              "descricao": "Reconhecer os elementos necessários para avaliação e validação do projeto"
+            },
+            {
+              "codigo": "CT3",
+              "descricao": "Elaborar documentação para avaliação e validação do projeto"
+            },
+            {
+              "codigo": "CT4",
+              "descricao": "Definir os requisitos funcionais e não funcionais do sistema de jogos"
+            },
+            {
+              "codigo": "CT5",
+              "descricao": "Reconhecer as necessidades de hardware e software demandadas pela aplicação"
+            },
+            {
+              "codigo": "CT6",
+              "descricao": "Aplicar procedimentos e recursos para elaboração de projeto conceitual"
+            },
+            {
+              "codigo": "CT7",
+              "descricao": "Criar esboços de artes conceituais de elementos multimídia para jogos"
+            },
+            {
+              "codigo": "CT8",
+              "descricao": "Documentar resultados de avaliações e validações de elementos multimídia"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 GAME DESIGN DOCUMENT (GDD)",
+              "subtopicos": [
+                "1.1 Normas",
+                "1.2 Escopo",
+                "1.3 Público-alvo",
+                "1.4 Level design",
+                "1.5 História"
+              ]
+            },
+            {
+              "topico": "2 TÉCNICAS DE LEVANTAMENTO DE REQUISITOS",
+              "subtopicos": [
+                "2.1 Brainstorm",
+                "2.2 Questionário",
+                "2.3 Entrevista",
+                "2.4 Prototipagem"
+              ]
+            },
+            {
+              "topico": "3 PROJETO CONCEITUAL",
+              "subtopicos": [
+                "3.1 Características",
+                "3.2 Arte conceitual",
+                "3.3 Pipeline de produção"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Produção de Elementos Multimídia para Jogos Digitais",
+          "modulo": "Específico I",
+          "cargaHoraria": 200,
+          "objetivo": "Propiciar desenvolvimento de capacidades técnicas para produção de elementos multimídia para jogos digitais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CT1",
+              "descricao": "Reconhecer as características de elementos 2D"
+            },
+            {
+              "codigo": "CT2",
+              "descricao": "Reconhecer as ferramentas para criação de elementos 2D"
+            },
+            {
+              "codigo": "CT3",
+              "descricao": "Aplicar métodos e técnicas para criação de elementos 2D"
+            },
+            {
+              "codigo": "CT4",
+              "descricao": "Reconhecer as características de elementos audiovisuais"
+            },
+            {
+              "codigo": "CT5",
+              "descricao": "Reconhecer as ferramentas para criação de elementos audiovisuais"
+            },
+            {
+              "codigo": "CT6",
+              "descricao": "Aplicar métodos e técnicas para criação de elementos audiovisuais"
+            },
+            {
+              "codigo": "CT7",
+              "descricao": "Reconhecer as características de elementos 3D"
+            },
+            {
+              "codigo": "CT8",
+              "descricao": "Reconhecer as ferramentas para modelagem de elementos 3D"
+            },
+            {
+              "codigo": "CT9",
+              "descricao": "Aplicar métodos e técnicas para modelagem de elementos 3D"
+            },
+            {
+              "codigo": "CT10",
+              "descricao": "Aplicar técnicas de verificação e validação de requisitos do projeto de jogos digitais"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 ELEMENTOS MULTIMÍDIA EM 2D",
+              "subtopicos": [
+                "1.1 Tipos",
+                "1.2 Ferramentas de criação",
+                "1.3 2D Sprites",
+                "1.4 Princípios de animação"
+              ]
+            },
+            {
+              "topico": "2 ELEMENTOS MULTIMÍDIA EM 3D",
+              "subtopicos": [
+                "2.1 Tipos",
+                "2.2 Concept art",
+                "2.3 Escultura e modelagem 3D",
+                "2.4 Rigging 3D",
+                "2.5 Animação 3D"
+              ]
+            },
+            {
+              "topico": "3 ELEMENTOS AUDIOVISUAIS",
+              "subtopicos": [
+                "3.1 Roteiro",
+                "3.2 Tipos",
+                "3.3 Criação e edição de imagens, vídeos e som"
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "Planejamento e Publicação de Jogos Digitais",
+          "modulo": "Específico II",
+          "cargaHoraria": 40,
+          "objetivo": "Propiciar desenvolvimento de capacidades técnicas para planejamento, integração, implantação e publicação de jogos digitais.",
+          "capacidadesTecnicas": [
+            {
+              "codigo": "CT1",
+              "descricao": "Definir os requisitos funcionais e não funcionais do sistema de jogos demandados pela aplicação"
+            },
+            {
+              "codigo": "CT2",
+              "descricao": "Reconhecer as necessidades de hardware e software demandadas pela aplicação"
+            },
+            {
+              "codigo": "CT3",
+              "descricao": "Relacionar o padrão de usabilidade com os requisitos do sistema de jogos"
+            },
+            {
+              "codigo": "CT4",
+              "descricao": "Relacionar o padrão de interatividade com os requisitos do sistema de jogos"
+            },
+            {
+              "codigo": "CT5",
+              "descricao": "Avaliar o GDD para garantir conformidade com as especificações técnicas do projeto"
+            },
+            {
+              "codigo": "CT6",
+              "descricao": "Reconhecer procedimentos para coleta de informações do cliente"
+            },
+            {
+              "codigo": "CT7",
+              "descricao": "Utilizar os procedimentos de desenvolvimento definidos pela metodologia Scrum"
+            },
+            {
+              "codigo": "CT8",
+              "descricao": "Reconhecer os procedimentos de publicação de jogos digitais"
+            },
+            {
+              "codigo": "CT9",
+              "descricao": "Aplicar os procedimentos de publicação de jogos digitais"
+            },
+            {
+              "codigo": "CT10",
+              "descricao": "Elaborar o documento de publicação de jogos digitais"
+            }
+          ],
+          "conhecimentos": [
+            {
+              "topico": "1 FUNDAMENTOS DE LEVANTAMENTO DE DEMANDAS",
+              "subtopicos": [
+                "1.1 Brainstorm",
+                "1.2 Questionário",
+                "1.3 Entrevista",
+                "1.4 Prototipagem"
               ]
             },
             {
               "topico": "2 GAME DESIGN DOCUMENT (GDD)",
               "subtopicos": [
-                "2.1 Estrutura",
-                "2.2 Conceito do jogo",
-                "2.3 Mecânicas",
-                "2.4 Personagens",
-                "2.5 Level design",
-                "2.6 Arte conceitual"
+                "2.1 Produção multimídia",
+                "2.2 Implementação",
+                "2.3 Integração",
+                "2.4 Testes",
+                "2.5 Publicação"
               ]
             },
             {
-              "topico": "3 MECÂNICAS DE JOGO",
+              "topico": "3 PUBLICAÇÃO",
               "subtopicos": [
-                "3.1 Core mechanics",
-                "3.2 Sistemas de regras",
-                "3.3 Feedback loops",
-                "3.4 Economia de jogo"
-              ]
-            },
-            {
-              "topico": "4 NARRATIVA EM JOGOS",
-              "subtopicos": [
-                "4.1 Storytelling interativo",
-                "4.2 Worldbuilding",
-                "4.3 Personagens",
-                "4.4 Diálogos"
-              ]
-            },
-            {
-              "topico": "5 BALANCEAMENTO",
-              "subtopicos": [
-                "5.1 Curva de dificuldade",
-                "5.2 Progressão do jogador",
-                "5.3 Sistemas de recompensa",
-                "5.4 Playtesting"
+                "3.1 Planejamento",
+                "3.2 Plataformas",
+                "3.3 Métodos",
+                "3.4 Instalação",
+                "3.5 Configuração"
               ]
             }
           ]
         },
         {
-          "nome": "Programação de Jogos 2D",
-          "modulo": "Específico I",
-          "cargaHoraria": 160,
-          "objetivo": "Desenvolver capacidades técnicas para programação de jogos 2D utilizando game engines.",
-          "capacidadesTecnicas": [
-            {
-              "codigo": "CT1",
-              "descricao": "Desenvolver jogos 2D utilizando game engines"
-            },
-            {
-              "codigo": "CT2",
-              "descricao": "Implementar mecânicas de jogos 2D"
-            },
-            {
-              "codigo": "CT3",
-              "descricao": "Aplicar física 2D em jogos"
-            },
-            {
-              "codigo": "CT4",
-              "descricao": "Criar sistemas de animação 2D"
-            }
-          ],
-          "conhecimentos": [
-            {
-              "topico": "1 GAME ENGINES 2D",
-              "subtopicos": [
-                "1.1 Unity 2D",
-                "1.2 Godot",
-                "1.3 GameMaker",
-                "1.4 Interface e ferramentas"
-              ]
-            },
-            {
-              "topico": "2 PROGRAMAÇÃO DE JOGOS 2D",
-              "subtopicos": [
-                "2.1 Scripts e componentes",
-                "2.2 Game loop",
-                "2.3 Input handling",
-                "2.4 Gerenciamento de cenas"
-              ]
-            },
-            {
-              "topico": "3 FÍSICA 2D",
-              "subtopicos": [
-                "3.1 Rigidbody 2D",
-                "3.2 Colliders",
-                "3.3 Triggers",
-                "3.4 Raycasting"
-              ]
-            },
-            {
-              "topico": "4 ANIMAÇÃO 2D",
-              "subtopicos": [
-                "4.1 Sprite animation",
-                "4.2 Animation controllers",
-                "4.3 Blend trees",
-                "4.4 Skeletal animation"
-              ]
-            },
-            {
-              "topico": "5 SISTEMAS DE JOGO",
-              "subtopicos": [
-                "5.1 Movimentação de personagem",
-                "5.2 Sistema de combate",
-                "5.3 Inventário",
-                "5.4 UI/HUD"
-              ]
-            }
-          ]
-        },
-        {
-          "nome": "Arte 2D para Jogos",
-          "modulo": "Específico I",
-          "cargaHoraria": 80,
-          "objetivo": "Desenvolver capacidades técnicas para criação de arte 2D para jogos digitais.",
-          "capacidadesTecnicas": [
-            {
-              "codigo": "CT1",
-              "descricao": "Criar sprites e assets 2D para jogos"
-            },
-            {
-              "codigo": "CT2",
-              "descricao": "Desenvolver animações de sprites"
-            },
-            {
-              "codigo": "CT3",
-              "descricao": "Criar tilesets e cenários 2D"
-            },
-            {
-              "codigo": "CT4",
-              "descricao": "Aplicar técnicas de pixel art"
-            }
-          ],
-          "conhecimentos": [
-            {
-              "topico": "1 FUNDAMENTOS DE ARTE 2D",
-              "subtopicos": [
-                "1.1 Princípios de design",
-                "1.2 Teoria das cores",
-                "1.3 Composição",
-                "1.4 Estilos artísticos"
-              ]
-            },
-            {
-              "topico": "2 SPRITES",
-              "subtopicos": [
-                "2.1 Criação de sprites",
-                "2.2 Sprite sheets",
-                "2.3 Animação de sprites",
-                "2.4 Exportação"
-              ]
-            },
-            {
-              "topico": "3 PIXEL ART",
-              "subtopicos": [
-                "3.1 Técnicas de pixel art",
-                "3.2 Paletas de cores",
-                "3.3 Dithering",
-                "3.4 Anti-aliasing"
-              ]
-            },
-            {
-              "topico": "4 CENÁRIOS E TILESETS",
-              "subtopicos": [
-                "4.1 Criação de tilesets",
-                "4.2 Tilemaps",
-                "4.3 Parallax",
-                "4.4 Backgrounds"
-              ]
-            },
-            {
-              "topico": "5 SOFTWARES",
-              "subtopicos": [
-                "5.1 Aseprite",
-                "5.2 Photoshop",
-                "5.3 GIMP",
-                "5.4 Piskel"
-              ]
-            }
-          ]
-        },
-        {
-          "nome": "Programação de Jogos 3D",
+          "nome": "Codificação de Sistemas de Jogos Digitais",
           "modulo": "Específico II",
           "cargaHoraria": 200,
-          "objetivo": "Desenvolver capacidades técnicas para programação de jogos 3D utilizando game engines.",
+          "objetivo": "Propiciar desenvolvimento de capacidades técnicas para codificação de sistemas de jogos digitais.",
           "capacidadesTecnicas": [
             {
               "codigo": "CT1",
-              "descricao": "Desenvolver jogos 3D utilizando game engines"
+              "descricao": "Reconhecer as linguagens de programação utilizadas para o desenvolvimento de jogos digitais"
             },
             {
               "codigo": "CT2",
-              "descricao": "Implementar mecânicas de jogos 3D"
+              "descricao": "Aplicar linguagem de programação no desenvolvimento de jogos digitais"
             },
             {
               "codigo": "CT3",
-              "descricao": "Aplicar física 3D em jogos"
+              "descricao": "Reconhecer as especificações técnicas definidas no projeto"
             },
             {
               "codigo": "CT4",
-              "descricao": "Criar sistemas de câmera e iluminação"
+              "descricao": "Aplicar técnicas e métodos de desenvolvimento, conforme a linguagem de programação empregada"
+            },
+            {
+              "codigo": "CT5",
+              "descricao": "Reconhecer processos de depuração e tratamento de erros"
+            },
+            {
+              "codigo": "CT6",
+              "descricao": "Aplicar as boas práticas para documentação de projetos"
+            },
+            {
+              "codigo": "CT7",
+              "descricao": "Gerenciar o versionamento dos sistemas"
+            },
+            {
+              "codigo": "CT8",
+              "descricao": "Reconhecer os procedimentos de instalação e configuração do ambiente de desenvolvimento (IDE)"
+            },
+            {
+              "codigo": "CT9",
+              "descricao": "Aplicar técnicas de conversão e manipulação de dados e arquivos"
+            },
+            {
+              "codigo": "CT10",
+              "descricao": "Aplicar boas práticas de segurança da informação"
+            },
+            {
+              "codigo": "CT11",
+              "descricao": "Aplicar técnicas de integração de elementos multimídia em jogos digitais"
             }
           ],
           "conhecimentos": [
             {
-              "topico": "1 GAME ENGINES 3D",
+              "topico": "1 PRODUÇÃO DE JOGOS DIGITAIS",
               "subtopicos": [
-                "1.1 Unity 3D",
-                "1.2 Unreal Engine",
-                "1.3 Godot 3D",
-                "1.4 Interface e ferramentas"
+                "1.1 Pré-produção",
+                "1.2 Produção",
+                "1.3 Testes",
+                "1.4 Finalização"
               ]
             },
             {
-              "topico": "2 PROGRAMAÇÃO DE JOGOS 3D",
+              "topico": "2 METODOLOGIA ÁGIL",
               "subtopicos": [
-                "2.1 Scripts e componentes",
-                "2.2 Transformações 3D",
-                "2.3 Vetores e quaternions",
-                "2.4 Gerenciamento de cenas"
+                "2.1 Aplicação",
+                "2.2 Exemplos",
+                "2.3 Ferramentas"
               ]
             },
             {
-              "topico": "3 FÍSICA 3D",
+              "topico": "3 BANCO DE DADOS",
               "subtopicos": [
-                "3.1 Rigidbody 3D",
-                "3.2 Colliders 3D",
-                "3.3 Character controller",
-                "3.4 Raycasting 3D"
+                "3.1 Conexão",
+                "3.2 Tipos de dados",
+                "3.3 Manipulação de dados"
               ]
             },
             {
-              "topico": "4 CÂMERA E ILUMINAÇÃO",
+              "topico": "4 LINGUAGEM DE PROGRAMAÇÃO PARA JOGOS",
               "subtopicos": [
-                "4.1 Sistemas de câmera",
-                "4.2 Iluminação em tempo real",
-                "4.3 Lightmapping",
-                "4.4 Post-processing"
+                "4.1 Histórico",
+                "4.2 Instalação",
+                "4.3 IDE",
+                "4.4 Sintaxe",
+                "4.5 Bibliotecas"
               ]
             },
             {
-              "topico": "5 SISTEMAS AVANÇADOS",
+              "topico": "5 PROGRAMAÇÃO ORIENTADA A OBJETOS",
               "subtopicos": [
-                "5.1 IA para jogos",
-                "5.2 Pathfinding",
-                "5.3 Sistemas de partículas",
-                "5.4 Shaders"
+                "5.1 Introdução",
+                "5.2 Estrutura",
+                "5.3 Herança",
+                "5.4 Polimorfismo"
+              ]
+            },
+            {
+              "topico": "6 PADRÕES DE PROJETO (DESIGN PATTERNS)",
+              "subtopicos": [
+                "6.1 Introdução",
+                "6.2 Facade",
+                "6.3 Factory",
+                "6.4 Singleton",
+                "6.5 Observer"
               ]
             }
           ]
         },
         {
-          "nome": "Modelagem 3D para Jogos",
-          "modulo": "Específico II",
-          "cargaHoraria": 120,
-          "objetivo": "Desenvolver capacidades técnicas para criação de modelos 3D para jogos digitais.",
-          "capacidadesTecnicas": [
-            {
-              "codigo": "CT1",
-              "descricao": "Criar modelos 3D para jogos"
-            },
-            {
-              "codigo": "CT2",
-              "descricao": "Aplicar texturas e materiais em modelos 3D"
-            },
-            {
-              "codigo": "CT3",
-              "descricao": "Criar rigging e animações 3D"
-            },
-            {
-              "codigo": "CT4",
-              "descricao": "Otimizar modelos para jogos"
-            }
-          ],
-          "conhecimentos": [
-            {
-              "topico": "1 MODELAGEM 3D",
-              "subtopicos": [
-                "1.1 Modelagem poligonal",
-                "1.2 Modelagem por subdivisão",
-                "1.3 Escultura digital",
-                "1.4 Retopologia"
-              ]
-            },
-            {
-              "topico": "2 TEXTURIZAÇÃO",
-              "subtopicos": [
-                "2.1 UV Mapping",
-                "2.2 Materiais PBR",
-                "2.3 Texture painting",
-                "2.4 Baking"
-              ]
-            },
-            {
-              "topico": "3 RIGGING E ANIMAÇÃO",
-              "subtopicos": [
-                "3.1 Criação de armatures",
-                "3.2 Skinning",
-                "3.3 Animação de personagens",
-                "3.4 Blend shapes"
-              ]
-            },
-            {
-              "topico": "4 OTIMIZAÇÃO",
-              "subtopicos": [
-                "4.1 LOD (Level of Detail)",
-                "4.2 Contagem de polígonos",
-                "4.3 Atlases de textura",
-                "4.4 Exportação para game engines"
-              ]
-            },
-            {
-              "topico": "5 SOFTWARES",
-              "subtopicos": [
-                "5.1 Blender",
-                "5.2 Maya",
-                "5.3 3ds Max",
-                "5.4 ZBrush",
-                "5.5 Substance Painter"
-              ]
-            }
-          ]
-        },
-        {
-          "nome": "Áudio para Jogos",
+          "nome": "Testes de Jogos Digitais",
           "modulo": "Específico II",
           "cargaHoraria": 60,
-          "objetivo": "Desenvolver capacidades técnicas para criação e implementação de áudio em jogos digitais.",
+          "objetivo": "Propiciar o desenvolvimento de capacidades técnicas para planejamento, execução e análise de testes em jogos digitais.",
           "capacidadesTecnicas": [
             {
               "codigo": "CT1",
-              "descricao": "Criar efeitos sonoros para jogos"
+              "descricao": "Analisar documentação de teste para planejamento da rotina"
             },
             {
               "codigo": "CT2",
-              "descricao": "Implementar sistemas de áudio em game engines"
+              "descricao": "Identificar tipos, função, ferramentas de teste de acordo com o sistema de jogos digitais"
             },
             {
               "codigo": "CT3",
-              "descricao": "Aplicar técnicas de áudio espacial"
+              "descricao": "Empregar ferramenta de documentação de teste para registro do resultado obtido"
             },
             {
               "codigo": "CT4",
-              "descricao": "Integrar música adaptativa em jogos"
+              "descricao": "Identificar problemas de sistemas por meio de aplicação de teste"
+            },
+            {
+              "codigo": "CT5",
+              "descricao": "Organizar o ambiente para o desenvolvimento das rotinas de testes"
+            },
+            {
+              "codigo": "CT6",
+              "descricao": "Definir roteiro de teste para execução, conforme recomendações técnicas"
+            },
+            {
+              "codigo": "CT7",
+              "descricao": "Reconhecer normas, métodos e técnicas de testes para correção de falhas de sistema"
+            },
+            {
+              "codigo": "CT8",
+              "descricao": "Reconhecer os elementos de um Plano de Testes"
+            },
+            {
+              "codigo": "CT9",
+              "descricao": "Desenvolver Plano de Testes"
             }
           ],
           "conhecimentos": [
             {
-              "topico": "1 FUNDAMENTOS DE ÁUDIO",
+              "topico": "1 TESTES EM JOGOS DIGITAIS",
               "subtopicos": [
-                "1.1 Teoria do som",
-                "1.2 Formatos de áudio",
-                "1.3 Compressão",
-                "1.4 Mixagem"
+                "1.1 Motivação",
+                "1.2 Objetivos",
+                "1.3 Testes no processo de desenvolvimento"
               ]
             },
             {
-              "topico": "2 SOUND DESIGN",
+              "topico": "2 PROCESSO FUNDAMENTAL DE TESTE",
               "subtopicos": [
-                "2.1 Criação de efeitos sonoros",
-                "2.2 Foley",
-                "2.3 Síntese sonora",
-                "2.4 Bibliotecas de som"
+                "2.1 Planejamento",
+                "2.2 Desenho dos Testes",
+                "2.3 Execução",
+                "2.4 Avaliação dos Resultados"
               ]
             },
             {
-              "topico": "3 IMPLEMENTAÇÃO EM JOGOS",
+              "topico": "3 TIPOS DE TESTES",
               "subtopicos": [
-                "3.1 Audio sources",
-                "3.2 Audio listeners",
-                "3.3 Áudio 3D espacial",
-                "3.4 Oclusão e reverberação"
+                "3.1 Testes de Funcionalidade",
+                "3.2 Testes de Usabilidade",
+                "3.3 Testes de Desempenho",
+                "3.4 Teste alfa",
+                "3.5 Teste beta"
               ]
             },
             {
-              "topico": "4 MÚSICA PARA JOGOS",
+              "topico": "4 TÉCNICAS DE TESTES",
               "subtopicos": [
-                "4.1 Música adaptativa",
-                "4.2 Loops",
-                "4.3 Transições",
-                "4.4 Middleware de áudio (FMOD, Wwise)"
+                "4.1 Teste funcional (caixa preta)",
+                "4.2 Teste estrutural (caixa branca)"
+              ]
+            },
+            {
+              "topico": "5 NÍVEIS DE TESTES",
+              "subtopicos": [
+                "5.1 Teste Unitário",
+                "5.2 Teste de Integração",
+                "5.3 Teste de Sistema",
+                "5.4 Teste de Aceitação"
               ]
             }
           ]
         },
         {
-          "nome": "Projeto de Jogo Digital",
+          "nome": "Manutenção de Jogos Digitais",
           "modulo": "Específico II",
-          "cargaHoraria": 120,
-          "objetivo": "Desenvolver capacidades técnicas para desenvolvimento completo de um projeto de jogo digital.",
+          "cargaHoraria": 28,
+          "objetivo": "Propiciar o desenvolvimento de capacidades técnicas para manutenção corretiva e evolutiva de jogos digitais.",
           "capacidadesTecnicas": [
             {
               "codigo": "CT1",
-              "descricao": "Planejar e gerenciar projetos de jogos"
+              "descricao": "Reconhecer os procedimentos de manutenção de jogos digitais"
             },
             {
               "codigo": "CT2",
-              "descricao": "Desenvolver jogos completos em equipe"
+              "descricao": "Aplicar procedimentos de manutenção de jogos digitais"
             },
             {
               "codigo": "CT3",
-              "descricao": "Aplicar metodologias ágeis no desenvolvimento de jogos"
+              "descricao": "Reconhecer os procedimentos de manutenção corretiva de jogos digitais"
             },
             {
               "codigo": "CT4",
-              "descricao": "Publicar jogos em plataformas digitais"
+              "descricao": "Aplicar procedimentos de manutenção corretiva de jogos digitais"
+            },
+            {
+              "codigo": "CT5",
+              "descricao": "Reconhecer os procedimentos de aprimoramento de jogos digitais"
+            },
+            {
+              "codigo": "CT6",
+              "descricao": "Aplicar procedimentos de aprimoramento de jogos digitais"
             }
           ],
           "conhecimentos": [
             {
-              "topico": "1 GESTÃO DE PROJETOS DE JOGOS",
+              "topico": "1 MANUTENÇÃO EM JOGOS DIGITAIS",
               "subtopicos": [
-                "1.1 Planejamento",
-                "1.2 Cronograma",
-                "1.3 Escopo",
-                "1.4 Recursos"
+                "1.1 Motivação",
+                "1.2 Objetivos",
+                "1.3 Evolução de software",
+                "1.4 Correção de bugs"
               ]
             },
             {
-              "topico": "2 METODOLOGIAS ÁGEIS",
+              "topico": "2 PROCESSO FUNDAMENTAL DE MANUTENÇÃO",
               "subtopicos": [
-                "2.1 Scrum para jogos",
-                "2.2 Sprints",
-                "2.3 Daily meetings",
-                "2.4 Retrospectivas"
+                "2.1 Planejamento",
+                "2.2 Plano de manutenção",
+                "2.3 Execução",
+                "2.4 Monitoração e Controle"
               ]
             },
             {
-              "topico": "3 DESENVOLVIMENTO EM EQUIPE",
+              "topico": "3 REFATORAÇÃO DE CÓDIGO",
               "subtopicos": [
-                "3.1 Controle de versão (Git)",
-                "3.2 Integração contínua",
-                "3.3 Code review",
-                "3.4 Documentação"
-              ]
-            },
-            {
-              "topico": "4 PUBLICAÇÃO",
-              "subtopicos": [
-                "4.1 Build e deploy",
-                "4.2 Plataformas (Steam, itch.io, Google Play, App Store)",
-                "4.3 Marketing",
-                "4.4 Monetização"
-              ]
-            },
-            {
-              "topico": "5 TESTES E QA",
-              "subtopicos": [
-                "5.1 Playtesting",
-                "5.2 Bug tracking",
-                "5.3 Testes de performance",
-                "5.4 Polimento"
+                "3.1 Motivação",
+                "3.2 Técnicas de refatoramento"
               ]
             }
           ]

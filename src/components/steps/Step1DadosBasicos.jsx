@@ -1,28 +1,65 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, GraduationCap, BookOpen } from 'lucide-react';
+import { ChevronRight, GraduationCap, BookOpen, Loader2 } from 'lucide-react';
 import { useProva, TIPO_AVALIACAO } from '../../context/ProvaContext';
-import { cursos, TIPO_ENSINO, getTermoCapacidade } from '../../data/cursos';
+import { getCursos, getUnidadesByCurso, TIPO_ENSINO, getTermoCapacidade } from '../../services/apiService';
 
 export default function Step1DadosBasicos() {
   const { dadosProva, updateDadosProva, nextStep, tipoAvaliacao } = useProva();
   const [errors, setErrors] = useState({});
+  const [cursos, setCursos] = useState([]);
+  const [unidadesCurriculares, setUnidadesCurriculares] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingUCs, setLoadingUCs] = useState(false);
+
+  // Carregar cursos do banco de dados
+  useEffect(() => {
+    async function loadCursos() {
+      try {
+        setLoading(true);
+        const data = await getCursos();
+        setCursos(data);
+      } catch (error) {
+        console.error('Erro ao carregar cursos:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCursos();
+  }, []);
+
+  // Carregar UCs quando curso mudar
+  useEffect(() => {
+    async function loadUCs() {
+      if (!dadosProva.cursoId) {
+        setUnidadesCurriculares([]);
+        return;
+      }
+      try {
+        setLoadingUCs(true);
+        const data = await getUnidadesByCurso(dadosProva.cursoId);
+        setUnidadesCurriculares(data);
+      } catch (error) {
+        console.error('Erro ao carregar UCs:', error);
+        setUnidadesCurriculares([]);
+      } finally {
+        setLoadingUCs(false);
+      }
+    }
+    loadUCs();
+  }, [dadosProva.cursoId]);
 
   // Filtrar cursos por tipo de ensino
   const cursosFiltrados = cursos.filter(c => c.tipoEnsino === dadosProva.tipoEnsino);
 
-  // Obter unidades curriculares do curso selecionado
-  const cursoSelecionado = cursos.find(c => c.id === dadosProva.cursoId);
-  const unidadesCurriculares = cursoSelecionado?.unidadesCurriculares || [];
-
   // Atualizar curso quando mudar tipo de ensino
   useEffect(() => {
-    if (dadosProva.cursoId) {
+    if (dadosProva.cursoId && cursos.length > 0) {
       const cursoAtual = cursos.find(c => c.id === dadosProva.cursoId);
       if (cursoAtual && cursoAtual.tipoEnsino !== dadosProva.tipoEnsino) {
-        updateDadosProva({ cursoId: '', curso: '', unidadeCurricular: '', capacidades: [] });
+        updateDadosProva({ cursoId: '', curso: '', unidadeCurricular: '', unidadeCurricularId: '', capacidades: [] });
       }
     }
-  }, [dadosProva.tipoEnsino]);
+  }, [dadosProva.tipoEnsino, cursos]);
 
   const handleCursoChange = (cursoId) => {
     const curso = cursos.find(c => c.id === cursoId);
@@ -30,6 +67,7 @@ export default function Step1DadosBasicos() {
       cursoId,
       curso: curso?.nome || '',
       unidadeCurricular: '',
+      unidadeCurricularId: '',
       capacidades: []
     });
   };
@@ -38,6 +76,7 @@ export default function Step1DadosBasicos() {
     const uc = unidadesCurriculares.find(u => u.id === ucId);
     updateDadosProva({
       unidadeCurricular: uc?.nome || '',
+      unidadeCurricularId: ucId,
       capacidades: [] // Reset capacidades quando mudar UC
     });
   };
@@ -125,7 +164,7 @@ export default function Step1DadosBasicos() {
           </div>
 
           {/* Curso */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Curso Técnico em <span className="text-red-500">*</span>
             </label>
@@ -137,38 +176,48 @@ export default function Step1DadosBasicos() {
                 ${errors.curso ? 'border-red-500' : 'border-gray-300'}
               `}
             >
-              <option value="">Selecione o curso...</option>
+              <option value="">{loading ? 'Carregando cursos...' : 'Selecione o curso...'}</option>
               {cursosFiltrados.map(curso => (
                 <option key={curso.id} value={curso.id}>
                   {curso.nome}
                 </option>
               ))}
             </select>
+            {loading && (
+              <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                <Loader2 className="animate-spin text-gray-400" size={20} />
+              </div>
+            )}
             {errors.curso && <p className="mt-1 text-sm text-red-500">{errors.curso}</p>}
           </div>
 
           {/* Unidade Curricular */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Unidade Curricular <span className="text-red-500">*</span>
             </label>
             <select
-              value={unidadesCurriculares.find(u => u.nome === dadosProva.unidadeCurricular)?.id || ''}
+              value={dadosProva.unidadeCurricularId || ''}
               onChange={(e) => handleUnidadeCurricularChange(e.target.value)}
-              disabled={!dadosProva.cursoId}
+              disabled={!dadosProva.cursoId || loadingUCs}
               className={`
                 w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
                 ${errors.unidadeCurricular ? 'border-red-500' : 'border-gray-300'}
                 ${!dadosProva.cursoId ? 'bg-gray-100 cursor-not-allowed' : ''}
               `}
             >
-              <option value="">Selecione a unidade curricular...</option>
+              <option value="">{loadingUCs ? 'Carregando...' : 'Selecione a unidade curricular...'}</option>
               {unidadesCurriculares.map(uc => (
                 <option key={uc.id} value={uc.id}>
                   {uc.nome} ({uc.cargaHoraria}h)
                 </option>
               ))}
             </select>
+            {loadingUCs && (
+              <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                <Loader2 className="animate-spin text-gray-400" size={20} />
+              </div>
+            )}
             {errors.unidadeCurricular && <p className="mt-1 text-sm text-red-500">{errors.unidadeCurricular}</p>}
           </div>
 

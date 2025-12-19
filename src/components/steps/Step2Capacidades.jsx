@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, CheckSquare, Square, Lightbulb } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckSquare, Square, Lightbulb, Loader2 } from 'lucide-react';
 import { useProva, TIPO_AVALIACAO } from '../../context/ProvaContext';
-import { cursos } from '../../data/cursos';
+import { getCapacidadesByUnidade } from '../../services/apiService';
 import { getSugestoesTemas } from '../../services/ragService';
 
 export default function Step2Capacidades() {
@@ -37,13 +37,29 @@ export default function Step2Capacidades() {
   
   const [errors, setErrors] = useState({});
   const [sugestoes, setSugestoes] = useState([]);
+  const [capacidadesDisponiveis, setCapacidadesDisponiveis] = useState([]);
+  const [loadingCapacidades, setLoadingCapacidades] = useState(false);
 
-  // Obter capacidades da unidade curricular selecionada
-  const cursoSelecionado = cursos.find(c => c.id === dadosProva.cursoId);
-  const ucSelecionada = cursoSelecionado?.unidadesCurriculares.find(
-    uc => uc.nome === dadosProva.unidadeCurricular
-  );
-  const capacidadesDisponiveis = ucSelecionada?.capacidades || [];
+  // Carregar capacidades da UC selecionada do banco de dados
+  useEffect(() => {
+    async function loadCapacidades() {
+      if (!dadosProva.unidadeCurricularId) {
+        setCapacidadesDisponiveis([]);
+        return;
+      }
+      try {
+        setLoadingCapacidades(true);
+        const data = await getCapacidadesByUnidade(dadosProva.unidadeCurricularId);
+        setCapacidadesDisponiveis(data);
+      } catch (error) {
+        console.error('Erro ao carregar capacidades:', error);
+        setCapacidadesDisponiveis([]);
+      } finally {
+        setLoadingCapacidades(false);
+      }
+    }
+    loadCapacidades();
+  }, [dadosProva.unidadeCurricularId]);
 
   // Buscar sugestões de temas do RAG baseado na UC
   useEffect(() => {
@@ -140,7 +156,18 @@ export default function Step2Capacidades() {
             </div>
 
             <div className="space-y-2 max-h-80 overflow-y-auto border rounded-lg p-4">
-              {capacidadesDisponiveis.map((cap) => {
+              {loadingCapacidades && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="animate-spin text-[#004b8d] mr-2" size={24} />
+                  <span className="text-gray-600">Carregando capacidades...</span>
+                </div>
+              )}
+              {!loadingCapacidades && capacidadesDisponiveis.length === 0 && (
+                <p className="text-center text-gray-500 py-8">
+                  Nenhuma capacidade encontrada para esta unidade curricular.
+                </p>
+              )}
+              {!loadingCapacidades && capacidadesDisponiveis.map((cap) => {
                 const isSelected = dadosProva.capacidades.some(c => c.codigo === cap.codigo);
                 return (
                   <button
