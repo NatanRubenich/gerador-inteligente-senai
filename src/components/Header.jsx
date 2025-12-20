@@ -23,7 +23,7 @@ export default function Header() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Gerador de Provas <span className="text-xs font-normal text-blue-300 ml-1">v1.2.0</span></h1>
+              <h1 className="text-2xl font-bold">Gerador de Provas <span className="text-xs font-normal text-blue-300 ml-1">v1.4.0</span></h1>
               <p className="text-blue-200 text-sm flex items-center gap-2">
                 <Brain size={14} />
                 RAG + IA Integrado
@@ -66,7 +66,7 @@ export default function Header() {
               apiConfigurada ? 'bg-green-500/20 text-green-200' : 'bg-amber-500/20 text-amber-200'
             }`}>
               <span className={`w-2 h-2 rounded-full ${apiConfigurada ? 'bg-green-400' : 'bg-amber-400'}`}></span>
-              {apiConfigurada ? 'API Conectada' : 'API não configurada'}
+              {apiConfigurada ? 'Conectado ao Gemini 2.5' : 'API não configurada'}
             </div>
             
             <button

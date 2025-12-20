@@ -1,6 +1,6 @@
 // Serviço RAG (Retrieval-Augmented Generation) - Especialista SENAI
 // Base de conhecimento da metodologia SENAI para elaboração de avaliações
-// v1.2.0 - Implementação com busca textual e base de conhecimento estruturada
+// v1.3.0 - Implementação com busca textual e base de conhecimento estruturada
 
 import matrizesData from '../data/knowledge-base/matrizes-curriculares.json';
 import metodologiaData from '../data/knowledge-base/metodologia-senai.json';
@@ -555,7 +555,7 @@ export function getContextoRAG(unidadeCurricular, assunto) {
 }
 
 // ============================================
-// NOVAS FUNÇÕES RAG v1.2.0
+// NOVAS FUNÇÕES RAG v1.3.0
 // ============================================
 
 /**
@@ -882,7 +882,7 @@ export default {
   getSugestoesTemas,
   getContextoRAG,
   baseConhecimento,
-  // Novas funções RAG v1.2.0
+  // Novas funções RAG v1.3.0
   searchRAG,
   getCursoInfo,
   getUCInfo,

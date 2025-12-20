@@ -1,11 +1,19 @@
 /**
  * Serviço para geração de Situação de Aprendizagem (SA)
  * Baseado no Guia Prático SENAI - Etapas para elaboração do Plano de Ensino e SA
- * Utiliza a API Groq (Llama 3.3) para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
- * v1.2.0 - Integração com RAG aprimorado
+ * Utiliza Google Gemini / Groq para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
+ * v1.4.0 - Integração com Google Gemini API
  */
 
-import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
+import { 
+  GEMINI_API_KEY, 
+  GEMINI_API_URL, 
+  GEMINI_MODEL,
+  GROQ_API_KEY, 
+  GROQ_API_URL, 
+  GROQ_MODEL,
+  LLM_PROVIDER 
+} from '../config/api';
 import { 
   gerarContextoRAGCompleto, 
   getMetodologiaSA,
@@ -17,15 +25,55 @@ import {
  * Verifica se a API está configurada
  */
 export const isApiConfigured = () => {
-  return GROQ_API_KEY && GROQ_API_KEY.length > 0 && GROQ_API_KEY !== 'sua_chave_groq_aqui';
+  const key = LLM_PROVIDER === 'gemini' ? GEMINI_API_KEY : GROQ_API_KEY;
+  return key && key.length > 10;
 };
 
 /**
- * Faz chamada à API do Groq (formato OpenAI)
+ * Faz chamada à API do Google Gemini
+ */
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('API Key do Gemini não configurada.');
+  }
+
+  const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: maxTokens,
+        responseMimeType: 'application/json'
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || `Erro na API Gemini: ${response.status}`);
+  }
+
+  const data = await response.json();
+  
+  if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+    throw new Error('Resposta truncada. Tente reduzir a complexidade.');
+  }
+  
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!content) throw new Error('Resposta vazia da API Gemini');
+  return content;
+}
+
+/**
+ * Faz chamada à API do Groq (fallback)
  */
 async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
   if (!GROQ_API_KEY) {
-    throw new Error('API Key não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
+    throw new Error('API Key do Groq não configurada.');
   }
 
   const response = await fetch(GROQ_API_URL, {
@@ -35,7 +83,7 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
       'Authorization': `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model: LLM_MODEL,
+      model: GROQ_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -53,18 +101,24 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
 
   const data = await response.json();
   
-  const finishReason = data.choices?.[0]?.finish_reason;
-  if (finishReason === 'length') {
+  if (data.choices?.[0]?.finish_reason === 'length') {
     throw new Error('Resposta truncada. Tente reduzir a complexidade.');
   }
   
   const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error('Resposta vazia da API Groq');
-  }
-
+  if (!content) throw new Error('Resposta vazia da API Groq');
   return content;
+}
+
+/**
+ * Faz chamada à API LLM configurada (Gemini ou Groq)
+ */
+async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  console.log(`[SA Service] Usando provider: ${LLM_PROVIDER}`);
+  if (LLM_PROVIDER === 'gemini') {
+    return callGeminiAPI(systemPrompt, userPrompt, maxTokens);
+  }
+  return callGroqAPI(systemPrompt, userPrompt, maxTokens);
 }
 
 /**
@@ -117,7 +171,7 @@ export async function gerarSituacaoAprendizagem({
   nivelDificuldade = 'intermediario',
   tipoRubrica = 'gradual'
 }) {
-  // Buscar contexto RAG aprimorado (v1.2.0)
+  // Buscar contexto RAG aprimorado (v1.3.0)
   const contextoRAG = gerarContextoRAGCompleto({
     curso,
     unidadeCurricular,
@@ -282,7 +336,7 @@ IMPORTANTE:
 - Os critérios devem ser em formato de pergunta no pretérito`;
 
   try {
-    const content = await callGroqAPI(systemPrompt, userPrompt);
+    const content = await callLLMAPI(systemPrompt, userPrompt);
 
     // Limpar e parsear JSON
     let jsonContent = content.trim();

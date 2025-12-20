@@ -2,17 +2,81 @@
  * Serviço para geração de Plano de Ensino
  * Compatível com o sistema SGN do SENAI
  * Baseado na Metodologia SENAI de Educação Profissional (MSEP)
- * Utiliza API Groq (Llama 3.3 70B)
+ * v1.4.0 - Integração com Google Gemini API
  */
 
-import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
+import { 
+  GEMINI_API_KEY, 
+  GEMINI_API_URL, 
+  GEMINI_MODEL,
+  GROQ_API_KEY, 
+  GROQ_API_URL, 
+  GROQ_MODEL,
+  LLM_PROVIDER 
+} from '../config/api';
 
 /**
- * Faz chamada à API do Groq (formato OpenAI)
+ * Faz chamada à API do Google Gemini
+ */
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('API Key do Gemini não configurada. Crie o arquivo .env com VITE_GEMINI_API_KEY');
+  }
+
+  const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  console.log('[Gemini] Chamando API:', GEMINI_MODEL);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: maxTokens,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    const data = await response.json();
+    console.log('[Gemini] Response status:', response.status);
+
+    if (!response.ok) {
+      console.error('[Gemini] Erro:', data);
+      throw new Error(data.error?.message || `Erro na API Gemini: ${response.status}`);
+    }
+    
+    // Verificar bloqueio de segurança
+    if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+      throw new Error('Conteúdo bloqueado por políticas de segurança. Tente reformular.');
+    }
+    
+    if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+      throw new Error('Resposta truncada. Tente reduzir a complexidade.');
+    }
+    
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) {
+      console.error('[Gemini] Resposta sem conteúdo:', data);
+      throw new Error('Resposta vazia da API Gemini');
+    }
+    
+    console.log('[Gemini] Resposta recebida:', content.length, 'caracteres');
+    return content;
+  } catch (error) {
+    console.error('[Gemini] Erro na chamada:', error);
+    throw error;
+  }
+}
+
+/**
+ * Faz chamada à API do Groq (fallback)
  */
 async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
   if (!GROQ_API_KEY) {
-    throw new Error('API Key não configurada. Configure VITE_GROQ_API_KEY no arquivo .env');
+    throw new Error('API Key do Groq não configurada.');
   }
 
   const response = await fetch(GROQ_API_URL, {
@@ -22,7 +86,7 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
       'Authorization': `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model: LLM_MODEL,
+      model: GROQ_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -40,18 +104,24 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
 
   const data = await response.json();
   
-  const finishReason = data.choices?.[0]?.finish_reason;
-  if (finishReason === 'length') {
+  if (data.choices?.[0]?.finish_reason === 'length') {
     throw new Error('Resposta truncada. Tente reduzir a complexidade.');
   }
   
   const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error('Resposta vazia da API Groq');
-  }
-
+  if (!content) throw new Error('Resposta vazia da API Groq');
   return content;
+}
+
+/**
+ * Faz chamada à API LLM configurada (Gemini ou Groq)
+ */
+async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  console.log(`[Plano Ensino Service] Usando provider: ${LLM_PROVIDER}`);
+  if (LLM_PROVIDER === 'gemini') {
+    return callGeminiAPI(systemPrompt, userPrompt, maxTokens);
+  }
+  return callGroqAPI(systemPrompt, userPrompt, maxTokens);
 }
 
 // Ambientes Pedagógicos comuns
@@ -337,7 +407,7 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
   try {
     const systemPrompt = 'Você é um especialista em educação profissional do SENAI. Gere conteúdo para preencher o sistema SGN. Responda APENAS com JSON válido, sem markdown ou texto adicional.';
     
-    const content = await callGroqAPI(systemPrompt, prompt);
+    const content = await callLLMAPI(systemPrompt, prompt);
 
     // Limpar e parsear JSON
     let jsonStr = content.trim();

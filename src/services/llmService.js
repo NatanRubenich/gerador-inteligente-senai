@@ -1,8 +1,16 @@
-// Serviço de integração com LLM (Groq API - Llama 3.3 70B)
-// Documentação: https://console.groq.com/docs/quickstart
-// v1.2.0 - Integração com RAG aprimorado
+// Serviço de integração com LLM (Google Gemini / Groq)
+// Documentação Gemini: https://ai.google.dev/gemini-api/docs
+// v1.4.0 - Integração com Google Gemini API
 
-import { GROQ_API_KEY, GROQ_API_URL, LLM_MODEL } from '../config/api';
+import { 
+  GEMINI_API_KEY, 
+  GEMINI_API_URL, 
+  GEMINI_MODEL,
+  GROQ_API_KEY, 
+  GROQ_API_URL, 
+  GROQ_MODEL,
+  LLM_PROVIDER 
+} from '../config/api';
 import { 
   getContextoRAG, 
   buscarConhecimentoRAG, 
@@ -124,21 +132,84 @@ function parseJsonSafely(content) {
 }
 
 /**
- * Obtém a API Key configurada
+ * Obtém a API Key configurada (Gemini ou Groq)
  */
 export function getApiKey() {
-  return GROQ_API_KEY;
+  return LLM_PROVIDER === 'gemini' ? GEMINI_API_KEY : GROQ_API_KEY;
 }
 
 /**
  * Verifica se a API está configurada
  */
 export function isApiConfigured() {
-  return Boolean(GROQ_API_KEY && GROQ_API_KEY.length > 10);
+  const key = getApiKey();
+  return Boolean(key && key.length > 10);
 }
 
 /**
- * Faz chamada à API do Groq (formato OpenAI)
+ * Faz chamada à API do Google Gemini
+ * @param {string} systemPrompt - Prompt do sistema
+ * @param {string} userPrompt - Prompt do usuário
+ * @param {number} maxTokens - Máximo de tokens na resposta
+ * @returns {Promise<string>} - Conteúdo da resposta
+ */
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  const apiKey = GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('API Key do Gemini não configurada. Crie o arquivo .env com VITE_GEMINI_API_KEY');
+  }
+
+  const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+  console.log('[Gemini] Chamando API:', GEMINI_MODEL);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: maxTokens,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    const data = await response.json();
+    console.log('[Gemini] Response status:', response.status, 'finishReason:', data.candidates?.[0]?.finishReason);
+
+    if (!response.ok) {
+      console.error('[Gemini] Erro:', data);
+      throw new Error(data.error?.message || `Erro na API Gemini: ${response.status}`);
+    }
+    
+    // Verificar bloqueio de segurança
+    if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+      throw new Error('Conteúdo bloqueado por políticas de segurança. Tente reformular.');
+    }
+    
+    if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+      throw new Error('Resposta truncada. Tente gerar menos questões.');
+    }
+    
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) {
+      console.error('[Gemini] Resposta sem conteúdo:', data);
+      throw new Error('Resposta vazia da API Gemini');
+    }
+    
+    console.log('[Gemini] Resposta recebida:', content.length, 'caracteres');
+    return content;
+  } catch (error) {
+    console.error('[Gemini] Erro na chamada:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Faz chamada à API do Groq (formato OpenAI) - Fallback
  * @param {string} systemPrompt - Prompt do sistema
  * @param {string} userPrompt - Prompt do usuário
  * @param {number} maxTokens - Máximo de tokens na resposta
@@ -148,7 +219,7 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
   const apiKey = GROQ_API_KEY;
   
   if (!apiKey) {
-    throw new Error('API Key não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
+    throw new Error('API Key do Groq não configurada. Configure a variável VITE_GROQ_API_KEY no arquivo .env');
   }
 
   const response = await fetch(GROQ_API_URL, {
@@ -158,7 +229,7 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: LLM_MODEL,
+      model: GROQ_MODEL,
       messages: [
         {
           role: 'system',
@@ -198,13 +269,30 @@ async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
 }
 
 /**
+ * Faz chamada à API LLM configurada (Gemini ou Groq)
+ * @param {string} systemPrompt - Prompt do sistema
+ * @param {string} userPrompt - Prompt do usuário
+ * @param {number} maxTokens - Máximo de tokens na resposta
+ * @returns {Promise<string>} - Conteúdo da resposta
+ */
+async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+  console.log(`[LLM] Usando provider: ${LLM_PROVIDER}`);
+  
+  if (LLM_PROVIDER === 'gemini') {
+    return callGeminiAPI(systemPrompt, userPrompt, maxTokens);
+  } else {
+    return callGroqAPI(systemPrompt, userPrompt, maxTokens);
+  }
+}
+
+/**
  * Gera questões usando a API do Groq (Llama 3.3) com RAG integrado
  * @param {object} dadosProva - Dados da prova
  * @returns {Promise<object>} - JSON com as questões geradas
  */
 export async function gerarQuestoes(dadosProva) {
 
-  // Buscar contexto do RAG aprimorado (v1.2.0)
+  // Buscar contexto do RAG aprimorado (v1.3.0)
   const contextoRAG = gerarContextoRAGCompleto({
     curso: dadosProva.curso,
     unidadeCurricular: dadosProva.unidadeCurricular,
@@ -325,7 +413,7 @@ IMPORTANTE:
 - Questões Difíceis: análise, síntese, avaliação crítica, problemas complexos`;
 
   try {
-    const content = await callGroqAPI(systemPrompt, userPrompt);
+    const content = await callLLMAPI(systemPrompt, userPrompt);
 
     // Usar parser seguro com múltiplas estratégias de correção
     return parseJsonSafely(content);
@@ -365,7 +453,7 @@ Retorne um JSON com a estrutura:
 }`;
 
   try {
-    const content = await callGroqAPI(systemPrompt, userPrompt);
+    const content = await callLLMAPI(systemPrompt, userPrompt);
 
     // Usar parser seguro com múltiplas estratégias de correção
     const result = parseJsonSafely(content);
@@ -530,7 +618,7 @@ IMPORTANTE:
 - A contextualização deve parecer uma situação REAL de trabalho, não genérica`;
 
   try {
-    const content = await callGroqAPI(systemPrompt, userPrompt);
+    const content = await callLLMAPI(systemPrompt, userPrompt);
 
     // Usar parser seguro com múltiplas estratégias de correção
     const result = parseJsonSafely(content);
