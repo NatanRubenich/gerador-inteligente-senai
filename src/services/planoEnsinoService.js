@@ -288,6 +288,13 @@ export async function gerarPlanoEnsino({
 
   const prompt = `Você é um especialista em educação profissional do SENAI, seguindo a Metodologia SENAI de Educação Profissional (MSEP).
 
+REGRAS DE CONTEÚDO PROIBIDO (OBRIGATÓRIO):
+- JAMAIS aborde temas relacionados a pornografia, conteúdo sexual ou adulto
+- JAMAIS aborde jogos de azar, apostas ou cassinos
+- JAMAIS crie conteúdo que fira os direitos humanos, seja discriminatório ou preconceituoso
+- JAMAIS inclua conteúdo violento, que incite ódio ou seja ofensivo
+- Mantenha sempre um tom profissional e educacional adequado ao ambiente escolar
+
 Gere um PLANO DE ENSINO para preencher o sistema SGN do SENAI.
 
 DADOS DO CURSO:

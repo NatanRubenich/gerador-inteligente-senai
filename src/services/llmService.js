@@ -344,12 +344,23 @@ export async function gerarQuestoes(dadosProva) {
 
   const systemPrompt = `Você é um especialista em elaboração de provas do SENAI seguindo a metodologia SAEP (Sistema de Avaliação da Educação Profissional).
 
+REGRAS DE CONTEÚDO PROIBIDO (OBRIGATÓRIO):
+- JAMAIS aborde temas relacionados a pornografia, conteúdo sexual ou adulto
+- JAMAIS aborde jogos de azar, apostas ou cassinos
+- JAMAIS crie conteúdo que fira os direitos humanos, seja discriminatório ou preconceituoso
+- JAMAIS inclua conteúdo violento, que incite ódio ou seja ofensivo
+- Mantenha sempre um tom profissional e educacional adequado ao ambiente escolar
+
 REGRAS IMPORTANTES PARA ELABORAÇÃO DE QUESTÕES:
 1. Cada questão deve ter: contexto, comando e 4 alternativas (a, b, c, d)
 2. O contexto deve ser uma situação-problema realista e profissional
 3. O comando deve estar diretamente ligado ao contexto - o aluno NÃO deve conseguir responder apenas lendo o comando
 4. NÃO use pegadinhas nas alternativas (termos ou comandos que não existem)
-5. As alternativas devem ter tamanhos semelhantes - a resposta correta NÃO pode ser maior que as outras
+5. TODAS AS ALTERNATIVAS DEVEM TER COMPRIMENTO SEMELHANTE - Esta é uma regra crítica:
+   - A resposta correta NÃO pode ser visivelmente mais longa ou mais curta que as outras
+   - Todas as 4 alternativas devem ter aproximadamente o mesmo número de palavras (variação máxima de 20%)
+   - Se uma alternativa precisa ser mais detalhada, ajuste as outras para terem tamanho similar
+   - Evite que a alternativa correta seja sempre a mais completa ou elaborada
 6. NÃO use frases subjetivas como "qual a melhor alternativa" ou "qual a melhor opção"
 7. Todas as alternativas devem ser plausíveis e relacionadas ao assunto
 8. Distribua as respostas corretas entre as letras a, b, c, d de forma equilibrada
@@ -500,6 +511,13 @@ export async function gerarAvaliacaoPratica(dadosProva) {
   });
 
   const systemPrompt = `Você é um especialista em elaboração de avaliações práticas do SENAI seguindo a Metodologia SENAI de Educação Profissional (MSEP).
+
+REGRAS DE CONTEÚDO PROIBIDO (OBRIGATÓRIO):
+- JAMAIS aborde temas relacionados a pornografia, conteúdo sexual ou adulto
+- JAMAIS aborde jogos de azar, apostas ou cassinos
+- JAMAIS crie conteúdo que fira os direitos humanos, seja discriminatório ou preconceituoso
+- JAMAIS inclua conteúdo violento, que incite ódio ou seja ofensivo
+- Mantenha sempre um tom profissional e educacional adequado ao ambiente escolar
 
 ESTRUTURA DA AVALIAÇÃO PRÁTICA:
 Uma avaliação prática deve conter:
