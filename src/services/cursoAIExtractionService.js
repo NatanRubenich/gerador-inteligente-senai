@@ -35,39 +35,103 @@ export async function extractMatrizFromExcel(file) {
         
         let allText = '';
         let ucs = [];
+        let cursoNome = '';
         
-        workbook.SheetNames.forEach(sheetName => {
-          const sheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-          
-          // Converter para texto
-          jsonData.forEach(row => {
-            if (row && row.length > 0) {
-              allText += row.join(' | ') + '\n';
-            }
-          });
-          
-          // Tentar extrair UCs da planilha
-          jsonData.forEach((row, index) => {
-            if (row && row.length >= 2) {
-              const firstCell = String(row[0] || '').trim();
-              const secondCell = String(row[1] || '').trim();
-              
-              // Detectar linhas que parecem ser UCs (tem nome e carga horária)
-              const horasMatch = String(row[row.length - 1] || row[row.length - 2] || '').match(/(\d+)/);
-              if (firstCell && horasMatch && !firstCell.match(/^(módulo|período|total|carga)/i)) {
-                ucs.push({
-                  nome: firstCell,
-                  cargaHoraria: parseInt(horasMatch[1]) || 0,
-                  modulo: detectModulo(jsonData, index)
-                });
-              }
-            }
-          });
+        // Processar apenas a primeira planilha (ou a que contém "Matriz")
+        const sheetName = workbook.SheetNames.find(s => s.toLowerCase().includes('matriz')) || workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        
+        console.log('[Excel] Processando planilha:', sheetName);
+        console.log('[Excel] Total de linhas:', jsonData.length);
+        
+        // Converter para texto
+        jsonData.forEach(row => {
+          if (row && row.length > 0) {
+            allText += row.join(' | ') + '\n';
+          }
         });
         
-        resolve({ text: allText, ucs });
+        // Detectar estrutura da planilha
+        // Estrutura típica SENAI:
+        // Coluna 0: Ano (1º ANO, 2º ANO) - pode estar vazia
+        // Coluna 1: Período (1º Período)
+        // Coluna 2: Módulo (Indústria, Introdutório, Específico I, etc)
+        // Coluna 4: Número da UC (1.0, 2.0, etc)
+        // Coluna 5: Nome da UC
+        // Coluna 6: Carga Horária Total
+        
+        let currentPeriodo = '';
+        let currentAno = '';
+        
+        jsonData.forEach((row, index) => {
+          if (!row || row.length < 5) return;
+          
+          // Tentar extrair nome do curso da primeira linha
+          if (index <= 2 && !cursoNome) {
+            for (const cell of row) {
+              const cellStr = String(cell || '').trim();
+              if (cellStr.toLowerCase().includes('técnico') || cellStr.toLowerCase().includes('tecnico')) {
+                cursoNome = cellStr.split('\n')[0].trim();
+                break;
+              }
+            }
+          }
+          
+          // Atualizar ano atual
+          const col0 = String(row[0] || '').trim();
+          if (col0.match(/^\d+º\s*ANO/i)) {
+            currentAno = col0;
+          }
+          
+          // Atualizar período atual
+          const col1 = String(row[1] || '').trim();
+          if (col1.match(/período|semestre/i)) {
+            currentPeriodo = col1;
+          }
+          
+          // Detectar linha de UC
+          // Procurar por: número (coluna 4), nome (coluna 5), carga horária (coluna 6)
+          const numUC = row[4];
+          const nomeUC = String(row[5] || '').trim();
+          const cargaHoraria = row[6];
+          const modulo = String(row[2] || '').trim();
+          
+          // Validar se é uma UC válida
+          if (nomeUC && 
+              nomeUC.length > 3 && 
+              !nomeUC.toLowerCase().includes('unidades curriculares') &&
+              !nomeUC.toLowerCase().includes('carga horária') &&
+              typeof numUC === 'number' && 
+              numUC > 0 && 
+              numUC < 100) {
+            
+            const ch = typeof cargaHoraria === 'number' ? cargaHoraria : parseInt(String(cargaHoraria).replace(/[^\d]/g, '')) || 0;
+            
+            if (ch > 0) {
+              ucs.push({
+                numero: numUC,
+                nome: nomeUC,
+                cargaHoraria: ch,
+                modulo: normalizeModulo(modulo),
+                periodo: currentPeriodo,
+                ano: currentAno
+              });
+              console.log(`[Excel] UC encontrada: ${numUC}. ${nomeUC} (${ch}h) - ${modulo}`);
+            }
+          }
+        });
+        
+        // Se não encontrou UCs com a estrutura acima, tentar estrutura alternativa
+        if (ucs.length === 0) {
+          console.log('[Excel] Tentando estrutura alternativa...');
+          ucs = extractUCsAlternativeStructure(jsonData);
+        }
+        
+        console.log(`[Excel] Total de UCs extraídas: ${ucs.length}`);
+        resolve({ text: allText, ucs, cursoNome });
       } catch (error) {
+        console.error('[Excel] Erro ao processar:', error);
         reject(error);
       }
     };
@@ -77,43 +141,101 @@ export async function extractMatrizFromExcel(file) {
 }
 
 /**
- * Detecta o módulo de uma UC baseado no contexto
+ * Extrai UCs usando estrutura alternativa (quando a estrutura padrão não funciona)
  */
-function detectModulo(data, ucIndex) {
-  // Procurar para cima por uma linha que indique o módulo
-  for (let i = ucIndex - 1; i >= 0 && i > ucIndex - 10; i--) {
-    const row = data[i];
-    if (row && row[0]) {
-      const text = String(row[0]).toLowerCase();
-      if (text.includes('básico')) return 'Básico';
-      if (text.includes('introdutório')) return 'Introdutório';
-      if (text.includes('específico iii') || text.includes('especifico iii')) return 'Específico III';
-      if (text.includes('específico ii') || text.includes('especifico ii')) return 'Específico II';
-      if (text.includes('específico i') || text.includes('especifico i')) return 'Específico I';
-      if (text.includes('específico') || text.includes('especifico')) return 'Específico I';
+function extractUCsAlternativeStructure(jsonData) {
+  const ucs = [];
+  
+  jsonData.forEach((row, index) => {
+    if (!row || row.length < 2) return;
+    
+    // Procurar por qualquer célula que pareça ser nome de UC seguida de carga horária
+    for (let i = 0; i < row.length - 1; i++) {
+      const cell = String(row[i] || '').trim();
+      const nextCell = row[i + 1];
+      
+      // Verificar se parece ser uma UC (nome com mais de 10 caracteres, não é cabeçalho)
+      if (cell.length > 10 && 
+          !cell.toLowerCase().match(/^(módulo|período|total|carga|unidade|ano|semestre)/i) &&
+          !cell.includes('=') && // Não é fórmula
+          typeof nextCell === 'number' && 
+          nextCell > 0 && 
+          nextCell <= 500) { // Carga horária razoável
+        
+        // Verificar se já não foi adicionada
+        if (!ucs.find(uc => uc.nome === cell)) {
+          ucs.push({
+            nome: cell,
+            cargaHoraria: nextCell,
+            modulo: detectModuloFromRow(row)
+          });
+        }
+      }
     }
+  });
+  
+  return ucs;
+}
+
+/**
+ * Detecta o módulo a partir de uma linha
+ */
+function detectModuloFromRow(row) {
+  for (const cell of row) {
+    const text = String(cell || '').toLowerCase();
+    if (text.includes('básico')) return 'Básico';
+    if (text.includes('introdutório') || text.includes('introdutorio')) return 'Introdutório';
+    if (text.includes('indústria') || text.includes('industria')) return 'Indústria';
+    if (text.includes('inovação') || text.includes('inovacao')) return 'Inovação';
+    if (text.includes('específico iii') || text.includes('especifico iii')) return 'Específico III';
+    if (text.includes('específico ii') || text.includes('especifico ii')) return 'Específico II';
+    if (text.includes('específico i') || text.includes('especifico i')) return 'Específico I';
+    if (text.includes('específico') || text.includes('especifico')) return 'Específico I';
   }
   return 'Específico I';
 }
 
 /**
- * Chama a API do Gemini para extrair dados do curso - Etapa 1: Dados gerais e lista de UCs
+ * Normaliza o nome do módulo
  */
-async function callGeminiStep1(pdfBase64, onStatus) {
-  onStatus?.('Etapa 1/2: Extraindo dados gerais do curso...');
+function normalizeModulo(modulo) {
+  const m = modulo.toLowerCase();
+  if (m.includes('básico')) return 'Básico';
+  if (m.includes('introdutório') || m.includes('introdutorio')) return 'Introdutório';
+  if (m.includes('indústria') || m.includes('industria')) return 'Indústria';
+  if (m.includes('inovação') || m.includes('inovacao')) return 'Inovação';
+  if (m.includes('específico iii') || m.includes('especifico iii')) return 'Específico III';
+  if (m.includes('específico ii') || m.includes('especifico ii')) return 'Específico II';
+  if (m.includes('específico i') || m.includes('especifico i')) return 'Específico I';
+  if (m.includes('específico') || m.includes('especifico')) return 'Específico I';
+  return modulo || 'Específico I';
+}
 
-  const prompt = `Você é um especialista em educação profissional do SENAI. Analise o documento PDF anexado (PPC/Itinerário Nacional) e extraia os DADOS GERAIS do curso e a LISTA de Unidades Curriculares.
+/**
+ * Chama a API do Gemini para extrair dados do curso - Etapa 1: Dados gerais do curso
+ * Usa as UCs da Matriz Curricular como referência
+ */
+async function callGeminiStep1(pdfBase64, ucsFromExcel, onStatus) {
+  onStatus?.('Etapa 1/3: Extraindo dados gerais do curso...');
 
-EXTRAIA:
+  const ucListText = ucsFromExcel.map((uc, i) => 
+    `${i + 1}. ${uc.nome} (${uc.cargaHoraria}h - ${uc.modulo || 'Módulo não identificado'})`
+  ).join('\n');
+
+  const prompt = `Você é um especialista em educação profissional do SENAI. Analise o documento PDF anexado (PPC/Itinerário Nacional) e extraia os DADOS GERAIS do curso.
+
+A MATRIZ CURRICULAR já foi processada e contém as seguintes Unidades Curriculares:
+${ucListText}
+
+EXTRAIA APENAS os dados gerais do curso:
 1. Nome completo do curso
 2. CBO (Classificação Brasileira de Ocupações)
 3. Carga horária total
 4. Eixo tecnológico
 5. Área tecnológica
 6. Competência geral (texto completo)
-7. Lista de TODAS as Unidades Curriculares com: nome, módulo e carga horária
 
-IMPORTANTE: Liste TODAS as UCs encontradas no documento, mesmo que sejam muitas.
+NÃO extraia as UCs - elas já foram identificadas na matriz curricular.
 
 Retorne APENAS JSON válido:
 {
@@ -123,10 +245,43 @@ Retorne APENAS JSON válido:
   "cargaHorariaTotal": 1200,
   "eixoTecnologico": "Infraestrutura",
   "areaTecnologica": "CC- Edificações",
-  "competenciaGeral": "Texto completo da competência geral...",
-  "unidadesCurriculares": [
-    { "nome": "Nome da UC 1", "modulo": "BÁSICO", "cargaHoraria": 40 },
-    { "nome": "Nome da UC 2", "modulo": "ESPECÍFICO I", "cargaHoraria": 80 }
+  "competenciaGeral": "Texto completo da competência geral..."
+}`;
+
+  return await callGeminiAPI(pdfBase64, prompt);
+}
+
+/**
+ * Chama a API do Gemini para extrair CAPACIDADES de UCs específicas - Etapa 2
+ */
+async function callGeminiStep2Capacidades(pdfBase64, ucs, onStatus) {
+  const ucNames = ucs.map(uc => uc.nome);
+  onStatus?.(`Etapa 2/3: Extraindo capacidades de ${ucNames.length} UCs...`);
+
+  const prompt = `Analise o documento PDF (PPC/Itinerário Nacional do SENAI) e extraia as CAPACIDADES das seguintes Unidades Curriculares:
+
+${ucs.map((uc, i) => `${i + 1}. "${uc.nome}" (${uc.cargaHoraria}h)`).join('\n')}
+
+Para CADA UC acima, extraia:
+- Objetivo da UC (texto completo)
+- TODAS as Capacidades Técnicas (CT1, CT2...) ou Capacidades Básicas (CB1, CB2...) ou Capacidades Socioemocionais (CS1, CS2...)
+
+IMPORTANTE: 
+- Extraia TODAS as capacidades de cada UC, não resuma
+- Use os códigos exatos do documento (CT, CB, CS)
+- Mantenha a descrição completa de cada capacidade
+
+Retorne APENAS JSON válido:
+{
+  "detalhesUCs": [
+    {
+      "nome": "Nome exato da UC",
+      "objetivo": "Objetivo completo da UC...",
+      "capacidadesTecnicas": [
+        { "codigo": "CT1", "descricao": "Descrição completa da capacidade..." },
+        { "codigo": "CT2", "descricao": "Descrição completa da capacidade..." }
+      ]
+    }
   ]
 }`;
 
@@ -134,34 +289,40 @@ Retorne APENAS JSON válido:
 }
 
 /**
- * Chama a API do Gemini para extrair detalhes de UCs específicas - Etapa 2
+ * Chama a API do Gemini para extrair CONHECIMENTOS de UCs específicas - Etapa 3
  */
-async function callGeminiStep2(pdfBase64, ucNames, onStatus) {
-  onStatus?.(`Etapa 2/2: Extraindo capacidades de ${ucNames.length} UCs...`);
+async function callGeminiStep3Conhecimentos(pdfBase64, ucs, onStatus) {
+  const ucNames = ucs.map(uc => uc.nome);
+  onStatus?.(`Etapa 3/3: Extraindo conhecimentos de ${ucNames.length} UCs...`);
 
-  const prompt = `Analise o documento PDF e extraia os DETALHES das seguintes Unidades Curriculares:
+  const prompt = `Analise o documento PDF (PPC/Itinerário Nacional do SENAI) e extraia os CONHECIMENTOS das seguintes Unidades Curriculares:
 
-${ucNames.map((name, i) => `${i + 1}. "${name}"`).join('\n')}
+${ucs.map((uc, i) => `${i + 1}. "${uc.nome}" (${uc.cargaHoraria}h)`).join('\n')}
 
-Para CADA UC acima, extraia:
-- Objetivo da UC
-- TODAS as Capacidades Técnicas (CT1, CT2...) ou Básicas (CB1, CB2...)
-- TODOS os Conhecimentos com hierarquia (1, 1.1, 1.2...)
+Para CADA UC acima, extraia TODOS os CONHECIMENTOS com sua hierarquia completa:
+- Tópicos principais (1, 2, 3...)
+- Subtópicos (1.1, 1.2, 2.1, 2.2...)
+- Sub-subtópicos se existirem (1.1.1, 1.1.2...)
 
-IMPORTANTE: Extraia TODAS as capacidades de cada UC, não resuma.
+IMPORTANTE:
+- Extraia TODOS os conhecimentos de cada UC
+- Mantenha a hierarquia e numeração original
+- Inclua todos os níveis de detalhamento
 
 Retorne APENAS JSON válido:
 {
-  "detalhesUCs": [
+  "conhecimentosUCs": [
     {
       "nome": "Nome exato da UC",
-      "objetivo": "Objetivo da UC...",
-      "capacidadesTecnicas": [
-        { "codigo": "CT1", "descricao": "Descrição completa..." },
-        { "codigo": "CT2", "descricao": "Descrição completa..." }
-      ],
       "conhecimentos": [
-        { "topico": "1 NOME DO TÓPICO", "subtopicos": ["1.1 Sub", "1.2 Sub"] }
+        { 
+          "topico": "1 NOME DO TÓPICO PRINCIPAL", 
+          "subtopicos": ["1.1 Subtópico A", "1.2 Subtópico B", "1.3 Subtópico C"] 
+        },
+        { 
+          "topico": "2 OUTRO TÓPICO", 
+          "subtopicos": ["2.1 Subtópico", "2.2 Subtópico"] 
+        }
       ]
     }
   ]
@@ -245,48 +406,76 @@ async function callGeminiAPI(pdfBase64, prompt) {
 
 /**
  * Chama a API do Gemini para extrair dados do curso em múltiplas etapas
+ * NOVA VERSÃO: Usa UCs da Matriz Curricular como guia
  */
 async function callGeminiForExtraction(pdfBase64, matrizText, ucsFromExcel, onStatus) {
-  // Etapa 1: Extrair dados gerais e lista de UCs
-  const step1Data = await callGeminiStep1(pdfBase64, onStatus);
-  console.log('[Gemini] Etapa 1 concluída:', step1Data);
-
-  if (!step1Data.unidadesCurriculares || step1Data.unidadesCurriculares.length === 0) {
-    throw new Error('Nenhuma Unidade Curricular encontrada no documento.');
+  if (!ucsFromExcel || ucsFromExcel.length === 0) {
+    throw new Error('A Matriz Curricular é obrigatória e deve conter as Unidades Curriculares.');
   }
 
-  // Etapa 2: Extrair detalhes das UCs em lotes
-  const ucNames = step1Data.unidadesCurriculares.map(uc => uc.nome);
-  const batchSize = 5; // Processar 5 UCs por vez para evitar truncamento
-  const allDetails = [];
+  console.log('[Gemini] UCs da Matriz Curricular:', ucsFromExcel);
 
-  for (let i = 0; i < ucNames.length; i += batchSize) {
-    const batch = ucNames.slice(i, i + batchSize);
-    onStatus?.(`Extraindo detalhes das UCs ${i + 1}-${Math.min(i + batchSize, ucNames.length)} de ${ucNames.length}...`);
+  // Etapa 1: Extrair dados gerais do curso (usando UCs da matriz como referência)
+  const step1Data = await callGeminiStep1(pdfBase64, ucsFromExcel, onStatus);
+  console.log('[Gemini] Etapa 1 concluída - Dados gerais:', step1Data);
+
+  // Etapa 2: Extrair CAPACIDADES das UCs em lotes
+  const batchSize = 4; // Processar 4 UCs por vez para evitar truncamento
+  const allCapacidades = [];
+  const allConhecimentos = [];
+
+  for (let i = 0; i < ucsFromExcel.length; i += batchSize) {
+    const batch = ucsFromExcel.slice(i, i + batchSize);
+    onStatus?.(`Extraindo capacidades das UCs ${i + 1}-${Math.min(i + batchSize, ucsFromExcel.length)} de ${ucsFromExcel.length}...`);
     
     try {
-      const batchData = await callGeminiStep2(pdfBase64, batch, onStatus);
+      const batchData = await callGeminiStep2Capacidades(pdfBase64, batch, onStatus);
       if (batchData.detalhesUCs) {
-        allDetails.push(...batchData.detalhesUCs);
+        allCapacidades.push(...batchData.detalhesUCs);
       }
     } catch (e) {
-      console.warn(`[Gemini] Erro no lote ${i + 1}-${i + batchSize}:`, e.message);
+      console.warn(`[Gemini] Erro ao extrair capacidades do lote ${i + 1}-${i + batchSize}:`, e.message);
     }
   }
 
-  // Mesclar dados
+  // Etapa 3: Extrair CONHECIMENTOS das UCs em lotes
+  for (let i = 0; i < ucsFromExcel.length; i += batchSize) {
+    const batch = ucsFromExcel.slice(i, i + batchSize);
+    onStatus?.(`Extraindo conhecimentos das UCs ${i + 1}-${Math.min(i + batchSize, ucsFromExcel.length)} de ${ucsFromExcel.length}...`);
+    
+    try {
+      const batchData = await callGeminiStep3Conhecimentos(pdfBase64, batch, onStatus);
+      if (batchData.conhecimentosUCs) {
+        allConhecimentos.push(...batchData.conhecimentosUCs);
+      }
+    } catch (e) {
+      console.warn(`[Gemini] Erro ao extrair conhecimentos do lote ${i + 1}-${i + batchSize}:`, e.message);
+    }
+  }
+
+  // Mesclar dados: UCs da matriz + capacidades + conhecimentos do PPC
   const finalData = {
     ...step1Data,
-    unidadesCurriculares: step1Data.unidadesCurriculares.map(uc => {
-      const details = allDetails.find(d => 
-        d.nome.toLowerCase().includes(uc.nome.toLowerCase().substring(0, 20)) ||
-        uc.nome.toLowerCase().includes(d.nome.toLowerCase().substring(0, 20))
+    unidadesCurriculares: ucsFromExcel.map(uc => {
+      // Encontrar capacidades correspondentes
+      const capDetails = allCapacidades.find(d => 
+        d.nome.toLowerCase().includes(uc.nome.toLowerCase().substring(0, 15)) ||
+        uc.nome.toLowerCase().includes(d.nome.toLowerCase().substring(0, 15))
       );
+      
+      // Encontrar conhecimentos correspondentes
+      const conDetails = allConhecimentos.find(d => 
+        d.nome.toLowerCase().includes(uc.nome.toLowerCase().substring(0, 15)) ||
+        uc.nome.toLowerCase().includes(d.nome.toLowerCase().substring(0, 15))
+      );
+      
       return {
-        ...uc,
-        objetivo: details?.objetivo || '',
-        capacidadesTecnicas: details?.capacidadesTecnicas || [],
-        conhecimentos: details?.conhecimentos || []
+        nome: uc.nome,
+        modulo: uc.modulo || 'Específico I',
+        cargaHoraria: uc.cargaHoraria || 0,
+        objetivo: capDetails?.objetivo || '',
+        capacidadesTecnicas: capDetails?.capacidadesTecnicas || [],
+        conhecimentos: conDetails?.conhecimentos || []
       };
     })
   };
@@ -372,27 +561,42 @@ function tryRecoverTruncatedJSON(jsonStr) {
 
 /**
  * Processa os arquivos e extrai dados do curso usando Gemini AI
+ * IMPORTANTE: A Matriz Curricular (Excel) é OBRIGATÓRIA
  */
 export async function extractCourseWithAI(matrizFile, pdfFile, onStatus) {
   onStatus?.('Iniciando extração...');
 
-  // 1. Extrair dados da Matriz Curricular (Excel)
+  // 1. Validar arquivos obrigatórios
+  if (!matrizFile) {
+    throw new Error('A Matriz Curricular (Excel) é OBRIGATÓRIA. Ela contém as UCs e cargas horárias que serão usadas como referência para extrair os dados do PPC.');
+  }
+  
+  if (!pdfFile) {
+    throw new Error('O PPC do Curso (PDF) é OBRIGATÓRIO. Ele contém as capacidades e conhecimentos de cada UC.');
+  }
+
+  // 2. Extrair dados da Matriz Curricular (Excel) - OBRIGATÓRIO
+  onStatus?.('Processando Matriz Curricular (Excel)...');
   let matrizText = '';
   let ucsFromExcel = [];
   
-  if (matrizFile) {
-    onStatus?.('Processando Matriz Curricular (Excel)...');
-    try {
-      const matrizData = await extractMatrizFromExcel(matrizFile);
-      matrizText = matrizData.text;
-      ucsFromExcel = matrizData.ucs;
-      console.log('[Extraction] UCs do Excel:', ucsFromExcel);
-    } catch (e) {
-      console.error('Erro ao processar Excel:', e);
+  try {
+    const matrizData = await extractMatrizFromExcel(matrizFile);
+    matrizText = matrizData.text;
+    ucsFromExcel = matrizData.ucs;
+    console.log('[Extraction] UCs extraídas da Matriz:', ucsFromExcel);
+    
+    if (ucsFromExcel.length === 0) {
+      throw new Error('Nenhuma Unidade Curricular foi identificada na Matriz Curricular. Verifique se o arquivo Excel contém as UCs com nome e carga horária.');
     }
+    
+    onStatus?.(`Matriz processada: ${ucsFromExcel.length} UCs identificadas`);
+  } catch (e) {
+    console.error('Erro ao processar Excel:', e);
+    throw new Error(`Erro ao processar Matriz Curricular: ${e.message}`);
   }
 
-  // 2. Converter PDF para Base64
+  // 3. Converter PDF para Base64
   onStatus?.('Preparando PDF para análise...');
   const pdfBase64 = await fileToBase64(pdfFile);
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Upload, FileText, Table, CheckCircle, AlertCircle, Loader2, Plus, Trash2, Eye, Save, X, ChevronDown, ChevronRight, ArrowLeft, Settings } from 'lucide-react';
+import { Upload, FileText, Table, CheckCircle, AlertCircle, Loader2, Plus, Trash2, Eye, Save, X, ChevronDown, ChevronRight, ArrowLeft, Settings, Edit3, BookOpen } from 'lucide-react';
 import { clearCache } from '../../services/apiService';
 
 /**
@@ -14,12 +14,34 @@ export default function AdminCursos({ onClose }) {
   const [extractedData, setExtractedData] = useState(null);
   const [validationResult, setValidationResult] = useState(null);
   const [savedCourses, setSavedCourses] = useState([]);
-  const [activeTab, setActiveTab] = useState('upload'); // 'upload', 'preview', 'saved'
+  const [activeTab, setActiveTab] = useState('upload'); // 'upload', 'preview', 'saved', 'manage-ucs'
   const [expandedUCs, setExpandedUCs] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState(null);
   const [saveStatus, setSaveStatus] = useState(null);
   const [processingStatus, setProcessingStatus] = useState('');
+  
+  // Estados para gerenciamento de UCs e Cursos
+  const [selectedCursoForUC, setSelectedCursoForUC] = useState(null);
+  const [ucsDosCurso, setUcsDosCurso] = useState([]);
+  const [loadingUCs, setLoadingUCs] = useState(false);
+  const [editingUC, setEditingUC] = useState(null);
+  const [ucEditData, setUcEditData] = useState(null);
+  const [savingUC, setSavingUC] = useState(false);
+  const [showAddUCModal, setShowAddUCModal] = useState(false);
+  const [newUCData, setNewUCData] = useState({
+    nome: '',
+    cargaHoraria: 40,
+    modulo: 'Específico I',
+    objetivo: '',
+    capacidades: [],
+    conhecimentos: []
+  });
+  
+  // Estados para edição do curso
+  const [editingCurso, setEditingCurso] = useState(false);
+  const [cursoEditData, setCursoEditData] = useState(null);
+  const [savingCurso, setSavingCurso] = useState(false);
 
   // Carregar cursos salvos do MongoDB e localStorage
   useEffect(() => {
@@ -346,6 +368,301 @@ export default function AdminCursos({ onClose }) {
     });
   };
 
+  // ========== FUNÇÕES PARA GERENCIAMENTO DE UCs ==========
+  
+  // Carregar UCs de um curso específico
+  const loadUCsFromCurso = async (cursoId) => {
+    setLoadingUCs(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/cursos/${cursoId}/unidades`);
+      if (response.ok) {
+        const result = await response.json();
+        setUcsDosCurso(result.data || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar UCs:', error);
+      setUcsDosCurso([]);
+    } finally {
+      setLoadingUCs(false);
+    }
+  };
+
+  // Selecionar curso para gerenciar UCs
+  const handleSelectCursoForUC = (curso) => {
+    setSelectedCursoForUC(curso);
+    loadUCsFromCurso(curso.id);
+    setEditingUC(null);
+    setUcEditData(null);
+  };
+
+  // Iniciar edição de UC
+  const handleStartEditUC = (uc) => {
+    setEditingUC(uc.id);
+    setUcEditData({
+      ...uc,
+      capacidades: uc.capacidades || uc.capacidadesTecnicas || [],
+      conhecimentos: uc.conhecimentos || []
+    });
+  };
+
+  // Cancelar edição de UC
+  const handleCancelEditUC = () => {
+    setEditingUC(null);
+    setUcEditData(null);
+  };
+
+  // Salvar UC editada
+  const handleSaveUC = async () => {
+    if (!ucEditData) return;
+    
+    setSavingUC(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/unidades/${ucEditData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ucEditData)
+      });
+
+      if (response.ok) {
+        // Recarregar UCs
+        await loadUCsFromCurso(selectedCursoForUC.id);
+        clearCache();
+        setEditingUC(null);
+        setUcEditData(null);
+        alert('UC atualizada com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(`Erro ao salvar: ${error.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar UC:', error);
+      alert(`Erro ao salvar: ${error.message}`);
+    } finally {
+      setSavingUC(false);
+    }
+  };
+
+  // Deletar UC
+  const handleDeleteUC = async (ucId) => {
+    if (!confirm('Tem certeza que deseja excluir esta Unidade Curricular? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/unidades/${ucId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        await loadUCsFromCurso(selectedCursoForUC.id);
+        clearCache();
+        alert('UC excluída com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(`Erro ao excluir: ${error.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir UC:', error);
+      alert(`Erro ao excluir: ${error.message}`);
+    }
+  };
+
+  // Adicionar nova UC
+  const handleAddNewUC = async () => {
+    if (!newUCData.nome.trim()) {
+      alert('O nome da UC é obrigatório');
+      return;
+    }
+
+    setSavingUC(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/unidades`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newUCData,
+          cursoId: selectedCursoForUC.id,
+          cursoNome: selectedCursoForUC.nome
+        })
+      });
+
+      if (response.ok) {
+        await loadUCsFromCurso(selectedCursoForUC.id);
+        clearCache();
+        setShowAddUCModal(false);
+        setNewUCData({
+          nome: '',
+          cargaHoraria: 40,
+          modulo: 'Específico I',
+          objetivo: '',
+          capacidades: [],
+          conhecimentos: []
+        });
+        alert('UC criada com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(`Erro ao criar: ${error.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao criar UC:', error);
+      alert(`Erro ao criar: ${error.message}`);
+    } finally {
+      setSavingUC(false);
+    }
+  };
+
+  // ===== FUNÇÕES PARA GERENCIAR O CURSO =====
+  
+  // Iniciar edição do curso
+  const handleStartEditCurso = () => {
+    setCursoEditData({
+      nome: selectedCursoForUC.nome || '',
+      cbo: selectedCursoForUC.cbo || '',
+      cargaHorariaTotal: selectedCursoForUC.cargaHorariaTotal || 0,
+      eixoTecnologico: selectedCursoForUC.eixoTecnologico || '',
+      areaTecnologica: selectedCursoForUC.areaTecnologica || '',
+      competenciaGeral: selectedCursoForUC.competenciaGeral || '',
+      tipoEnsino: selectedCursoForUC.tipoEnsino || 'tecnico'
+    });
+    setEditingCurso(true);
+  };
+
+  // Cancelar edição do curso
+  const handleCancelEditCurso = () => {
+    setEditingCurso(false);
+    setCursoEditData(null);
+  };
+
+  // Salvar edição do curso
+  const handleSaveCursoEdit = async () => {
+    setSavingCurso(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/cursos/${selectedCursoForUC.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cursoEditData)
+      });
+
+      if (response.ok) {
+        // Atualizar curso na lista local
+        const updatedCurso = { ...selectedCursoForUC, ...cursoEditData };
+        setSavedCourses(prev => prev.map(c => c.id === selectedCursoForUC.id ? updatedCurso : c));
+        setSelectedCursoForUC(updatedCurso);
+        setEditingCurso(false);
+        setCursoEditData(null);
+        clearCache();
+        alert('Curso atualizado com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(`Erro ao atualizar: ${error.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar curso:', error);
+      alert(`Erro ao atualizar: ${error.message}`);
+    } finally {
+      setSavingCurso(false);
+    }
+  };
+
+  // Excluir curso inteiro
+  const handleDeleteCurso = async () => {
+    if (!confirm(`ATENÇÃO: Tem certeza que deseja excluir o curso "${selectedCursoForUC.nome}" e TODAS as suas UCs?\n\nEsta ação não pode ser desfeita!`)) {
+      return;
+    }
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/cursos/${selectedCursoForUC.id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setSavedCourses(prev => prev.filter(c => c.id !== selectedCursoForUC.id));
+        setSelectedCursoForUC(null);
+        setUcsDosCurso([]);
+        clearCache();
+        alert('Curso excluído com sucesso!');
+      } else {
+        const error = await response.json();
+        alert(`Erro ao excluir: ${error.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir curso:', error);
+      alert(`Erro ao excluir: ${error.message}`);
+    }
+  };
+
+  // Atualizar campo da UC em edição
+  const handleUCFieldChange = (field, value) => {
+    setUcEditData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Adicionar capacidade à UC em edição
+  const handleAddCapacidadeToUC = () => {
+    setUcEditData(prev => ({
+      ...prev,
+      capacidades: [
+        ...prev.capacidades,
+        { codigo: `CT${prev.capacidades.length + 1}`, descricao: '' }
+      ]
+    }));
+  };
+
+  // Editar capacidade da UC
+  const handleEditUCCapacidade = (index, field, value) => {
+    setUcEditData(prev => {
+      const newCaps = [...prev.capacidades];
+      newCaps[index] = { ...newCaps[index], [field]: value };
+      return { ...prev, capacidades: newCaps };
+    });
+  };
+
+  // Remover capacidade da UC
+  const handleRemoveUCCapacidade = (index) => {
+    setUcEditData(prev => ({
+      ...prev,
+      capacidades: prev.capacidades.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Adicionar conhecimento à UC em edição
+  const handleAddConhecimentoToUC = () => {
+    setUcEditData(prev => ({
+      ...prev,
+      conhecimentos: [
+        ...(prev.conhecimentos || []),
+        { topico: '', subtopicos: [] }
+      ]
+    }));
+  };
+
+  // Editar conhecimento da UC
+  const handleEditUCConhecimento = (index, field, value) => {
+    setUcEditData(prev => {
+      const newCons = [...(prev.conhecimentos || [])];
+      if (field === 'subtopicos') {
+        // Converter string para array
+        newCons[index] = { ...newCons[index], subtopicos: value.split('\n').filter(s => s.trim()) };
+      } else {
+        newCons[index] = { ...newCons[index], [field]: value };
+      }
+      return { ...prev, conhecimentos: newCons };
+    });
+  };
+
+  // Remover conhecimento da UC
+  const handleRemoveUCConhecimento = (index) => {
+    setUcEditData(prev => ({
+      ...prev,
+      conhecimentos: (prev.conhecimentos || []).filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header Azul */}
@@ -407,15 +724,15 @@ export default function AdminCursos({ onClose }) {
               Pré-visualização
             </button>
             <button
-              onClick={() => setActiveTab('saved')}
+              onClick={() => setActiveTab('manage-ucs')}
               className={`px-6 py-3 font-medium ${
-                activeTab === 'saved'
+                activeTab === 'manage-ucs'
                   ? 'text-[#004b8d] border-b-2 border-[#004b8d]'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <Table className="inline-block w-4 h-4 mr-2" />
-              Cursos Salvos ({savedCourses.length})
+              <BookOpen className="inline-block w-4 h-4 mr-2" />
+              Gerenciar Cursos ({savedCourses.length})
             </button>
           </div>
 
@@ -459,14 +776,18 @@ export default function AdminCursos({ onClose }) {
                     )}
                   </div>
 
-                  {/* Upload Matriz Curricular (Opcional) */}
+                  {/* Upload Matriz Curricular (OBRIGATÓRIO) */}
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#004b8d] transition-colors">
                     <Table className="w-10 h-10 mx-auto text-gray-400 mb-3" />
                     <h3 className="text-lg font-medium text-gray-700 mb-2">
-                      Matriz Curricular (Excel)
+                      Matriz Curricular (Excel) *
                     </h3>
                     <p className="text-sm text-gray-500 mb-4">
-                      Opcional - Complementa dados do PPC
+                      Contém as UCs e cargas horárias
+                      <br />
+                      <span className="text-xs text-red-500 font-medium">
+                        OBRIGATÓRIO - Define quais UCs serão extraídas
+                      </span>
                     </p>
                     <input
                       type="file"
@@ -477,7 +798,7 @@ export default function AdminCursos({ onClose }) {
                     />
                     <label
                       htmlFor="matriz-upload"
-                      className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                      className="inline-flex items-center px-4 py-2 bg-[#004b8d] text-white rounded-lg cursor-pointer hover:bg-[#003a6d] transition-colors"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       Selecionar Excel
@@ -495,9 +816,9 @@ export default function AdminCursos({ onClose }) {
                 <div className="flex justify-center">
                   <button
                     onClick={processFiles}
-                    disabled={!pdfFile || isProcessing}
+                    disabled={!pdfFile || !matrizFile || isProcessing}
                     className={`px-8 py-3 rounded-lg font-medium text-white ${
-                      !pdfFile || isProcessing
+                      !pdfFile || !matrizFile || isProcessing
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-[#e5173f] hover:bg-[#c41535]'
                     } transition-colors`}
@@ -871,38 +1192,559 @@ export default function AdminCursos({ onClose }) {
               </div>
             )}
 
-            {/* Tab: Saved Courses */}
-            {activeTab === 'saved' && (
-              <div>
-                {savedCourses.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <Table className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p>Nenhum curso adicionado ainda.</p>
-                    <p className="text-sm">Use a aba "Upload" para adicionar novos cursos.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {savedCourses.map((curso) => (
-                      <div key={curso.id} className="bg-white border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-bold text-[#004b8d]">{curso.nome}</h4>
-                            <p className="text-sm text-gray-600">
-                              ID: {curso.id} | CBO: {curso.cbo || 'N/A'} | {curso.cargaHorariaTotal}h
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {curso.unidadesCurriculares?.length || 0} Unidades Curriculares
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteCourse(curso.id)}
-                            className="text-red-500 hover:text-red-700 p-2"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+
+            {/* Tab: Gerenciar Cursos */}
+            {activeTab === 'manage-ucs' && (
+              <div className="space-y-6">
+                {/* Seleção de Curso */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Selecione o Curso para Gerenciar
+                  </label>
+                  <select
+                    value={selectedCursoForUC?.id || ''}
+                    onChange={(e) => {
+                      const curso = savedCourses.find(c => c.id === e.target.value);
+                      if (curso) {
+                        handleSelectCursoForUC(curso);
+                        setEditingCurso(false);
+                        setCursoEditData(null);
+                      } else {
+                        setSelectedCursoForUC(null);
+                        setUcsDosCurso([]);
+                      }
+                    }}
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">Selecione um curso...</option>
+                    {savedCourses.map(curso => (
+                      <option key={curso.id} value={curso.id}>
+                        {curso.nome} ({curso.unidadesCurriculares?.length || 0} UCs)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Dados do Curso Selecionado */}
+                {selectedCursoForUC && (
+                  <div className="space-y-6">
+                    {/* Card de Informações do Curso */}
+                    <div className="bg-white border rounded-lg overflow-hidden">
+                      <div className="bg-[#004b8d] text-white px-4 py-3 flex justify-between items-center">
+                        <h3 className="font-bold text-lg">Dados do Curso</h3>
+                        <div className="flex gap-2">
+                          {editingCurso ? (
+                            <>
+                              <button
+                                onClick={handleSaveCursoEdit}
+                                disabled={savingCurso}
+                                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 disabled:opacity-50 flex items-center gap-1"
+                              >
+                                {savingCurso ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                Salvar
+                              </button>
+                              <button
+                                onClick={handleCancelEditCurso}
+                                className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 flex items-center gap-1"
+                              >
+                                <X className="w-4 h-4" />
+                                Cancelar
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={handleStartEditCurso}
+                                className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 flex items-center gap-1"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                                Editar Curso
+                              </button>
+                              <button
+                                onClick={handleDeleteCurso}
+                                className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 flex items-center gap-1"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Excluir Curso
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
-                    ))}
+                      
+                      {/* Formulário de Edição do Curso */}
+                      {editingCurso ? (
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Curso *</label>
+                            <input
+                              type="text"
+                              value={cursoEditData?.nome || ''}
+                              onChange={(e) => setCursoEditData(prev => ({ ...prev, nome: e.target.value }))}
+                              className="w-full p-2 border rounded"
+                              placeholder="Nome completo do curso"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">CBO</label>
+                            <input
+                              type="text"
+                              value={cursoEditData?.cbo || ''}
+                              onChange={(e) => setCursoEditData(prev => ({ ...prev, cbo: e.target.value }))}
+                              className="w-full p-2 border rounded"
+                              placeholder="Ex: 3121-05"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Carga Horária Total</label>
+                            <input
+                              type="number"
+                              value={cursoEditData?.cargaHorariaTotal || 0}
+                              onChange={(e) => setCursoEditData(prev => ({ ...prev, cargaHorariaTotal: parseInt(e.target.value) || 0 }))}
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Eixo Tecnológico</label>
+                            <input
+                              type="text"
+                              value={cursoEditData?.eixoTecnologico || ''}
+                              onChange={(e) => setCursoEditData(prev => ({ ...prev, eixoTecnologico: e.target.value }))}
+                              className="w-full p-2 border rounded"
+                              placeholder="Ex: Informação e Comunicação"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Área Tecnológica</label>
+                            <input
+                              type="text"
+                              value={cursoEditData?.areaTecnologica || ''}
+                              onChange={(e) => setCursoEditData(prev => ({ ...prev, areaTecnologica: e.target.value }))}
+                              className="w-full p-2 border rounded"
+                              placeholder="Ex: TI - Desenvolvimento de Sistemas"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Ensino</label>
+                            <select
+                              value={cursoEditData?.tipoEnsino || 'tecnico'}
+                              onChange={(e) => setCursoEditData(prev => ({ ...prev, tipoEnsino: e.target.value }))}
+                              className="w-full p-2 border rounded"
+                            >
+                              <option value="tecnico">Técnico</option>
+                              <option value="aprendizagem">Aprendizagem Industrial</option>
+                              <option value="qualificacao">Qualificação Profissional</option>
+                              <option value="aperfeicoamento">Aperfeiçoamento</option>
+                            </select>
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Competência Geral</label>
+                            <textarea
+                              value={cursoEditData?.competenciaGeral || ''}
+                              onChange={(e) => setCursoEditData(prev => ({ ...prev, competenciaGeral: e.target.value }))}
+                              className="w-full p-2 border rounded h-24"
+                              placeholder="Competência geral do curso..."
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-600">Nome:</span>
+                            <span className="ml-2 text-gray-800">{selectedCursoForUC.nome}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">ID:</span>
+                            <span className="ml-2 text-gray-800 font-mono text-xs">{selectedCursoForUC.id}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">CBO:</span>
+                            <span className="ml-2 text-gray-800">{selectedCursoForUC.cbo || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">Carga Horária:</span>
+                            <span className="ml-2 text-gray-800">{selectedCursoForUC.cargaHorariaTotal || 0}h</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">Eixo:</span>
+                            <span className="ml-2 text-gray-800">{selectedCursoForUC.eixoTecnologico || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">Área:</span>
+                            <span className="ml-2 text-gray-800">{selectedCursoForUC.areaTecnologica || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">Tipo:</span>
+                            <span className="ml-2 text-gray-800">{selectedCursoForUC.tipoEnsino || 'técnico'}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-600">UCs:</span>
+                            <span className="ml-2 text-gray-800">{ucsDosCurso.length} unidades curriculares</span>
+                          </div>
+                          {selectedCursoForUC.competenciaGeral && (
+                            <div className="md:col-span-2">
+                              <span className="font-medium text-gray-600">Competência Geral:</span>
+                              <p className="mt-1 text-gray-700 text-xs bg-gray-50 p-2 rounded">{selectedCursoForUC.competenciaGeral}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Seção de Unidades Curriculares */}
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-bold text-[#004b8d]">
+                        Unidades Curriculares ({ucsDosCurso.length})
+                      </h3>
+                      <button
+                        onClick={() => setShowAddUCModal(true)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Adicionar UC
+                      </button>
+                    </div>
+
+                    {loadingUCs ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="animate-spin text-[#004b8d] mr-2" size={24} />
+                        <span className="text-gray-600">Carregando UCs...</span>
+                      </div>
+                    ) : ucsDosCurso.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>Nenhuma UC encontrada para este curso.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {ucsDosCurso.map((uc) => (
+                          <div key={uc.id} className="bg-white border rounded-lg overflow-hidden">
+                            {/* Header da UC */}
+                            <div className="flex items-center justify-between p-4 bg-gray-50">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-800">{uc.nome}</h4>
+                                <p className="text-sm text-gray-500">
+                                  {uc.cargaHoraria}h | {uc.modulo || 'Módulo não definido'}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                {editingUC === uc.id ? (
+                                  <>
+                                    <button
+                                      onClick={handleSaveUC}
+                                      disabled={savingUC}
+                                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                      {savingUC ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    </button>
+                                    <button
+                                      onClick={handleCancelEditUC}
+                                      className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => handleStartEditUC(uc)}
+                                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                    >
+                                      <Edit3 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteUC(uc.id)}
+                                      className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Formulário de Edição */}
+                            {editingUC === uc.id && ucEditData && (
+                              <div className="p-4 border-t space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                                    <input
+                                      type="text"
+                                      value={ucEditData.nome}
+                                      onChange={(e) => handleUCFieldChange('nome', e.target.value)}
+                                      className="w-full p-2 border rounded"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Carga Horária</label>
+                                    <input
+                                      type="number"
+                                      value={ucEditData.cargaHoraria}
+                                      onChange={(e) => handleUCFieldChange('cargaHoraria', parseInt(e.target.value))}
+                                      className="w-full p-2 border rounded"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Módulo</label>
+                                    <select
+                                      value={ucEditData.modulo || ''}
+                                      onChange={(e) => handleUCFieldChange('modulo', e.target.value)}
+                                      className="w-full p-2 border rounded"
+                                    >
+                                      <option value="">Selecione...</option>
+                                      <option value="Básico">Básico</option>
+                                      <option value="Básico da Indústria">Básico da Indústria</option>
+                                      <option value="Introdutório">Introdutório</option>
+                                      <option value="Específico I">Específico I</option>
+                                      <option value="Específico II">Específico II</option>
+                                      <option value="Específico III">Específico III</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                                    <select
+                                      value={ucEditData.periodo || ''}
+                                      onChange={(e) => handleUCFieldChange('periodo', e.target.value)}
+                                      className="w-full p-2 border rounded"
+                                    >
+                                      <option value="">Selecione...</option>
+                                      <option value="1º Período">1º Período</option>
+                                      <option value="2º Período">2º Período</option>
+                                      <option value="3º Período">3º Período</option>
+                                      <option value="4º Período">4º Período</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo</label>
+                                  <textarea
+                                    value={ucEditData.objetivo || ''}
+                                    onChange={(e) => handleUCFieldChange('objetivo', e.target.value)}
+                                    className="w-full p-2 border rounded h-20"
+                                    placeholder="Objetivo da unidade curricular..."
+                                  />
+                                </div>
+
+                                {/* Capacidades */}
+                                <div>
+                                  <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-sm font-medium text-gray-700">Capacidades ({ucEditData.capacidades?.length || 0})</label>
+                                    <button
+                                      onClick={handleAddCapacidadeToUC}
+                                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                                    >
+                                      <Plus className="w-3 h-3 inline mr-1" />
+                                      Adicionar
+                                    </button>
+                                  </div>
+                                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-2 bg-gray-50">
+                                    {ucEditData.capacidades?.length === 0 && (
+                                      <p className="text-xs text-gray-400 text-center py-2">Nenhuma capacidade cadastrada</p>
+                                    )}
+                                    {ucEditData.capacidades?.map((cap, idx) => (
+                                      <div key={idx} className="flex gap-2 items-start bg-white p-1 rounded">
+                                        <input
+                                          type="text"
+                                          value={cap.codigo}
+                                          onChange={(e) => handleEditUCCapacidade(idx, 'codigo', e.target.value)}
+                                          className="w-20 p-1 border rounded text-xs"
+                                          placeholder="Código"
+                                        />
+                                        <input
+                                          type="text"
+                                          value={cap.descricao}
+                                          onChange={(e) => handleEditUCCapacidade(idx, 'descricao', e.target.value)}
+                                          className="flex-1 p-1 border rounded text-xs"
+                                          placeholder="Descrição da capacidade"
+                                        />
+                                        <button
+                                          onClick={() => handleRemoveUCCapacidade(idx)}
+                                          className="text-red-500 hover:text-red-700"
+                                        >
+                                          <X className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Conhecimentos */}
+                                <div>
+                                  <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-sm font-medium text-gray-700">Conhecimentos ({ucEditData.conhecimentos?.length || 0})</label>
+                                    <button
+                                      onClick={handleAddConhecimentoToUC}
+                                      className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+                                    >
+                                      <Plus className="w-3 h-3 inline mr-1" />
+                                      Adicionar Tópico
+                                    </button>
+                                  </div>
+                                  <div className="space-y-3 max-h-60 overflow-y-auto border rounded p-2 bg-gray-50">
+                                    {(!ucEditData.conhecimentos || ucEditData.conhecimentos.length === 0) && (
+                                      <p className="text-xs text-gray-400 text-center py-2">Nenhum conhecimento cadastrado</p>
+                                    )}
+                                    {ucEditData.conhecimentos?.map((con, idx) => (
+                                      <div key={idx} className="bg-white p-2 rounded border space-y-2">
+                                        <div className="flex gap-2 items-start">
+                                          <input
+                                            type="text"
+                                            value={con.topico}
+                                            onChange={(e) => handleEditUCConhecimento(idx, 'topico', e.target.value)}
+                                            className="flex-1 p-1 border rounded text-xs font-medium"
+                                            placeholder="Tópico principal (ex: 1 FUNDAMENTOS)"
+                                          />
+                                          <button
+                                            onClick={() => handleRemoveUCConhecimento(idx)}
+                                            className="text-red-500 hover:text-red-700"
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                        <textarea
+                                          value={(con.subtopicos || []).join('\n')}
+                                          onChange={(e) => handleEditUCConhecimento(idx, 'subtopicos', e.target.value)}
+                                          className="w-full p-1 border rounded text-xs h-16"
+                                          placeholder="Subtópicos (um por linha):&#10;1.1 Subtópico A&#10;1.2 Subtópico B"
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Visualização das Capacidades e Conhecimentos (quando não está editando) */}
+                            {editingUC !== uc.id && (
+                              <div className="p-4 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Capacidades */}
+                                <div>
+                                  <p className="text-xs font-medium text-gray-700 mb-1">
+                                    Capacidades: {(uc.capacidades || uc.capacidadesTecnicas || []).length}
+                                  </p>
+                                  {(uc.capacidades || uc.capacidadesTecnicas || []).length > 0 ? (
+                                    <div className="text-xs text-gray-600 max-h-20 overflow-y-auto bg-gray-50 p-2 rounded">
+                                      {(uc.capacidades || uc.capacidadesTecnicas || []).slice(0, 3).map((cap, idx) => (
+                                        <div key={idx} className="truncate">
+                                          <span className="font-medium text-[#004b8d]">{cap.codigo}:</span> {cap.descricao}
+                                        </div>
+                                      ))}
+                                      {(uc.capacidades || uc.capacidadesTecnicas || []).length > 3 && (
+                                        <p className="text-gray-400 mt-1">
+                                          ... e mais {(uc.capacidades || uc.capacidadesTecnicas || []).length - 3}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-gray-400 italic">Nenhuma capacidade</p>
+                                  )}
+                                </div>
+                                {/* Conhecimentos */}
+                                <div>
+                                  <p className="text-xs font-medium text-gray-700 mb-1">
+                                    Conhecimentos: {(uc.conhecimentos || []).length}
+                                  </p>
+                                  {(uc.conhecimentos || []).length > 0 ? (
+                                    <div className="text-xs text-gray-600 max-h-20 overflow-y-auto bg-gray-50 p-2 rounded">
+                                      {(uc.conhecimentos || []).slice(0, 3).map((con, idx) => (
+                                        <div key={idx} className="truncate">
+                                          <span className="font-medium text-green-700">{con.topico}</span>
+                                        </div>
+                                      ))}
+                                      {(uc.conhecimentos || []).length > 3 && (
+                                        <p className="text-gray-400 mt-1">
+                                          ... e mais {(uc.conhecimentos || []).length - 3} tópicos
+                                        </p>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-red-400 italic">Nenhum conhecimento cadastrado</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Modal para Adicionar Nova UC */}
+                {showAddUCModal && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                      <div className="p-4 border-b flex justify-between items-center">
+                        <h3 className="text-lg font-bold text-[#004b8d]">Adicionar Nova UC</h3>
+                        <button onClick={() => setShowAddUCModal(false)} className="text-gray-500 hover:text-gray-700">
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+                          <input
+                            type="text"
+                            value={newUCData.nome}
+                            onChange={(e) => setNewUCData(prev => ({ ...prev, nome: e.target.value }))}
+                            className="w-full p-2 border rounded"
+                            placeholder="Nome da Unidade Curricular"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Carga Horária</label>
+                            <input
+                              type="number"
+                              value={newUCData.cargaHoraria}
+                              onChange={(e) => setNewUCData(prev => ({ ...prev, cargaHoraria: parseInt(e.target.value) }))}
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Módulo</label>
+                            <select
+                              value={newUCData.modulo}
+                              onChange={(e) => setNewUCData(prev => ({ ...prev, modulo: e.target.value }))}
+                              className="w-full p-2 border rounded"
+                            >
+                              <option value="Básico">Básico</option>
+                              <option value="Básico da Indústria">Básico da Indústria</option>
+                              <option value="Introdutório">Introdutório</option>
+                              <option value="Específico I">Específico I</option>
+                              <option value="Específico II">Específico II</option>
+                              <option value="Específico III">Específico III</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo</label>
+                          <textarea
+                            value={newUCData.objetivo}
+                            onChange={(e) => setNewUCData(prev => ({ ...prev, objetivo: e.target.value }))}
+                            className="w-full p-2 border rounded h-20"
+                            placeholder="Objetivo da unidade curricular..."
+                          />
+                        </div>
+                      </div>
+                      <div className="p-4 border-t flex justify-end gap-3">
+                        <button
+                          onClick={() => setShowAddUCModal(false)}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleAddNewUC}
+                          disabled={savingUC}
+                          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {savingUC ? 'Salvando...' : 'Criar UC'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -914,9 +1756,10 @@ export default function AdminCursos({ onClose }) {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
           <h4 className="font-semibold text-[#004b8d] mb-2">Instruções</h4>
           <ul className="list-disc list-inside space-y-1">
-            <li>O <strong>PPC do Curso (PDF)</strong> é obrigatório e deve conter as informações completas do curso.</li>
-            <li>A <strong>Matriz Curricular (Excel)</strong> é opcional e pode complementar os dados extraídos.</li>
+            <li>A <strong>Matriz Curricular (Excel)</strong> é <span className="text-red-600 font-medium">OBRIGATÓRIA</span> - define quais UCs serão extraídas do PPC.</li>
+            <li>O <strong>PPC do Curso (PDF)</strong> é <span className="text-red-600 font-medium">OBRIGATÓRIO</span> - contém capacidades e conhecimentos de cada UC.</li>
             <li>Após o processamento, revise os dados extraídos e faça ajustes se necessário.</li>
+            <li>Use a aba <strong>"Gerenciar UCs"</strong> para editar nome, carga horária, objetivo e capacidades das UCs já cadastradas.</li>
             <li>Os cursos salvos ficarão disponíveis em todas as funcionalidades do sistema.</li>
           </ul>
         </div>

@@ -103,6 +103,47 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PUT /api/cursos/:id - Atualizar curso (apenas dados do curso, não UCs)
+router.put('/:id', async (req, res) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Remover campos que não devem ser atualizados diretamente
+    delete updateData.id;
+    delete updateData._id;
+    delete updateData.unidadesCurriculares;
+    delete updateData.createdAt;
+
+    // Adicionar timestamp de atualização
+    updateData.updatedAt = new Date();
+
+    const result = await db.collection(COLLECTIONS.CURSOS).updateOne(
+      { id },
+      { $set: updateData }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ success: false, error: 'Curso não encontrado' });
+    }
+
+    // Se o nome do curso foi atualizado, atualizar também nas UCs
+    if (updateData.nome) {
+      await db.collection(COLLECTIONS.UNIDADES_CURRICULARES).updateMany(
+        { cursoId: id },
+        { $set: { cursoNome: updateData.nome } }
+      );
+    }
+
+    res.json({ success: true, message: 'Curso atualizado com sucesso' });
+
+  } catch (error) {
+    console.error('Erro ao atualizar curso:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // DELETE /api/cursos/:id - Deletar curso
 router.delete('/:id', async (req, res) => {
   try {

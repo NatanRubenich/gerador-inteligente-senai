@@ -123,6 +123,128 @@ router.get('/:id/conhecimentos', async (req, res) => {
   }
 });
 
+// PUT /api/unidades/:id - Atualizar UC
+router.put('/:id', async (req, res) => {
+  try {
+    const db = getDb();
+    const ucId = req.params.id;
+    const updateData = req.body;
+
+    // Verificar se UC existe
+    const existing = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
+      .findOne({ id: ucId });
+    
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Unidade Curricular não encontrada' });
+    }
+
+    // Atualizar UC
+    const result = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES).updateOne(
+      { id: ucId },
+      { 
+        $set: { 
+          ...updateData, 
+          id: ucId, // Manter o ID original
+          updatedAt: new Date() 
+        } 
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Unidade Curricular atualizada com sucesso',
+      data: { id: ucId, modifiedCount: result.modifiedCount }
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar UC:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/unidades - Criar nova UC
+router.post('/', async (req, res) => {
+  try {
+    const db = getDb();
+    const ucData = req.body;
+
+    // Validar dados mínimos
+    if (!ucData.nome || !ucData.cursoId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Nome e cursoId são obrigatórios' 
+      });
+    }
+
+    // Gerar ID se não existir
+    if (!ucData.id) {
+      const count = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
+        .countDocuments({ cursoId: ucData.cursoId });
+      ucData.id = `${ucData.cursoId}-uc${count + 1}`;
+    }
+
+    // Verificar se já existe
+    const existing = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
+      .findOne({ id: ucData.id });
+    
+    if (existing) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Já existe uma UC com este ID' 
+      });
+    }
+
+    // Inserir UC
+    const ucDoc = {
+      ...ucData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    await db.collection(COLLECTIONS.UNIDADES_CURRICULARES).insertOne(ucDoc);
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Unidade Curricular criada com sucesso',
+      data: { id: ucData.id }
+    });
+  } catch (error) {
+    console.error('Erro ao criar UC:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE /api/unidades/:id - Deletar UC
+router.delete('/:id', async (req, res) => {
+  try {
+    const db = getDb();
+    const ucId = req.params.id;
+
+    // Verificar se UC existe
+    const existing = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
+      .findOne({ id: ucId });
+    
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Unidade Curricular não encontrada' });
+    }
+
+    // Deletar UC
+    await db.collection(COLLECTIONS.UNIDADES_CURRICULARES).deleteOne({ id: ucId });
+
+    // Deletar capacidades e conhecimentos associados (se existirem em coleções separadas)
+    await db.collection(COLLECTIONS.CAPACIDADES).deleteMany({ unidadeCurricularId: ucId });
+    await db.collection(COLLECTIONS.CONHECIMENTOS).deleteMany({ unidadeCurricularId: ucId });
+
+    res.json({ 
+      success: true, 
+      message: 'Unidade Curricular deletada com sucesso',
+      data: { id: ucId }
+    });
+  } catch (error) {
+    console.error('Erro ao deletar UC:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // POST /api/unidades/busca - Busca textual (para RAG)
 router.post('/busca', async (req, res) => {
   try {
