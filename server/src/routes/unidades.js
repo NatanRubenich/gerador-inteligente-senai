@@ -61,10 +61,29 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/capacidades', async (req, res) => {
   try {
     const db = getDb();
-    const capacidades = await db.collection(COLLECTIONS.CAPACIDADES)
+    
+    // Primeiro, tentar buscar na coleção CAPACIDADES separada
+    let capacidades = await db.collection(COLLECTIONS.CAPACIDADES)
       .find({ unidadeCurricularId: req.params.id })
       .project({ _id: 0 })
       .toArray();
+    
+    // Se não encontrou, buscar capacidades embutidas na UC
+    if (capacidades.length === 0) {
+      const unidade = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
+        .findOne({ id: req.params.id }, { projection: { _id: 0 } });
+      
+      if (unidade) {
+        // Verificar diferentes nomes de campo para capacidades
+        const caps = unidade.capacidades || unidade.capacidadesTecnicas || [];
+        capacidades = caps.map((cap, index) => ({
+          ...cap,
+          id: cap.id || `${req.params.id}-cap${index + 1}`,
+          unidadeCurricularId: req.params.id,
+          unidadeCurricularNome: unidade.nome
+        }));
+      }
+    }
     
     res.json({ success: true, data: capacidades, count: capacidades.length });
   } catch (error) {
@@ -76,10 +95,27 @@ router.get('/:id/capacidades', async (req, res) => {
 router.get('/:id/conhecimentos', async (req, res) => {
   try {
     const db = getDb();
-    const conhecimentos = await db.collection(COLLECTIONS.CONHECIMENTOS)
+    
+    // Primeiro, tentar buscar na coleção CONHECIMENTOS separada
+    let conhecimentos = await db.collection(COLLECTIONS.CONHECIMENTOS)
       .find({ unidadeCurricularId: req.params.id })
       .project({ _id: 0 })
       .toArray();
+    
+    // Se não encontrou, buscar conhecimentos embutidos na UC
+    if (conhecimentos.length === 0) {
+      const unidade = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
+        .findOne({ id: req.params.id }, { projection: { _id: 0 } });
+      
+      if (unidade && unidade.conhecimentos) {
+        conhecimentos = unidade.conhecimentos.map((con, index) => ({
+          ...con,
+          id: con.id || `${req.params.id}-con${index + 1}`,
+          unidadeCurricularId: req.params.id,
+          unidadeCurricularNome: unidade.nome
+        }));
+      }
+    }
     
     res.json({ success: true, data: conhecimentos, count: conhecimentos.length });
   } catch (error) {

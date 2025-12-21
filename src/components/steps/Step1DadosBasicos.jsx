@@ -77,7 +77,7 @@ export default function Step1DadosBasicos() {
     updateDadosProva({
       unidadeCurricular: uc?.nome || '',
       unidadeCurricularId: ucId,
-      capacidades: [] // Reset capacidades quando mudar UC
+      capacidades: []
     });
   };
 

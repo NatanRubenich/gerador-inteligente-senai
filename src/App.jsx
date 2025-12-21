@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { ProvaProvider, useProva, TIPO_AVALIACAO } from './context/ProvaContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -13,9 +14,33 @@ import Step3GerarSA from './components/steps/sa/Step3GerarSA';
 import Step4VisualizarSA from './components/steps/sa/Step4VisualizarSA';
 import Step3GerarPlano from './components/steps/plano/Step3GerarPlano';
 import Step4VisualizarPlano from './components/steps/plano/Step4VisualizarPlano';
+import AdminCursos from './components/admin/AdminCursos';
 
 function AppContent() {
   const { currentStep, tipoAvaliacao, selectTipoAvaliacao } = useProva();
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  // Atalho secreto: Ctrl+Shift+A para abrir painel de administração
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setShowAdmin(prev => !prev);
+      }
+      // ESC para fechar o painel admin
+      if (e.key === 'Escape' && showAdmin) {
+        setShowAdmin(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAdmin]);
+
+  // Mostrar painel de administração
+  if (showAdmin) {
+    return <AdminCursos onClose={() => setShowAdmin(false)} />;
+  }
 
   // Se não selecionou tipo de avaliação, mostrar seletor
   if (!tipoAvaliacao) {

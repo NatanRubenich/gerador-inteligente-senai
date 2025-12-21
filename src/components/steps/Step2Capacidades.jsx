@@ -70,11 +70,18 @@ export default function Step2Capacidades() {
   }, [dadosProva.unidadeCurricular]);
 
   const toggleCapacidade = (capacidade) => {
-    const isSelected = dadosProva.capacidades.some(c => c.codigo === capacidade.codigo);
+    // Usar ID único para identificar capacidades (evita problemas com códigos duplicados)
+    const isSelected = dadosProva.capacidades.some(c => 
+      (c.id && capacidade.id && c.id === capacidade.id) || 
+      (c.codigo === capacidade.codigo && c.descricao === capacidade.descricao)
+    );
     
     if (isSelected) {
       updateDadosProva({
-        capacidades: dadosProva.capacidades.filter(c => c.codigo !== capacidade.codigo)
+        capacidades: dadosProva.capacidades.filter(c => 
+          !((c.id && capacidade.id && c.id === capacidade.id) || 
+            (c.codigo === capacidade.codigo && c.descricao === capacidade.descricao))
+        )
       });
     } else {
       updateDadosProva({
@@ -84,7 +91,12 @@ export default function Step2Capacidades() {
   };
 
   const selectAll = () => {
-    updateDadosProva({ capacidades: [...capacidadesDisponiveis] });
+    // Garantir que cada capacidade tenha um ID único
+    const capsComId = capacidadesDisponiveis.map((cap, index) => ({
+      ...cap,
+      id: cap.id || `${cap.codigo}-${index}`
+    }));
+    updateDadosProva({ capacidades: capsComId });
   };
 
   const deselectAll = () => {
@@ -167,12 +179,13 @@ export default function Step2Capacidades() {
                   Nenhuma capacidade encontrada para esta unidade curricular.
                 </p>
               )}
-              {!loadingCapacidades && capacidadesDisponiveis.map((cap) => {
-                const isSelected = dadosProva.capacidades.some(c => c.codigo === cap.codigo);
+              {!loadingCapacidades && capacidadesDisponiveis.map((cap, index) => {
+                const capId = cap.id || `${cap.codigo}-${index}`;
+                const isSelected = dadosProva.capacidades.some(c => (c.id && c.id === cap.id) || (c.codigo === cap.codigo && c.descricao === cap.descricao));
                 return (
                   <button
-                    key={cap.codigo}
-                    onClick={() => toggleCapacidade(cap)}
+                    key={capId}
+                    onClick={() => toggleCapacidade({ ...cap, id: capId })}
                     className={`
                       w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all
                       ${isSelected 

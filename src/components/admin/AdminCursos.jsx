@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Upload, FileText, Table, CheckCircle, AlertCircle, Loader2, Plus, Trash2, Eye, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Upload, FileText, Table, CheckCircle, AlertCircle, Loader2, Plus, Trash2, Eye, Save, X, ChevronDown, ChevronRight, ArrowLeft, Settings } from 'lucide-react';
+import { clearCache } from '../../services/apiService';
 
 /**
  * Página de Administração de Cursos
  * Permite upload do PPC (PDF) e Matriz Curricular (Excel) para alimentar o sistema
+ * Acesso secreto: Ctrl+Shift+A
  */
-export default function AdminCursos() {
+export default function AdminCursos({ onClose }) {
   const [pdfFile, setPdfFile] = useState(null);
   const [matrizFile, setMatrizFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,16 +21,38 @@ export default function AdminCursos() {
   const [saveStatus, setSaveStatus] = useState(null);
   const [processingStatus, setProcessingStatus] = useState('');
 
-  // Carregar cursos salvos do localStorage
+  // Carregar cursos salvos do MongoDB e localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('cursos_adicionados');
-    if (saved) {
+    const loadCourses = async () => {
       try {
-        setSavedCourses(JSON.parse(saved));
-      } catch (e) {
-        console.error('Erro ao carregar cursos salvos:', e);
+        // Carregar do MongoDB com UCs incluídas
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const response = await fetch(`${API_URL}/api/cursos?includeUCs=true`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            console.log('[Admin] Cursos carregados do MongoDB:', result.data.length);
+            setSavedCourses(result.data);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar do MongoDB:', error);
       }
-    }
+
+      // Fallback: carregar do localStorage
+      const saved = localStorage.getItem('cursos_adicionados');
+      if (saved) {
+        try {
+          setSavedCourses(JSON.parse(saved));
+        } catch (e) {
+          console.error('Erro ao carregar cursos salvos:', e);
+        }
+      }
+    };
+
+    loadCourses();
   }, []);
 
   const handlePdfUpload = useCallback((e) => {
@@ -50,13 +74,8 @@ export default function AdminCursos() {
   }, []);
 
   const processFiles = async () => {
-    if (!matrizFile) {
-      alert('Por favor, selecione o arquivo da Matriz Curricular do Curso.');
-      return;
-    }
-    
     if (!pdfFile) {
-      alert('Por favor, selecione o PPC do Curso (PDF). É necessário para extrair capacidades e conhecimentos.');
+      alert('Por favor, selecione o PPC do Curso (PDF). É obrigatório para extrair as informações.');
       return;
     }
 
@@ -65,57 +84,27 @@ export default function AdminCursos() {
     setValidationResult(null);
 
     try {
-      // Importar serviço de extração local
-      setProcessingStatus('Carregando serviços...');
-      const extractionService = await import('../../services/cursoExtractionService');
+      // Importar serviço de extração com IA
+      setProcessingStatus('Carregando serviço de IA...');
+      const aiService = await import('../../services/cursoAIExtractionService');
       
-      // Processar Matriz Curricular (estrutura base)
-      setProcessingStatus('Processando Matriz Curricular...');
-      const excelData = await extractionService.extractDataFromExcel(matrizFile);
-      console.log('[Admin] Dados do Excel:', excelData);
+      // Processar com Gemini AI
+      console.log('[Admin] Iniciando extração com Gemini AI...');
+      const courseData = await aiService.extractCourseWithAI(
+        matrizFile, 
+        pdfFile, 
+        (status) => setProcessingStatus(status)
+      );
       
-      setProcessingStatus('Extraindo dados do curso...');
-      const matrizData = extractionService.parseMatrizCurricular(excelData);
-      console.log('[Admin] Matriz parseada:', matrizData);
-      
-      // Converter para formato do curso
-      setProcessingStatus('Convertendo dados...');
-      let courseData = extractionService.convertMatrizToCurso(matrizData);
-      console.log('[Admin] Curso convertido:', courseData);
+      console.log('[Admin] Curso extraído:', courseData);
 
-      if (!courseData) {
-        throw new Error('Não foi possível extrair dados da Matriz Curricular');
-      }
-
-      // Extrair capacidades e conhecimentos do PDF localmente
-      if (pdfFile) {
-        try {
-          setProcessingStatus('Extraindo texto do PDF...');
-          console.log('[Admin] Iniciando extração local do PDF...');
-          
-          // Primeiro extrair o texto do PDF
-          const pdfText = await extractionService.extractTextFromPDF(pdfFile, (status) => setProcessingStatus(status));
-          console.log('[Admin] Texto extraído do PDF:', pdfText.length, 'caracteres');
-          
-          // Depois fazer o parse do texto
-          setProcessingStatus('Analisando conteúdo do PDF...');
-          const pdfData = extractionService.parseCourseFromPDF(pdfText);
-          console.log('[Admin] Dados extraídos do PDF:', pdfData);
-          
-          // Mesclar dados do PDF com a Matriz Curricular
-          setProcessingStatus('Mesclando dados extraídos...');
-          courseData = mergePDFWithMatriz(courseData, pdfData);
-          console.log('[Admin] Dados mesclados:', courseData);
-          
-        } catch (pdfError) {
-          console.error('Erro ao processar PDF:', pdfError);
-          alert(`Aviso: Erro na extração do PDF: ${pdfError.message}. Continuando com dados da Matriz.`);
-        }
+      if (!courseData || !courseData.nome) {
+        throw new Error('Não foi possível extrair dados do curso. Verifique se o PDF é um PPC válido.');
       }
 
       // Validar dados
       setProcessingStatus('Validando dados extraídos...');
-      const validation = extractionService.validateCourseData(courseData);
+      const validation = aiService.validateCourseData(courseData);
 
       setExtractedData(courseData);
       setEditedData(JSON.parse(JSON.stringify(courseData)));
@@ -130,49 +119,6 @@ export default function AdminCursos() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // Função para mesclar dados do PDF com a Matriz Curricular
-  const mergePDFWithMatriz = (matrizData, pdfData) => {
-    const curso = { ...matrizData };
-    
-    if (!pdfData) return curso;
-    
-    // Dados gerais do PDF
-    if (pdfData.competenciaGeral) curso.competenciaGeral = pdfData.competenciaGeral;
-    if (pdfData.cbo) curso.cbo = pdfData.cbo;
-    if (pdfData.eixoTecnologico) curso.eixoTecnologico = pdfData.eixoTecnologico;
-    if (pdfData.areaTecnologica) curso.areaTecnologica = pdfData.areaTecnologica;
-    
-    // Mesclar UCs
-    if (pdfData.unidadesCurriculares && pdfData.unidadesCurriculares.length > 0) {
-      curso.unidadesCurriculares.forEach(matrizUC => {
-        // Buscar UC correspondente no PDF
-        const pdfUC = pdfData.unidadesCurriculares.find(uc => {
-          const matrizName = matrizUC.nome.toLowerCase().replace(/\s+/g, ' ').trim();
-          const pdfName = uc.nome.toLowerCase().replace(/\s+/g, ' ').trim();
-          return matrizName.includes(pdfName.substring(0, 20)) ||
-                 pdfName.includes(matrizName.substring(0, 20));
-        });
-        
-        if (pdfUC) {
-          // Usar capacidades do PDF se existirem
-          if (pdfUC.capacidadesTecnicas?.length > 0) {
-            matrizUC.capacidadesTecnicas = pdfUC.capacidadesTecnicas;
-          }
-          // Usar conhecimentos do PDF se existirem
-          if (pdfUC.conhecimentos?.length > 0) {
-            matrizUC.conhecimentos = pdfUC.conhecimentos;
-          }
-          // Usar objetivo do PDF se existir
-          if (pdfUC.objetivo) {
-            matrizUC.objetivo = pdfUC.objetivo;
-          }
-        }
-      });
-    }
-    
-    return curso;
   };
 
   const toggleUC = (index) => {
@@ -193,7 +139,28 @@ export default function AdminCursos() {
     setSaveStatus('saving');
 
     try {
-      // Salvar no localStorage (cursos adicionados pelo usuário)
+      // Salvar no MongoDB via API
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      
+      const response = await fetch(`${API_URL}/api/cursos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSave)
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao salvar no banco de dados');
+      }
+
+      console.log('[Admin] Curso salvo no MongoDB:', result);
+
+      // Limpar cache do apiService para forçar recarregamento dos cursos
+      clearCache();
+      console.log('[Admin] Cache do apiService limpo');
+
+      // Também salvar no localStorage como backup
       const existingCourses = JSON.parse(localStorage.getItem('cursos_adicionados') || '[]');
       const existingIndex = existingCourses.findIndex(c => c.id === dataToSave.id);
       
@@ -208,7 +175,21 @@ export default function AdminCursos() {
       // Atualizar RAG knowledge base
       await updateRAGKnowledgeBase(dataToSave);
       
-      setSavedCourses(existingCourses);
+      // Recarregar cursos do MongoDB para atualizar a lista
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const refreshResponse = await fetch(`${API_URL}/api/cursos?includeUCs=true`);
+        if (refreshResponse.ok) {
+          const refreshResult = await refreshResponse.json();
+          if (refreshResult.success && refreshResult.data) {
+            setSavedCourses(refreshResult.data);
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao recarregar cursos:', e);
+        setSavedCourses(existingCourses);
+      }
+      
       setSaveStatus('success');
       
       setTimeout(() => {
@@ -218,6 +199,7 @@ export default function AdminCursos() {
 
     } catch (error) {
       console.error('Erro ao salvar curso:', error);
+      alert(`Erro ao salvar: ${error.message}`);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 3000);
     }
@@ -257,9 +239,29 @@ export default function AdminCursos() {
     localStorage.setItem('rag_cursos', JSON.stringify(ragCourses));
   };
 
-  const handleDeleteCourse = (courseId) => {
+  const handleDeleteCourse = async (courseId) => {
     if (!confirm('Tem certeza que deseja excluir este curso?')) return;
     
+    try {
+      // Deletar do MongoDB via API
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      
+      const response = await fetch(`${API_URL}/api/cursos/${courseId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Erro ao deletar do banco de dados');
+      }
+
+      console.log('[Admin] Curso deletado do MongoDB:', courseId);
+    } catch (error) {
+      console.error('Erro ao deletar do MongoDB:', error);
+      // Continuar mesmo se falhar no MongoDB (pode não existir lá)
+    }
+    
+    // Deletar do localStorage
     const updatedCourses = savedCourses.filter(c => c.id !== courseId);
     localStorage.setItem('cursos_adicionados', JSON.stringify(updatedCourses));
     
@@ -345,17 +347,38 @@ export default function AdminCursos() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-2xl font-bold text-[#004b8d] mb-2">
-            Administração de Cursos
-          </h1>
-          <p className="text-gray-600">
-            Adicione novos cursos ao sistema através do upload de documentos oficiais.
-          </p>
+    <div className="min-h-screen bg-gray-100">
+      {/* Header Azul */}
+      <header className="bg-[#004b8d] text-white shadow-lg">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                <Settings className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">
+                  Administração de Cursos
+                </h1>
+                <p className="text-blue-100 text-sm">
+                  Adicione novos cursos ao sistema através do upload de documentos oficiais
+                </p>
+              </div>
+            </div>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Voltar ao Sistema
+              </button>
+            )}
+          </div>
         </div>
+      </header>
+
+      <div className="max-w-6xl mx-auto p-6">
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-md mb-6">
@@ -401,41 +424,6 @@ export default function AdminCursos() {
             {activeTab === 'upload' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Upload Matriz Curricular (Obrigatório) */}
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#004b8d] transition-colors">
-                    <Table className="w-10 h-10 mx-auto text-gray-400 mb-3" />
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">
-                      Matriz Curricular (Excel) *
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      Estrutura curricular do curso
-                      <br />
-                      <span className="text-xs text-gray-400">
-                        Ex: "Edificações DR-SC_Presencial.xlsx"
-                      </span>
-                    </p>
-                    <input
-                      type="file"
-                      accept=".xls,.xlsx"
-                      onChange={handleMatrizUpload}
-                      className="hidden"
-                      id="matriz-upload"
-                    />
-                    <label
-                      htmlFor="matriz-upload"
-                      className="inline-flex items-center px-4 py-2 bg-[#004b8d] text-white rounded-lg cursor-pointer hover:bg-[#003a6d] transition-colors"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Selecionar Excel
-                    </label>
-                    {matrizFile && (
-                      <div className="mt-4 flex items-center justify-center text-green-600">
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        <span className="text-sm truncate max-w-[200px]">{matrizFile.name}</span>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Upload PPC (Obrigatório) */}
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#004b8d] transition-colors">
                     <FileText className="w-10 h-10 mx-auto text-gray-400 mb-3" />
@@ -470,24 +458,46 @@ export default function AdminCursos() {
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Informações sobre os arquivos */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-800 mb-2">Arquivos necessários:</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li><strong>Matriz Curricular *:</strong> Excel com UCs, módulos, períodos e carga horária</li>
-                    <li><strong>PPC do Curso *:</strong> PDF com capacidades técnicas e conhecimentos de cada UC</li>
-                  </ul>
+                  {/* Upload Matriz Curricular (Opcional) */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#004b8d] transition-colors">
+                    <Table className="w-10 h-10 mx-auto text-gray-400 mb-3" />
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">
+                      Matriz Curricular (Excel)
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Opcional - Complementa dados do PPC
+                    </p>
+                    <input
+                      type="file"
+                      accept=".xls,.xlsx"
+                      onChange={handleMatrizUpload}
+                      className="hidden"
+                      id="matriz-upload"
+                    />
+                    <label
+                      htmlFor="matriz-upload"
+                      className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Selecionar Excel
+                    </label>
+                    {matrizFile && (
+                      <div className="mt-4 flex items-center justify-center text-green-600">
+                        <CheckCircle className="w-5 h-5 mr-2" />
+                        <span className="text-sm truncate max-w-[200px]">{matrizFile.name}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Botão Processar */}
                 <div className="flex justify-center">
                   <button
                     onClick={processFiles}
-                    disabled={!matrizFile || !pdfFile || isProcessing}
+                    disabled={!pdfFile || isProcessing}
                     className={`px-8 py-3 rounded-lg font-medium text-white ${
-                      !matrizFile || !pdfFile || isProcessing
+                      !pdfFile || isProcessing
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-[#e5173f] hover:bg-[#c41535]'
                     } transition-colors`}
@@ -901,14 +911,13 @@ export default function AdminCursos() {
         </div>
 
         {/* Instruções */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-          <h4 className="font-bold mb-2">📋 Instruções</h4>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
+          <h4 className="font-semibold text-[#004b8d] mb-2">Instruções</h4>
           <ul className="list-disc list-inside space-y-1">
-            <li>O <strong>Projeto do Curso (PDF)</strong> é obrigatório e deve conter as informações completas do curso.</li>
-            <li>A <strong>Matriz SAEP (Excel)</strong> é opcional e pode complementar os dados extraídos.</li>
+            <li>O <strong>PPC do Curso (PDF)</strong> é obrigatório e deve conter as informações completas do curso.</li>
+            <li>A <strong>Matriz Curricular (Excel)</strong> é opcional e pode complementar os dados extraídos.</li>
             <li>Após o processamento, revise os dados extraídos e faça ajustes se necessário.</li>
             <li>Os cursos salvos ficarão disponíveis em todas as funcionalidades do sistema.</li>
-            <li>Os dados são armazenados localmente no navegador.</li>
           </ul>
         </div>
       </div>
