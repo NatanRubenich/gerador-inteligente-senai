@@ -1,11 +1,13 @@
 /**
  * Serviço de Extração de Cursos com Gemini AI
  * Extrai informações de PDFs de PPC e Matrizes Curriculares
- * v1.0.0
+ * v2.0.0 - Agora usa o backend para chamadas ao Gemini (segurança)
  */
 
-import { GEMINI_API_KEY, GEMINI_API_URL, GEMINI_MODEL } from '../config/api';
 import * as XLSX from 'xlsx';
+
+// URL da API do backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /**
  * Converte arquivo para Base64
@@ -212,201 +214,71 @@ function normalizeModulo(modulo) {
 }
 
 /**
- * Chama a API do Gemini para extrair dados do curso - Etapa 1: Dados gerais do curso
- * Usa as UCs da Matriz Curricular como referência
+ * Chama o BACKEND para extrair dados do curso - Etapa 1: Dados gerais do curso
+ * A API Key fica APENAS no servidor (segurança)
  */
 async function callGeminiStep1(pdfBase64, ucsFromExcel, onStatus) {
   onStatus?.('Etapa 1/3: Extraindo dados gerais do curso...');
 
-  const ucListText = ucsFromExcel.map((uc, i) => 
-    `${i + 1}. ${uc.nome} (${uc.cargaHoraria}h - ${uc.modulo || 'Módulo não identificado'})`
-  ).join('\n');
+  const response = await fetch(`${API_URL}/api/gemini/extract-course`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pdfBase64, ucsFromExcel })
+  });
 
-  const prompt = `Você é um especialista em educação profissional do SENAI. Analise o documento PDF anexado (PPC/Itinerário Nacional) e extraia os DADOS GERAIS do curso.
-
-A MATRIZ CURRICULAR já foi processada e contém as seguintes Unidades Curriculares:
-${ucListText}
-
-EXTRAIA APENAS os dados gerais do curso:
-1. Nome completo do curso
-2. CBO (Classificação Brasileira de Ocupações)
-3. Carga horária total
-4. Eixo tecnológico
-5. Área tecnológica
-6. Competência geral (texto completo)
-
-NÃO extraia as UCs - elas já foram identificadas na matriz curricular.
-
-Retorne APENAS JSON válido:
-{
-  "nome": "TÉCNICO EM EDIFICAÇÕES",
-  "id": "tecnico-em-edificacoes",
-  "cbo": "3121-05",
-  "cargaHorariaTotal": 1200,
-  "eixoTecnologico": "Infraestrutura",
-  "areaTecnologica": "CC- Edificações",
-  "competenciaGeral": "Texto completo da competência geral..."
-}`;
-
-  return await callGeminiAPI(pdfBase64, prompt);
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Erro ao extrair dados do curso');
+  }
+  return result.data;
 }
 
 /**
- * Chama a API do Gemini para extrair CAPACIDADES de UCs específicas - Etapa 2
+ * Chama o BACKEND para extrair CAPACIDADES de UCs específicas - Etapa 2
+ * A API Key fica APENAS no servidor (segurança)
  */
 async function callGeminiStep2Capacidades(pdfBase64, ucs, onStatus) {
   const ucNames = ucs.map(uc => uc.nome);
   onStatus?.(`Etapa 2/3: Extraindo capacidades de ${ucNames.length} UCs...`);
 
-  const prompt = `Analise o documento PDF (PPC/Itinerário Nacional do SENAI) e extraia as CAPACIDADES das seguintes Unidades Curriculares:
+  const response = await fetch(`${API_URL}/api/gemini/extract-capacidades`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pdfBase64, ucs })
+  });
 
-${ucs.map((uc, i) => `${i + 1}. "${uc.nome}" (${uc.cargaHoraria}h)`).join('\n')}
-
-Para CADA UC acima, extraia:
-- Objetivo da UC (texto completo)
-- TODAS as Capacidades Técnicas (CT1, CT2...) ou Capacidades Básicas (CB1, CB2...) ou Capacidades Socioemocionais (CS1, CS2...)
-
-IMPORTANTE: 
-- Extraia TODAS as capacidades de cada UC, não resuma
-- Use os códigos exatos do documento (CT, CB, CS)
-- Mantenha a descrição completa de cada capacidade
-
-Retorne APENAS JSON válido:
-{
-  "detalhesUCs": [
-    {
-      "nome": "Nome exato da UC",
-      "objetivo": "Objetivo completo da UC...",
-      "capacidadesTecnicas": [
-        { "codigo": "CT1", "descricao": "Descrição completa da capacidade..." },
-        { "codigo": "CT2", "descricao": "Descrição completa da capacidade..." }
-      ]
-    }
-  ]
-}`;
-
-  return await callGeminiAPI(pdfBase64, prompt);
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Erro ao extrair capacidades');
+  }
+  return result.data;
 }
 
 /**
- * Chama a API do Gemini para extrair CONHECIMENTOS de UCs específicas - Etapa 3
+ * Chama o BACKEND para extrair CONHECIMENTOS de UCs específicas - Etapa 3
+ * A API Key fica APENAS no servidor (segurança)
  */
 async function callGeminiStep3Conhecimentos(pdfBase64, ucs, onStatus) {
   const ucNames = ucs.map(uc => uc.nome);
   onStatus?.(`Etapa 3/3: Extraindo conhecimentos de ${ucNames.length} UCs...`);
 
-  const prompt = `Analise o documento PDF (PPC/Itinerário Nacional do SENAI) e extraia os CONHECIMENTOS das seguintes Unidades Curriculares:
-
-${ucs.map((uc, i) => `${i + 1}. "${uc.nome}" (${uc.cargaHoraria}h)`).join('\n')}
-
-Para CADA UC acima, extraia TODOS os CONHECIMENTOS com sua hierarquia completa:
-- Tópicos principais (1, 2, 3...)
-- Subtópicos (1.1, 1.2, 2.1, 2.2...)
-- Sub-subtópicos se existirem (1.1.1, 1.1.2...)
-
-IMPORTANTE:
-- Extraia TODOS os conhecimentos de cada UC
-- Mantenha a hierarquia e numeração original
-- Inclua todos os níveis de detalhamento
-
-Retorne APENAS JSON válido:
-{
-  "conhecimentosUCs": [
-    {
-      "nome": "Nome exato da UC",
-      "conhecimentos": [
-        { 
-          "topico": "1 NOME DO TÓPICO PRINCIPAL", 
-          "subtopicos": ["1.1 Subtópico A", "1.2 Subtópico B", "1.3 Subtópico C"] 
-        },
-        { 
-          "topico": "2 OUTRO TÓPICO", 
-          "subtopicos": ["2.1 Subtópico", "2.2 Subtópico"] 
-        }
-      ]
-    }
-  ]
-}`;
-
-  return await callGeminiAPI(pdfBase64, prompt);
-}
-
-/**
- * Função auxiliar para chamar a API do Gemini
- */
-async function callGeminiAPI(pdfBase64, prompt) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API Key do Gemini não configurada. Crie o arquivo .env com VITE_GEMINI_API_KEY');
-  }
-
-  const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const requestBody = {
-    contents: [{
-      parts: [
-        { text: prompt },
-        {
-          inline_data: {
-            mime_type: 'application/pdf',
-            data: pdfBase64
-          }
-        }
-      ]
-    }],
-    generationConfig: {
-      temperature: 0.1,
-      maxOutputTokens: 65536,
-      responseMimeType: 'application/json'
-    },
-    safetySettings: [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-    ]
-  };
-
-  const response = await fetch(url, {
+  const response = await fetch(`${API_URL}/api/gemini/extract-conhecimentos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify({ pdfBase64, ucs })
   });
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    console.error('[Gemini] Erro:', data);
-    throw new Error(data.error?.message || `Erro na API Gemini: ${response.status}`);
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Erro ao extrair conhecimentos');
   }
-
-  const finishReason = data.candidates?.[0]?.finishReason;
-  if (finishReason === 'SAFETY') {
-    throw new Error('Conteúdo bloqueado por políticas de segurança.');
-  }
-
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!content) {
-    throw new Error('Resposta vazia da API Gemini');
-  }
-
-  let jsonStr = content.trim();
-  jsonStr = jsonStr.replace(/^```json\s*/i, '');
-  jsonStr = jsonStr.replace(/^```\s*/i, '');
-  jsonStr = jsonStr.replace(/\s*```$/i, '');
-
-  try {
-    return JSON.parse(jsonStr);
-  } catch (e) {
-    console.error('[Gemini] Erro ao parsear JSON:', e.message);
-    const recovered = tryRecoverTruncatedJSON(jsonStr);
-    if (recovered) return recovered;
-    throw new Error('Erro ao processar resposta da IA.');
-  }
+  return result.data;
 }
 
 /**
- * Chama a API do Gemini para extrair dados do curso em múltiplas etapas
+ * Chama o backend para extrair dados do curso em múltiplas etapas
  * NOVA VERSÃO: Usa UCs da Matriz Curricular como guia
+ * A API Key fica APENAS no servidor (segurança)
  */
 async function callGeminiForExtraction(pdfBase64, matrizText, ucsFromExcel, onStatus) {
   if (!ucsFromExcel || ucsFromExcel.length === 0) {
@@ -469,12 +341,22 @@ async function callGeminiForExtraction(pdfBase64, matrizText, ucsFromExcel, onSt
         uc.nome.toLowerCase().includes(d.nome.toLowerCase().substring(0, 15))
       );
       
+      // Combinar todas as capacidades em um único array
+      const todasCapacidades = [
+        ...(capDetails?.capacidadesBasicas || []),
+        ...(capDetails?.capacidadesTecnicas || []),
+        ...(capDetails?.capacidadesSocioemocionais || [])
+      ];
+
       return {
         nome: uc.nome,
         modulo: uc.modulo || 'Específico I',
         cargaHoraria: uc.cargaHoraria || 0,
         objetivo: capDetails?.objetivo || '',
+        capacidades: todasCapacidades,
+        capacidadesBasicas: capDetails?.capacidadesBasicas || [],
         capacidadesTecnicas: capDetails?.capacidadesTecnicas || [],
+        capacidadesSocioemocionais: capDetails?.capacidadesSocioemocionais || [],
         conhecimentos: conDetails?.conhecimentos || []
       };
     })

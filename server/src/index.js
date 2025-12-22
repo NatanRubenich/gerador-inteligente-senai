@@ -13,6 +13,7 @@ import cursosRouter from './routes/cursos.js';
 import unidadesRouter from './routes/unidades.js';
 import capacidadesRouter from './routes/capacidades.js';
 import conhecimentosRouter from './routes/conhecimentos.js';
+import geminiRouter from './routes/gemini.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +40,7 @@ app.use('/api/cursos', cursosRouter);
 app.use('/api/unidades', unidadesRouter);
 app.use('/api/capacidades', capacidadesRouter);
 app.use('/api/conhecimentos', conhecimentosRouter);
+app.use('/api/gemini', geminiRouter);
 
 // Rota 404
 app.use((req, res) => {
@@ -76,6 +78,9 @@ async function startServer() {
       console.log(`  GET  /api/capacidades/stats`);
       console.log(`  GET  /api/conhecimentos`);
       console.log(`  POST /api/conhecimentos/busca`);
+      console.log(`  POST /api/gemini/extract-course`);
+      console.log(`  POST /api/gemini/extract-capacidades`);
+      console.log(`  POST /api/gemini/extract-conhecimentos`);
     });
   } catch (error) {
     console.error('❌ Erro ao iniciar servidor:', error);

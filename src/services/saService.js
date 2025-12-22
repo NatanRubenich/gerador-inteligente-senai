@@ -1,19 +1,13 @@
 /**
  * Serviço para geração de Situação de Aprendizagem (SA)
  * Baseado no Guia Prático SENAI - Etapas para elaboração do Plano de Ensino e SA
- * Utiliza Google Gemini / Groq para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
- * v1.4.0 - Integração com Google Gemini API
+ * Utiliza Google Gemini para gerar SAs seguindo a Metodologia SENAI de Educação Profissional
+ * v2.0.0 - Chamadas via backend para segurança da API Key
  */
 
-import { 
-  GEMINI_API_KEY, 
-  GEMINI_API_URL, 
-  GEMINI_MODEL,
-  GROQ_API_KEY, 
-  GROQ_API_URL, 
-  GROQ_MODEL,
-  LLM_PROVIDER 
-} from '../config/api';
+// URL da API do backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 import { 
   gerarContextoRAGCompleto, 
   getMetodologiaSA,
@@ -22,103 +16,44 @@ import {
 } from './ragService';
 
 /**
- * Verifica se a API está configurada
+ * Verifica se a API está configurada (agora sempre true pois usa backend)
  */
-export const isApiConfigured = () => {
-  const key = LLM_PROVIDER === 'gemini' ? GEMINI_API_KEY : GROQ_API_KEY;
-  return key && key.length > 10;
-};
+export const isApiConfigured = () => true;
 
 /**
- * Faz chamada à API do Google Gemini
+ * Faz chamada à API do Google Gemini via BACKEND
+ * A API Key fica APENAS no servidor (segurança)
  */
 async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('API Key do Gemini não configurada.');
+  console.log('[Gemini] Chamando API via backend...');
+
+  try {
+    const response = await fetch(`${API_URL}/api/gemini/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ systemPrompt, userPrompt, maxTokens })
+    });
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Erro na API Gemini');
+    }
+    
+    console.log('[Gemini] Resposta recebida:', result.content.length, 'caracteres');
+    return result.content;
+  } catch (error) {
+    console.error('[Gemini] Erro na chamada:', error.message);
+    throw error;
   }
-
-  const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: maxTokens,
-        responseMimeType: 'application/json'
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `Erro na API Gemini: ${response.status}`);
-  }
-
-  const data = await response.json();
-  
-  if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
-    throw new Error('Resposta truncada. Tente reduzir a complexidade.');
-  }
-  
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!content) throw new Error('Resposta vazia da API Gemini');
-  return content;
 }
 
 /**
- * Faz chamada à API do Groq (fallback)
- */
-async function callGroqAPI(systemPrompt, userPrompt, maxTokens = 8192) {
-  if (!GROQ_API_KEY) {
-    throw new Error('API Key do Groq não configurada.');
-  }
-
-  const response = await fetch(GROQ_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GROQ_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.7,
-      max_tokens: maxTokens,
-      response_format: { type: 'json_object' }
-    })
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `Erro na API Groq: ${response.status}`);
-  }
-
-  const data = await response.json();
-  
-  if (data.choices?.[0]?.finish_reason === 'length') {
-    throw new Error('Resposta truncada. Tente reduzir a complexidade.');
-  }
-  
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Resposta vazia da API Groq');
-  return content;
-}
-
-/**
- * Faz chamada à API LLM configurada (Gemini ou Groq)
+ * Faz chamada à API LLM (Gemini via backend)
  */
 async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 8192) {
-  console.log(`[SA Service] Usando provider: ${LLM_PROVIDER}`);
-  if (LLM_PROVIDER === 'gemini') {
-    return callGeminiAPI(systemPrompt, userPrompt, maxTokens);
-  }
-  return callGroqAPI(systemPrompt, userPrompt, maxTokens);
+  console.log('[SA Service] Usando Gemini via backend');
+  return callGeminiAPI(systemPrompt, userPrompt, maxTokens);
 }
 
 /**
