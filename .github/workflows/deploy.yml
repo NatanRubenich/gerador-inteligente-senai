@@ -22,7 +22,8 @@ jobs:
     - name: Build with API Key
       run: npm run build
       env:
-        VITE_GROQ_API_KEY: ${{ secrets.VITE_GROQ_API_KEY }}
+        VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+        VITE_API_URL: https://gerador-provas-api-531942819894.southamerica-east1.run.app/api
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
