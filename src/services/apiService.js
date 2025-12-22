@@ -2,7 +2,7 @@
  * Serviço de API para comunicação com o backend MongoDB
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001') + '/api';
 
 // Cache simples para evitar requisições repetidas
 const cache = new Map();
