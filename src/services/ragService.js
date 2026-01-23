@@ -1,9 +1,148 @@
 // Serviço RAG (Retrieval-Augmented Generation) - Especialista SENAI
 // Base de conhecimento da metodologia SENAI para elaboração de avaliações
-// v1.3.0 - Implementação com busca textual e base de conhecimento estruturada
+// v2.0.0 - Refatorado para usar MongoDB via API + cache local
+// Mantém metodologia-senai.json local (regras que não mudam)
+// Busca cursos, UCs, capacidades e conhecimentos do MongoDB
 
-import matrizesData from '../data/knowledge-base/matrizes-curriculares.json';
 import metodologiaData from '../data/knowledge-base/metodologia-senai.json';
+
+// URL da API do backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// Cache local para dados do MongoDB (evita requisições repetidas)
+const cache = {
+  cursos: null,
+  unidadesCurriculares: {},
+  capacidades: {},
+  conhecimentos: {},
+  lastFetch: {},
+  CACHE_TTL: 5 * 60 * 1000 // 5 minutos
+};
+
+/**
+ * Verifica se o cache está válido
+ */
+function isCacheValid(key) {
+  const lastFetch = cache.lastFetch[key];
+  if (!lastFetch) return false;
+  return (Date.now() - lastFetch) < cache.CACHE_TTL;
+}
+
+/**
+ * Busca cursos do MongoDB via API
+ */
+async function fetchCursos() {
+  if (cache.cursos && isCacheValid('cursos')) {
+    return cache.cursos;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/cursos?includeUCs=true`);
+    if (!response.ok) throw new Error('Erro ao buscar cursos');
+    
+    const result = await response.json();
+    if (result.success && result.data) {
+      cache.cursos = result.data;
+      cache.lastFetch['cursos'] = Date.now();
+      console.log(`[RAG] ${result.data.length} cursos carregados do MongoDB`);
+      return result.data;
+    }
+  } catch (error) {
+    console.warn('[RAG] Erro ao buscar cursos do MongoDB:', error.message);
+  }
+  
+  return cache.cursos || [];
+}
+
+/**
+ * Busca UCs de um curso do MongoDB via API
+ */
+async function fetchUnidadesByCurso(cursoId) {
+  const cacheKey = `uc_${cursoId}`;
+  if (cache.unidadesCurriculares[cursoId] && isCacheValid(cacheKey)) {
+    return cache.unidadesCurriculares[cursoId];
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/cursos/${cursoId}/unidades`);
+    if (!response.ok) throw new Error('Erro ao buscar UCs');
+    
+    const result = await response.json();
+    if (result.success && result.data) {
+      cache.unidadesCurriculares[cursoId] = result.data;
+      cache.lastFetch[cacheKey] = Date.now();
+      return result.data;
+    }
+  } catch (error) {
+    console.warn('[RAG] Erro ao buscar UCs do MongoDB:', error.message);
+  }
+  
+  return cache.unidadesCurriculares[cursoId] || [];
+}
+
+/**
+ * Busca capacidades de uma UC do MongoDB via API
+ */
+async function fetchCapacidadesByUC(ucId) {
+  const cacheKey = `cap_${ucId}`;
+  if (cache.capacidades[ucId] && isCacheValid(cacheKey)) {
+    return cache.capacidades[ucId];
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/unidades/${ucId}/capacidades`);
+    if (!response.ok) throw new Error('Erro ao buscar capacidades');
+    
+    const result = await response.json();
+    if (result.success && result.data) {
+      cache.capacidades[ucId] = result.data;
+      cache.lastFetch[cacheKey] = Date.now();
+      return result.data;
+    }
+  } catch (error) {
+    console.warn('[RAG] Erro ao buscar capacidades do MongoDB:', error.message);
+  }
+  
+  return cache.capacidades[ucId] || [];
+}
+
+/**
+ * Busca conhecimentos de uma UC do MongoDB via API
+ */
+async function fetchConhecimentosByUC(ucId) {
+  const cacheKey = `con_${ucId}`;
+  if (cache.conhecimentos[ucId] && isCacheValid(cacheKey)) {
+    return cache.conhecimentos[ucId];
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/unidades/${ucId}/conhecimentos`);
+    if (!response.ok) throw new Error('Erro ao buscar conhecimentos');
+    
+    const result = await response.json();
+    if (result.success && result.data) {
+      cache.conhecimentos[ucId] = result.data;
+      cache.lastFetch[cacheKey] = Date.now();
+      return result.data;
+    }
+  } catch (error) {
+    console.warn('[RAG] Erro ao buscar conhecimentos do MongoDB:', error.message);
+  }
+  
+  return cache.conhecimentos[ucId] || [];
+}
+
+/**
+ * Limpa o cache do RAG
+ */
+export function clearRAGCache() {
+  cache.cursos = null;
+  cache.unidadesCurriculares = {};
+  cache.capacidades = {};
+  cache.conhecimentos = {};
+  cache.lastFetch = {};
+  console.log('[RAG] Cache limpo');
+}
 
 /**
  * Índice de busca textual para RAG
@@ -76,80 +215,77 @@ class RAGSearchIndex {
 // Instância global do índice RAG
 const ragIndex = new RAGSearchIndex();
 let indexInitialized = false;
+let indexInitializing = false;
 
 /**
  * Inicializar índice RAG com a base de conhecimento
+ * Agora busca dados do MongoDB via API (assíncrono)
  */
-export function initializeRAGIndex() {
+export async function initializeRAGIndex() {
   if (indexInitialized) return;
+  if (indexInitializing) {
+    // Aguardar inicialização em andamento
+    while (indexInitializing) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return;
+  }
 
-  // Indexar matrizes curriculares
-  matrizesData.cursos.forEach(curso => {
-    // Indexar curso
-    ragIndex.addDocument(
-      `curso-${curso.id}`,
-      `${curso.nome} ${curso.perfilProfissional} ${curso.competenciaGeral}`,
-      { type: 'curso', curso: curso.nome }
-    );
+  indexInitializing = true;
 
-    // Indexar unidades curriculares
-    curso.unidadesCurriculares.forEach(uc => {
-      const capacidadesText = uc.capacidadesTecnicas?.map(c => `${c.codigo} ${c.descricao}`).join(' ') || '';
-      
-      // Processar conhecimentos (podem ser strings simples ou objetos hierárquicos)
-      let conhecimentosText = '';
-      if (uc.conhecimentos) {
-        conhecimentosText = uc.conhecimentos.map(c => {
-          if (typeof c === 'string') return c;
-          if (typeof c === 'object' && c.topico) {
-            return `${c.topico} ${c.subtopicos?.join(' ') || ''}`;
-          }
-          return '';
-        }).join(' ');
-      }
-      
-      // Adicionar conhecimentos resumidos se existirem
-      if (uc.conhecimentosResumidos) {
-        conhecimentosText += ' ' + uc.conhecimentosResumidos.join(' ');
-      }
-      
-      ragIndex.addDocument(
-        `uc-${curso.id}-${uc.nome.replace(/\s+/g, '-').toLowerCase()}`,
-        `${uc.nome} ${uc.objetivo} ${capacidadesText} ${conhecimentosText}`,
-        { type: 'unidadeCurricular', curso: curso.nome, uc: uc.nome, cargaHoraria: uc.cargaHoraria }
-      );
+  try {
+    // 1. Indexar metodologia SENAI (dados locais - sempre disponíveis)
+    indexarMetodologia();
 
-      // Indexar capacidades individualmente
-      uc.capacidadesTecnicas?.forEach(cap => {
+    // 2. Buscar e indexar cursos do MongoDB
+    const cursos = await fetchCursos();
+    
+    if (cursos && cursos.length > 0) {
+      cursos.forEach(curso => {
+        // Indexar curso
         ragIndex.addDocument(
-          `cap-${curso.id}-${uc.nome}-${cap.codigo}`,
-          `${cap.codigo} ${cap.descricao}`,
-          { type: 'capacidade', curso: curso.nome, uc: uc.nome, codigo: cap.codigo }
+          `curso-${curso.id}`,
+          `${curso.nome} ${curso.perfilProfissional || ''} ${curso.competenciaGeral || ''}`,
+          { type: 'curso', curso: curso.nome }
         );
-      });
 
-      // Indexar conhecimentos hierárquicos individualmente (para Plano de Ensino)
-      if (uc.conhecimentos && Array.isArray(uc.conhecimentos)) {
-        uc.conhecimentos.forEach((conhecimento, idx) => {
-          if (typeof conhecimento === 'object' && conhecimento.topico) {
-            ragIndex.addDocument(
-              `conhecimento-${curso.id}-${uc.nome}-${idx}`,
-              `${conhecimento.topico} ${conhecimento.subtopicos?.join(' ') || ''}`,
-              { 
-                type: 'conhecimento', 
-                curso: curso.nome, 
-                uc: uc.nome, 
-                topico: conhecimento.topico,
-                subtopicos: conhecimento.subtopicos 
-              }
-            );
-          }
+        // Indexar unidades curriculares (se vieram junto com o curso)
+        const ucs = curso.unidadesCurriculares || [];
+        ucs.forEach(uc => {
+          indexarUC(curso, uc);
         });
-      }
-    });
-  });
+      });
+      
+      console.log(`[RAG] ${cursos.length} cursos indexados do MongoDB`);
+    } else {
+      console.warn('[RAG] Nenhum curso encontrado no MongoDB');
+    }
 
-  // Indexar metodologia SENAI
+    indexInitialized = true;
+    console.log(`[RAG] Índice inicializado com ${ragIndex.documents.length} documentos`);
+    
+  } catch (error) {
+    console.error('[RAG] Erro ao inicializar índice:', error);
+  } finally {
+    indexInitializing = false;
+  }
+}
+
+/**
+ * Versão síncrona para compatibilidade (usa apenas metodologia local)
+ */
+export function initializeRAGIndexSync() {
+  if (indexInitialized) return;
+  
+  indexarMetodologia();
+  indexInitialized = true;
+  console.log(`[RAG] Índice inicializado (sync) com ${ragIndex.documents.length} documentos`);
+}
+
+/**
+ * Indexar dados de metodologia SENAI (local)
+ */
+function indexarMetodologia() {
   const metodologia = metodologiaData.metodologia;
   
   // Indexar SA
@@ -166,26 +302,157 @@ export function initializeRAGIndex() {
     { type: 'metodologia', tema: 'Avaliação Prática' }
   );
 
+  // Indexar avaliação geral
+  if (metodologia.avaliacao) {
+    ragIndex.addDocument(
+      'metodologia-avaliacao',
+      `${metodologia.avaliacao.definicao} ${metodologia.avaliacao.principios.join(' ')}`,
+      { type: 'metodologia', tema: 'Avaliação' }
+    );
+  }
+
+  // Indexar plano de ensino
+  if (metodologia.planoEnsino) {
+    ragIndex.addDocument(
+      'metodologia-plano-ensino',
+      `${metodologia.planoEnsino.definicao} ${metodologia.planoEnsino.regras?.join(' ') || ''}`,
+      { type: 'metodologia', tema: 'Plano de Ensino' }
+    );
+  }
+
+  // Indexar desenho curricular
+  if (metodologia.desenhoCurricular) {
+    ragIndex.addDocument(
+      'metodologia-desenho-curricular',
+      `${metodologia.desenhoCurricular.definicao}`,
+      { type: 'metodologia', tema: 'Desenho Curricular' }
+    );
+  }
+
+  // Indexar SAEP
+  if (metodologia.saep) {
+    ragIndex.addDocument(
+      'metodologia-saep',
+      `${metodologia.saep.nome} ${metodologia.saep.regrasElaboracao?.join(' ') || ''}`,
+      { type: 'metodologia', tema: 'SAEP' }
+    );
+  }
+
   // Indexar taxonomia de Bloom
   metodologia.taxonomiaBloom.niveis.forEach(nivel => {
     ragIndex.addDocument(
-      `bloom-${nivel.nome.toLowerCase()}`,
-      `${nivel.nome} ${nivel.descricao} ${nivel.verbos.join(' ')}`,
-      { type: 'taxonomia', nivel: nivel.nivel, nome: nivel.nome }
+      `bloom-${nivel.nome.toLowerCase().replace(/\//g, '-')}`,
+      `${nivel.nome} ${nivel.descricao} ${nivel.verbos.join(' ')} ${nivel.dificuldade || ''}`,
+      { type: 'taxonomia', nivel: nivel.nivel, nome: nivel.nome, dificuldade: nivel.dificuldade }
     );
   });
 
   // Indexar estratégias pedagógicas
   metodologia.estrategiasPedagogicas.forEach(estrategia => {
     ragIndex.addDocument(
-      `estrategia-${estrategia.nome.toLowerCase()}`,
-      `${estrategia.nome} ${estrategia.descricao} ${estrategia.quando_usar}`,
+      `estrategia-${estrategia.nome.toLowerCase().replace(/\s+/g, '-')}`,
+      `${estrategia.nome} ${estrategia.descricao} ${estrategia.quando_usar} ${estrategia.caracteristicas?.join(' ') || ''}`,
       { type: 'estrategia', nome: estrategia.nome }
     );
   });
 
-  indexInitialized = true;
-  console.log(`[RAG] Índice inicializado com ${ragIndex.documents.length} documentos`);
+  // Indexar tipos de capacidades
+  if (metodologia.tiposCapacidades) {
+    Object.entries(metodologia.tiposCapacidades).forEach(([tipo, dados]) => {
+      ragIndex.addDocument(
+        `capacidade-tipo-${tipo}`,
+        `${dados.codigo} ${dados.descricao} ${dados.verbosComuns?.join(' ') || ''}`,
+        { type: 'tipoCapacidade', codigo: dados.codigo, nome: tipo }
+      );
+    });
+  }
+
+  // Indexar glossário
+  if (metodologia.glossario) {
+    Object.entries(metodologia.glossario).forEach(([termo, definicao]) => {
+      ragIndex.addDocument(
+        `glossario-${termo}`,
+        `${termo} ${definicao}`,
+        { type: 'glossario', termo }
+      );
+    });
+  }
+}
+
+/**
+ * Indexar uma Unidade Curricular
+ */
+function indexarUC(curso, uc) {
+  // Processar capacidades
+  const capacidades = uc.capacidades || uc.capacidadesTecnicas || [];
+  const capacidadesText = capacidades.map(c => `${c.codigo} ${c.descricao}`).join(' ');
+  
+  // Processar conhecimentos
+  let conhecimentosText = '';
+  const conhecimentos = uc.conhecimentos || [];
+  if (conhecimentos.length > 0) {
+    conhecimentosText = conhecimentos.map(c => {
+      if (typeof c === 'string') return c;
+      if (typeof c === 'object') {
+        const topico = c.topico || c.titulo || '';
+        const subtopicos = c.subtopicos?.join(' ') || '';
+        return `${topico} ${subtopicos}`;
+      }
+      return '';
+    }).join(' ');
+  }
+  
+  // Indexar UC
+  ragIndex.addDocument(
+    `uc-${curso.id}-${uc.id || uc.nome.replace(/\s+/g, '-').toLowerCase()}`,
+    `${uc.nome} ${uc.objetivo || ''} ${capacidadesText} ${conhecimentosText}`,
+    { 
+      type: 'unidadeCurricular', 
+      curso: curso.nome, 
+      cursoId: curso.id,
+      uc: uc.nome, 
+      ucId: uc.id,
+      cargaHoraria: uc.cargaHoraria,
+      modulo: uc.modulo
+    }
+  );
+
+  // Indexar capacidades individualmente
+  capacidades.forEach(cap => {
+    ragIndex.addDocument(
+      `cap-${curso.id}-${uc.id || uc.nome}-${cap.codigo}`,
+      `${cap.codigo} ${cap.descricao}`,
+      { 
+        type: 'capacidade', 
+        curso: curso.nome, 
+        cursoId: curso.id,
+        uc: uc.nome, 
+        ucId: uc.id,
+        codigo: cap.codigo,
+        tipo: cap.tipo
+      }
+    );
+  });
+
+  // Indexar conhecimentos individualmente
+  conhecimentos.forEach((conhecimento, idx) => {
+    if (typeof conhecimento === 'object') {
+      const topico = conhecimento.topico || conhecimento.titulo || '';
+      ragIndex.addDocument(
+        `conhecimento-${curso.id}-${uc.id || uc.nome}-${idx}`,
+        `${topico} ${conhecimento.subtopicos?.join(' ') || ''}`,
+        { 
+          type: 'conhecimento', 
+          curso: curso.nome, 
+          cursoId: curso.id,
+          uc: uc.nome,
+          ucId: uc.id,
+          topico: topico,
+          subtopicos: conhecimento.subtopicos 
+        }
+      );
+    }
+  });
 }
 
 /**
@@ -564,8 +831,8 @@ export function getContextoRAG(unidadeCurricular, assunto) {
  * @param {object} options - Opções de busca
  * @returns {object} - Resultados da busca com contexto
  */
-export function searchRAG(query, options = {}) {
-  initializeRAGIndex();
+export async function searchRAG(query, options = {}) {
+  await initializeRAGIndex();
   
   const { maxResults = 5, types = null } = options;
   let results = ragIndex.search(query, maxResults * 2);
@@ -579,33 +846,63 @@ export function searchRAG(query, options = {}) {
 }
 
 /**
- * Buscar informações de curso específico
+ * Buscar informações de curso específico (usa cache do MongoDB)
  * @param {string} cursoNome - Nome do curso
  * @returns {object|null} - Dados do curso
  */
-export function getCursoInfo(cursoNome) {
-  initializeRAGIndex();
+export async function getCursoInfo(cursoNome) {
+  const cursos = await fetchCursos();
+  if (!cursos || cursos.length === 0) return null;
   
   const cursoLower = cursoNome.toLowerCase();
-  return matrizesData.cursos.find(c => 
-    c.nome.toLowerCase().includes(cursoLower) ||
-    c.id.toLowerCase().includes(cursoLower.replace(/\s+/g, '-'))
+  return cursos.find(c => 
+    c.nome?.toLowerCase().includes(cursoLower) ||
+    c.id?.toLowerCase().includes(cursoLower.replace(/\s+/g, '-'))
   );
 }
 
 /**
- * Buscar informações de UC específica
+ * Versão síncrona de getCursoInfo (usa cache existente)
+ */
+export function getCursoInfoSync(cursoNome) {
+  const cursos = cache.cursos || [];
+  if (cursos.length === 0) return null;
+  
+  const cursoLower = cursoNome.toLowerCase();
+  return cursos.find(c => 
+    c.nome?.toLowerCase().includes(cursoLower) ||
+    c.id?.toLowerCase().includes(cursoLower.replace(/\s+/g, '-'))
+  );
+}
+
+/**
+ * Buscar informações de UC específica (usa cache do MongoDB)
  * @param {string} cursoNome - Nome do curso
  * @param {string} ucNome - Nome da UC
  * @returns {object|null} - Dados da UC
  */
-export function getUCInfo(cursoNome, ucNome) {
-  const curso = getCursoInfo(cursoNome);
+export async function getUCInfo(cursoNome, ucNome) {
+  const curso = await getCursoInfo(cursoNome);
   if (!curso) return null;
   
+  const ucs = curso.unidadesCurriculares || [];
   const ucLower = ucNome.toLowerCase();
-  return curso.unidadesCurriculares.find(uc => 
-    uc.nome.toLowerCase().includes(ucLower)
+  return ucs.find(uc => 
+    uc.nome?.toLowerCase().includes(ucLower)
+  );
+}
+
+/**
+ * Versão síncrona de getUCInfo (usa cache existente)
+ */
+export function getUCInfoSync(cursoNome, ucNome) {
+  const curso = getCursoInfoSync(cursoNome);
+  if (!curso) return null;
+  
+  const ucs = curso.unidadesCurriculares || [];
+  const ucLower = ucNome.toLowerCase();
+  return ucs.find(uc => 
+    uc.nome?.toLowerCase().includes(ucLower)
   );
 }
 
@@ -615,10 +912,27 @@ export function getUCInfo(cursoNome, ucNome) {
  * @param {string} ucNome - Nome da UC
  * @returns {object} - Conhecimentos formatados para blocos de aula
  */
-export function getConhecimentosUC(cursoNome, ucNome) {
-  const uc = getUCInfo(cursoNome, ucNome);
+export async function getConhecimentosUC(cursoNome, ucNome) {
+  const uc = await getUCInfo(cursoNome, ucNome);
   if (!uc) return null;
   
+  return formatarConhecimentosUC(uc);
+}
+
+/**
+ * Versão síncrona de getConhecimentosUC
+ */
+export function getConhecimentosUCSync(cursoNome, ucNome) {
+  const uc = getUCInfoSync(cursoNome, ucNome);
+  if (!uc) return null;
+  
+  return formatarConhecimentosUC(uc);
+}
+
+/**
+ * Formatar conhecimentos de uma UC
+ */
+function formatarConhecimentosUC(uc) {
   const resultado = {
     uc: uc.nome,
     cargaHoraria: uc.cargaHoraria,
@@ -627,8 +941,9 @@ export function getConhecimentosUC(cursoNome, ucNome) {
     conhecimentosTexto: ''
   };
   
-  if (uc.conhecimentos) {
-    resultado.conhecimentos = uc.conhecimentos.map(c => {
+  const conhecimentos = uc.conhecimentos || [];
+  if (conhecimentos.length > 0) {
+    resultado.conhecimentos = conhecimentos.map(c => {
       if (typeof c === 'string') {
         return { topico: c, subtopicos: [] };
       }
@@ -637,10 +952,11 @@ export function getConhecimentosUC(cursoNome, ucNome) {
     
     // Formatar texto para prompt
     resultado.conhecimentosTexto = resultado.conhecimentos.map(c => {
+      const topico = c.topico || c.titulo || c;
       if (c.subtopicos && c.subtopicos.length > 0) {
-        return `${c.topico}\n  ${c.subtopicos.join('\n  ')}`;
+        return `${topico}\n  ${c.subtopicos.join('\n  ')}`;
       }
-      return c.topico || c;
+      return topico;
     }).join('\n');
   }
   
@@ -656,27 +972,27 @@ export function getConhecimentosUC(cursoNome, ucNome) {
  * @param {object} params - Parâmetros
  * @returns {string} - Contexto formatado para geração de Plano de Ensino
  */
-export function gerarContextoPlanoEnsino(params) {
-  initializeRAGIndex();
+export async function gerarContextoPlanoEnsino(params) {
+  await initializeRAGIndex();
   
   const { curso, unidadeCurricular, capacidades } = params;
   let contexto = '';
   
   // 1. Informações do curso
-  const cursoInfo = getCursoInfo(curso);
+  const cursoInfo = await getCursoInfo(curso);
   if (cursoInfo) {
     contexto += `=== CURSO ===\n`;
     contexto += `Nome: ${cursoInfo.nome}\n`;
-    contexto += `Competência Geral: ${cursoInfo.competenciaGeral}\n\n`;
+    contexto += `Competência Geral: ${cursoInfo.competenciaGeral || ''}\n\n`;
   }
   
   // 2. Conhecimentos detalhados da UC
-  const conhecimentosUC = getConhecimentosUC(curso, unidadeCurricular);
+  const conhecimentosUC = await getConhecimentosUC(curso, unidadeCurricular);
   if (conhecimentosUC) {
     contexto += `=== UNIDADE CURRICULAR ===\n`;
     contexto += `UC: ${conhecimentosUC.uc}\n`;
     contexto += `Carga Horária: ${conhecimentosUC.cargaHoraria}h\n`;
-    contexto += `Objetivo: ${conhecimentosUC.objetivo}\n\n`;
+    contexto += `Objetivo: ${conhecimentosUC.objetivo || ''}\n\n`;
     
     contexto += `=== CONHECIMENTOS DA MATRIZ CURRICULAR ===\n`;
     contexto += `Os blocos de aula devem ser baseados nos seguintes conhecimentos:\n\n`;
@@ -706,10 +1022,18 @@ export function gerarContextoPlanoEnsino(params) {
   if (planoEnsino) {
     contexto += `=== METODOLOGIA SENAI - PLANO DE ENSINO ===\n`;
     contexto += `${planoEnsino.definicao}\n\n`;
-    contexto += `Elementos do Plano de Ensino:\n`;
-    planoEnsino.elementos.forEach(el => {
-      contexto += `- ${el.elemento}: ${el.descricao}\n`;
-    });
+    if (planoEnsino.elementos) {
+      contexto += `Elementos do Plano de Ensino:\n`;
+      planoEnsino.elementos.forEach(el => {
+        contexto += `- ${el.elemento}: ${el.descricao}\n`;
+      });
+    }
+    if (planoEnsino.regras) {
+      contexto += `\nRegras:\n`;
+      planoEnsino.regras.forEach(r => {
+        contexto += `- ${r}\n`;
+      });
+    }
   }
   
   return contexto;
@@ -766,45 +1090,58 @@ export function getEstrategiasPedagogicas(nome = null) {
  * @param {object} params - Parâmetros da busca
  * @returns {string} - Contexto formatado para LLM
  */
-export function gerarContextoRAGCompleto(params) {
-  initializeRAGIndex();
+export async function gerarContextoRAGCompleto(params) {
+  await initializeRAGIndex();
   
   const { curso, unidadeCurricular, capacidades, tipoConteudo, assunto } = params;
   let contexto = '';
   
-  // 1. Buscar informações do curso e UC
-  const cursoInfo = getCursoInfo(curso);
-  const ucInfo = cursoInfo ? getUCInfo(curso, unidadeCurricular) : null;
+  // 1. Buscar informações do curso e UC (do MongoDB)
+  const cursoInfo = await getCursoInfo(curso);
+  const ucInfo = cursoInfo ? await getUCInfo(curso, unidadeCurricular) : null;
   
   if (cursoInfo) {
     contexto += `\n=== INFORMAÇÕES DO CURSO ===\n`;
     contexto += `Curso: ${cursoInfo.nome}\n`;
-    contexto += `Perfil Profissional: ${cursoInfo.perfilProfissional}\n`;
-    contexto += `Competência Geral: ${cursoInfo.competenciaGeral}\n`;
+    contexto += `Perfil Profissional: ${cursoInfo.perfilProfissional || ''}\n`;
+    contexto += `Competência Geral: ${cursoInfo.competenciaGeral || ''}\n`;
   }
   
   if (ucInfo) {
     contexto += `\n=== UNIDADE CURRICULAR ===\n`;
     contexto += `UC: ${ucInfo.nome}\n`;
     contexto += `Carga Horária: ${ucInfo.cargaHoraria}h\n`;
-    contexto += `Objetivo: ${ucInfo.objetivo}\n`;
+    contexto += `Objetivo: ${ucInfo.objetivo || ''}\n`;
     
-    if (ucInfo.capacidadesTecnicas) {
+    // Capacidades podem estar em diferentes formatos
+    const caps = ucInfo.capacidadesTecnicas || ucInfo.capacidades || [];
+    if (caps.length > 0) {
       contexto += `\nCapacidades Técnicas:\n`;
-      ucInfo.capacidadesTecnicas.forEach(cap => {
+      caps.forEach(cap => {
         contexto += `- ${cap.codigo}: ${cap.descricao}\n`;
       });
     }
     
-    if (ucInfo.conhecimentos) {
+    // Conhecimentos
+    const conhecimentos = ucInfo.conhecimentos || [];
+    if (conhecimentos.length > 0) {
       contexto += `\nConhecimentos:\n`;
-      ucInfo.conhecimentos.forEach(c => {
-        contexto += `- ${c}\n`;
+      conhecimentos.forEach(c => {
+        if (typeof c === 'string') {
+          contexto += `- ${c}\n`;
+        } else if (c.topico || c.titulo) {
+          contexto += `- ${c.topico || c.titulo}\n`;
+          if (c.subtopicos) {
+            c.subtopicos.forEach(sub => {
+              contexto += `  - ${sub}\n`;
+            });
+          }
+        }
       });
     }
   }
   
-  // 2. Buscar metodologia relevante
+  // 2. Buscar metodologia relevante (dados locais)
   if (tipoConteudo === 'sa' || tipoConteudo === 'situacao_aprendizagem') {
     const metodologiaSA = getMetodologiaSA();
     contexto += `\n=== METODOLOGIA SENAI - SITUAÇÃO DE APRENDIZAGEM ===\n`;
@@ -817,6 +1154,13 @@ export function gerarContextoRAGCompleto(params) {
     metodologiaSA.caracteristicas.forEach(c => {
       contexto += `- ${c}\n`;
     });
+    // Adicionar critérios de rubrica
+    if (metodologiaSA.criteriosRubrica) {
+      contexto += `\nCritérios de Rubrica:\n`;
+      contexto += `- Formato: ${metodologiaSA.criteriosRubrica.formatoPergunta}\n`;
+      contexto += `- Estrutura: ${metodologiaSA.criteriosRubrica.estrutura}\n`;
+      contexto += `- Exemplo: ${metodologiaSA.criteriosRubrica.exemplo}\n`;
+    }
   }
   
   if (tipoConteudo === 'pratica' || tipoConteudo === 'avaliacao_pratica') {
@@ -827,11 +1171,29 @@ export function gerarContextoRAGCompleto(params) {
     Object.entries(metodologiaPratica.estrutura).forEach(([key, value]) => {
       contexto += `- ${key}: ${value}\n`;
     });
+    // Adicionar critérios de avaliação
+    if (metodologiaPratica.criteriosAvaliacao) {
+      contexto += `\nCritérios de Avaliação: ${metodologiaPratica.criteriosAvaliacao.descricao || ''}\n`;
+    }
+  }
+
+  if (tipoConteudo === 'plano' || tipoConteudo === 'plano_ensino') {
+    const planoEnsino = metodologiaData.metodologia.planoEnsino;
+    if (planoEnsino) {
+      contexto += `\n=== METODOLOGIA SENAI - PLANO DE ENSINO ===\n`;
+      contexto += `Definição: ${planoEnsino.definicao}\n`;
+      if (planoEnsino.regras) {
+        contexto += `\nRegras:\n`;
+        planoEnsino.regras.forEach(r => {
+          contexto += `- ${r}\n`;
+        });
+      }
+    }
   }
   
-  // 3. Buscar por relevância textual
+  // 3. Buscar por relevância textual no índice
   if (assunto) {
-    const resultadosBusca = searchRAG(assunto, { maxResults: 3 });
+    const resultadosBusca = await searchRAG(assunto, { maxResults: 3 });
     if (resultadosBusca.length > 0) {
       contexto += `\n=== CONTEÚDO RELEVANTE (RAG) ===\n`;
       resultadosBusca.forEach(r => {
@@ -840,7 +1202,7 @@ export function gerarContextoRAGCompleto(params) {
     }
   }
   
-  // 4. Incluir base de conhecimento legada
+  // 4. Incluir base de conhecimento legada (SAEP, exemplos)
   contexto += '\n' + buscarConhecimentoRAG(unidadeCurricular, assunto || '', capacidades || []);
   
   return contexto;
@@ -850,13 +1212,21 @@ export function gerarContextoRAGCompleto(params) {
  * Obter estatísticas do índice RAG
  * @returns {object} - Estatísticas do índice
  */
-export function getRAGStats() {
-  initializeRAGIndex();
+export async function getRAGStats() {
+  await initializeRAGIndex();
+  
+  const cursos = cache.cursos || [];
   
   const stats = {
     totalDocumentos: ragIndex.documents.length,
     totalTermos: Object.keys(ragIndex.invertedIndex).length,
-    documentosPorTipo: {}
+    documentosPorTipo: {},
+    fonte: 'MongoDB',
+    cursosCarregados: cursos.length,
+    cacheStatus: {
+      cursos: cache.cursos ? 'loaded' : 'empty',
+      lastFetch: cache.lastFetch['cursos'] ? new Date(cache.lastFetch['cursos']).toISOString() : null
+    }
   };
   
   ragIndex.documents.forEach(doc => {
@@ -869,31 +1239,57 @@ export function getRAGStats() {
 
 /**
  * Obter dados brutos da base de conhecimento
+ * Agora retorna dados do cache do MongoDB + metodologia local
  */
-export function getKnowledgeBase() {
+export async function getKnowledgeBase() {
+  const cursos = await fetchCursos();
   return {
-    matrizes: matrizesData,
-    metodologia: metodologiaData
+    cursos: cursos,
+    metodologia: metodologiaData,
+    fonte: 'MongoDB + metodologia-senai.json'
+  };
+}
+
+/**
+ * Versão síncrona de getKnowledgeBase (usa cache existente)
+ */
+export function getKnowledgeBaseSync() {
+  return {
+    cursos: cache.cursos || [],
+    metodologia: metodologiaData,
+    fonte: 'cache'
   };
 }
 
 export default {
+  // Funções de busca de conhecimento
   buscarConhecimentoRAG,
   getSugestoesTemas,
   getContextoRAG,
   baseConhecimento,
-  // Novas funções RAG v1.3.0
+  
+  // Funções RAG v2.0.0 (assíncronas - usam MongoDB)
+  initializeRAGIndex,
   searchRAG,
   getCursoInfo,
   getUCInfo,
   getConhecimentosUC,
   gerarContextoPlanoEnsino,
-  getMetodologiaSA,
-  getMetodologiaAvaliacaoPratica,
-  getTaxonomiaBloom,
-  getEstrategiasPedagogicas,
   gerarContextoRAGCompleto,
   getRAGStats,
   getKnowledgeBase,
-  initializeRAGIndex
+  
+  // Funções síncronas (usam cache existente)
+  initializeRAGIndexSync,
+  getCursoInfoSync,
+  getUCInfoSync,
+  getConhecimentosUCSync,
+  getKnowledgeBaseSync,
+  clearRAGCache,
+  
+  // Funções de metodologia (dados locais - sempre síncronas)
+  getMetodologiaSA,
+  getMetodologiaAvaliacaoPratica,
+  getTaxonomiaBloom,
+  getEstrategiasPedagogicas
 };

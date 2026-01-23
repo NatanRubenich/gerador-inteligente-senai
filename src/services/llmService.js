@@ -12,13 +12,16 @@ import {
   initializeRAGIndex
 } from './ragService';
 
-// Inicializar índice RAG ao carregar o serviço
-try {
-  initializeRAGIndex();
-  console.log('[LLM Service] RAG inicializado:', getRAGStats());
-} catch (e) {
-  console.warn('[LLM Service] Erro ao inicializar RAG:', e);
-}
+// Inicializar índice RAG ao carregar o serviço (agora assíncrono)
+(async () => {
+  try {
+    await initializeRAGIndex();
+    const stats = await getRAGStats();
+    console.log('[LLM Service] RAG inicializado:', stats);
+  } catch (e) {
+    console.warn('[LLM Service] Erro ao inicializar RAG:', e);
+  }
+})();
 
 /**
  * Limpa e corrige JSON malformado retornado pela API
@@ -182,8 +185,8 @@ async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 8192) {
  */
 export async function gerarQuestoes(dadosProva) {
 
-  // Buscar contexto do RAG aprimorado (v1.3.0)
-  const contextoRAG = gerarContextoRAGCompleto({
+  // Buscar contexto do RAG aprimorado (v2.0.0 - agora assíncrono, usa MongoDB)
+  const contextoRAG = await gerarContextoRAGCompleto({
     curso: dadosProva.curso,
     unidadeCurricular: dadosProva.unidadeCurricular,
     capacidades: dadosProva.capacidades,

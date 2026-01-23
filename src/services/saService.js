@@ -106,8 +106,8 @@ export async function gerarSituacaoAprendizagem({
   nivelDificuldade = 'intermediario',
   tipoRubrica = 'gradual'
 }) {
-  // Buscar contexto RAG aprimorado (v1.3.0)
-  const contextoRAG = gerarContextoRAGCompleto({
+  // Buscar contexto RAG aprimorado (v2.0.0 - agora assíncrono, usa MongoDB)
+  const contextoRAG = await gerarContextoRAGCompleto({
     curso,
     unidadeCurricular,
     capacidades,

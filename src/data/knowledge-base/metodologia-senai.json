@@ -2,31 +2,81 @@
   "metodologia": {
     "nome": "Metodologia SENAI de Educação Profissional (MSEP)",
     "versao": "2019",
-    "principios": [
-      "Aprendizagem baseada em competências",
-      "Contextualização do conhecimento",
-      "Integração teoria-prática",
-      "Desenvolvimento de capacidades técnicas, sociais, organizativas e metodológicas",
-      "Avaliação formativa e somativa"
+    "descricao": "A Metodologia SENAI de Educação Profissional é baseada no desenvolvimento de competências profissionais, utilizando a Análise Funcional para definição de Perfis Profissionais. Consolidada ao longo de 20 anos, integra as melhores práticas de formação profissional com base em competências.",
+    "fases": [
+      "Perfil Profissional",
+      "Desenho Curricular", 
+      "Prática Pedagógica"
     ],
+    "principios": [
+      "Formação baseada em competências profissionais",
+      "Integração entre teoria e prática",
+      "Contextualização do conhecimento no mundo do trabalho",
+      "Avaliação contínua e formativa",
+      "Desenvolvimento de capacidades técnicas, sociais, organizativas e metodológicas",
+      "Protagonismo do aluno",
+      "Mediação da aprendizagem pelo docente"
+    ],
+    "competenciaProfissional": {
+      "definicao": "É a mobilização de conhecimentos, habilidades e atitudes para desempenhar funções e/ou atividades típicas, segundo padrões de qualidade e produtividade requeridos pela natureza do trabalho.",
+      "componentes": {
+        "conhecimentos": "Saberes teóricos e técnicos necessários ao desempenho profissional",
+        "habilidades": "Capacidade de realizar ações e procedimentos de forma adequada",
+        "atitudes": "Comportamentos e posturas profissionais esperados"
+      }
+    },
+    "tiposCapacidades": {
+      "basicas": {
+        "codigo": "CB",
+        "descricao": "Capacidades de caráter geral, sem relação de exclusividade com a ocupação. Consideram bases científicas, tecnológicas e saberes universais. São pré-requisitos para as capacidades técnicas.",
+        "dominios": ["cognitivo", "psicomotor"],
+        "verbosComuns": ["Reconhecer", "Identificar", "Compreender", "Aplicar"],
+        "modulosRelacionados": ["Básico", "Indústria", "Introdutório", "Inovação"]
+      },
+      "tecnicas": {
+        "codigo": "CT",
+        "descricao": "Capacidades que expressam desempenhos típicos de uma determinada ocupação. Permitem ao trabalhador realizar com eficiência as atividades inerentes às funções profissionais.",
+        "dominios": ["cognitivo", "psicomotor"],
+        "verbosComuns": ["Aplicar", "Realizar", "Executar", "Avaliar", "Selecionar"],
+        "modulosRelacionados": ["Específico I", "Específico II", "Específico III", "Específico IV"]
+      },
+      "socioemocionais": {
+        "codigo": "CS",
+        "descricao": "Capacidades relacionadas a comportamentos, atitudes, habilidades de abertura a novas experiências, consciência, sociabilidade, cooperação, diálogo, empatia e estabilidade emocional.",
+        "dominios": ["afetivo"],
+        "exemplos": ["Trabalhar em equipe", "Comunicar-se de forma clara", "Demonstrar ética profissional", "Adaptar-se a mudanças"]
+      }
+    },
     "situacaoAprendizagem": {
-      "definicao": "A Situação de Aprendizagem é uma estratégia de ensino que contextualiza os conhecimentos em situações reais ou simuladas do mundo do trabalho, promovendo o desenvolvimento de competências profissionais.",
+      "definicao": "A Situação de Aprendizagem é um conjunto de ações educacionais, pedagogicamente planejadas para favorecer aprendizagens significativas por meio da utilização de estratégias de aprendizagem desafiadoras, mediação da aprendizagem e diferentes estratégias de ensino, promovendo a avaliação de capacidades.",
       "estrutura": {
         "titulo": "Nome que identifica a SA, deve ser claro e relacionado ao contexto profissional",
-        "contextualizacao": "Descrição do cenário profissional que contextualiza a situação-problema. Deve apresentar uma empresa, setor ou situação real do mundo do trabalho.",
-        "desafio": "Problema ou tarefa que o estudante deve resolver. Deve ser claro, mensurável e relacionado às capacidades a serem desenvolvidas.",
-        "resultadosEsperados": "Entregas e evidências que o estudante deve produzir ao final da SA.",
+        "contextualizacao": "Descrição do cenário profissional que contextualiza a situação-problema. Deve apresentar uma empresa, setor ou situação real do mundo do trabalho, sem mencionar nomes de pessoas ou empresas reais ou fictícios.",
+        "desafio": "Problema ou tarefa que o estudante deve resolver. Deve ser CURTO e objetivo, inserir o profissional como protagonista da ação, depender diretamente do contexto e NÃO conter o desenvolvimento da atividade.",
+        "resultado": "Entrega final objetiva e simplificada, indicando apenas o produto final (documento ou objeto), sem detalhar etapas ou descrições extensas.",
         "etapas": "Sequência de atividades que o estudante realizará para resolver o desafio.",
         "recursos": "Materiais, equipamentos e ambientes necessários para a realização da SA.",
         "avaliacao": "Critérios e instrumentos de avaliação (rubrica, lista de verificação)."
       },
       "caracteristicas": [
-        "Contextualizada no mundo do trabalho",
+        "Baseada em situação-problema real do mundo do trabalho",
+        "Integra conhecimentos, habilidades e atitudes",
+        "Desenvolve autonomia e protagonismo do aluno",
+        "Permite avaliação por competências",
+        "Contextualiza o conteúdo técnico",
         "Desafiadora e motivadora",
-        "Integradora de conhecimentos",
-        "Promotora de autonomia",
-        "Avaliável por critérios claros"
+        "Promotora de aprendizagens significativas"
       ],
+      "criteriosRubrica": {
+        "formatoPergunta": "Os critérios devem ser em formato de PERGUNTA no pretérito perfeito",
+        "estrutura": "verbo de ação + objeto + condição",
+        "exemplo": "Elaborou o relatório conforme as normas técnicas?",
+        "requisitos": [
+          "Cada critério associado a UMA capacidade específica",
+          "Critérios devem ser OBSERVÁVEIS (qualitativos ou quantitativos)",
+          "Usar verbos conforme Taxonomia de Bloom"
+        ]
+      },
       "etapasElaboracao": [
         {
           "etapa": 1,
@@ -36,189 +86,416 @@
         {
           "etapa": 2,
           "nome": "Definição do Contexto",
-          "descricao": "Criar um cenário realista do mundo do trabalho que contextualize a situação-problema."
+          "descricao": "Criar um cenário realista do mundo do trabalho que contextualize a situação-problema, sem mencionar nomes."
         },
         {
           "etapa": 3,
           "nome": "Elaboração do Desafio",
-          "descricao": "Formular o problema ou tarefa que o estudante deverá resolver, relacionando às capacidades."
+          "descricao": "Formular o problema ou tarefa de forma curta e objetiva, inserindo o estudante como protagonista."
         },
         {
           "etapa": 4,
-          "nome": "Planejamento das Etapas",
-          "descricao": "Definir a sequência de atividades e o tempo estimado para cada uma."
+          "nome": "Definição do Resultado",
+          "descricao": "Indicar a entrega final de forma objetiva e simplificada."
         },
         {
           "etapa": 5,
+          "nome": "Planejamento das Atividades",
+          "descricao": "Definir a sequência de atividades e o tempo estimado para cada uma."
+        },
+        {
+          "etapa": 6,
           "nome": "Definição dos Critérios de Avaliação",
-          "descricao": "Elaborar os critérios e instrumentos de avaliação (rubrica ou lista de verificação)."
+          "descricao": "Elaborar os critérios em formato de pergunta no pretérito e instrumentos de avaliação."
         }
       ]
     },
     "avaliacaoPratica": {
-      "definicao": "A Avaliação Prática é um instrumento de avaliação que verifica o desenvolvimento de capacidades técnicas através da execução de tarefas práticas em situações reais ou simuladas.",
+      "definicao": "A Avaliação Prática é um instrumento de avaliação que verifica o desenvolvimento de capacidades técnicas através da execução de tarefas práticas em situações reais ou simuladas do mundo do trabalho.",
       "estrutura": {
         "capacidades": "Lista das capacidades técnicas que serão avaliadas",
-        "contextualizacao": "Cenário que contextualiza a tarefa prática",
+        "contextualizacao": "Cenário que contextualiza a tarefa prática no mundo do trabalho",
         "desafio": "Descrição da tarefa que o estudante deve executar",
         "resultadosEntregas": "Evidências e produtos que o estudante deve entregar",
         "listaVerificacao": "Critérios de avaliação com indicadores de desempenho"
       },
       "criteriosAvaliacao": {
+        "descricao": "Os critérios devem ser formulados em formato de pergunta no pretérito perfeito, associados a capacidades específicas e observáveis.",
         "tipos": [
           {
             "nome": "Rubrica Gradual",
-            "descricao": "Escala de desempenho com níveis progressivos (Insuficiente, Regular, Bom, Excelente)",
+            "descricao": "Escala de desempenho com níveis progressivos",
             "niveis": [
-              {"nivel": 1, "nome": "Insuficiente", "descricao": "Não atende aos critérios mínimos"},
-              {"nivel": 2, "nome": "Regular", "descricao": "Atende parcialmente aos critérios"},
-              {"nivel": 3, "nome": "Bom", "descricao": "Atende aos critérios de forma satisfatória"},
-              {"nivel": 4, "nome": "Excelente", "descricao": "Supera os critérios estabelecidos"}
+              {"nivel": 1, "nome": "Abaixo do Básico", "pontos": "1-2", "descricao": "Não atende aos requisitos mínimos"},
+              {"nivel": 2, "nome": "Básico", "pontos": "3-5", "descricao": "Atende parcialmente aos requisitos"},
+              {"nivel": 3, "nome": "Adequado", "pontos": "6-7", "descricao": "Atende aos requisitos esperados"},
+              {"nivel": 4, "nome": "Avançado", "pontos": "8-10", "descricao": "Supera as expectativas"}
             ]
           },
           {
             "nome": "Rubrica Dicotômica",
             "descricao": "Avaliação binária (Atende/Não Atende)",
             "niveis": [
-              {"nivel": 0, "nome": "Não Atende", "descricao": "O critério não foi satisfeito"},
-              {"nivel": 1, "nome": "Atende", "descricao": "O critério foi satisfeito"}
+              {"nivel": 0, "nome": "Não Atende", "descricao": "Não cumpriu o critério satisfatoriamente"},
+              {"nivel": 1, "nome": "Atende", "descricao": "Cumpriu o critério satisfatoriamente"}
             ]
           }
-        ]
+        ],
+        "metodoGradual": {
+          "descricao": "Cada nível de desempenho possui um valor numérico, ponderado de acordo com a criticidade em relação ao desempenho esperado.",
+          "exemplo": "O valor máximo de cada critério será sempre no último nível (4) e no nível mais primário não se atribui pontuação (1)."
+        },
+        "metodoDicotomico": {
+          "descricao": "Conforme o critério é atendido, soma-se a pontuação correspondente, ponderada de acordo com as prioridades.",
+          "prioridades": "Estabelecidas considerando o nível de criticidade no comprometimento do resultado esperado."
+        }
       }
     },
+    "avaliacao": {
+      "definicao": "A avaliação deve ser empregada para que o Docente tenha um indicador de aprendizagem que possa orientar o seu trabalho e o do Aluno.",
+      "principios": [
+        "Avaliar não é apenas coletar dados, mas interpretar e associar significados",
+        "A avaliação deve ir além da atribuição de qualidade, objetivando direcionar o desenvolvimento do Aluno",
+        "Não faz sentido indicar se o Aluno possui ou não determinada capacidade, mas definir seu grau de desenvolvimento",
+        "A avaliação não tem natureza determinante - ao mudar as variáveis, diferentes resultados podem ser alcançados"
+      ],
+      "tipos": {
+        "formativa": "Realizada ao longo dos processos de ensino e aprendizagem, com caráter contínuo",
+        "somativa": "Realizada ao final de um período para apresentação de resultados"
+      },
+      "recuperacao": {
+        "continua": "Inserida no trabalho pedagógico do dia a dia, com intervenções pontuais e imediatas",
+        "paralela": "Destinada a alunos com dificuldades não superadas no cotidiano, em paralelo às aulas regulares"
+      },
+      "feedback": "A comunicação dos resultados facilita ao Aluno envolver-se no próprio processo de aprendizagem e responsabilizar-se pelo desenvolvimento das capacidades."
+    },
     "planoEnsino": {
-      "definicao": "O Plano de Ensino é o documento que organiza e orienta o trabalho pedagógico do docente, detalhando objetivos, conteúdos, estratégias e avaliação.",
-      "elementos": [
+      "definicao": "O Plano de Ensino é o documento que organiza e orienta o trabalho pedagógico do docente, sistematizando as informações referentes ao planejamento dos processos de ensino e aprendizagem.",
+      "etapasElaboracao": [
         {
-          "elemento": "Identificação",
-          "descricao": "Dados do curso, unidade curricular, carga horária, docente"
+          "etapa": 1,
+          "nome": "Estruturação do Plano de Ensino",
+          "subetapas": [
+            "Seleção/Interpretação de Capacidades e seus Respectivos Conhecimentos",
+            "Definição das Estratégias de Ensino e Descrição das Atividades",
+            "Definição de Recursos Didáticos e Ambientes Pedagógicos",
+            "Critérios e Instrumentos de Avaliação da Aprendizagem"
+          ]
         },
         {
-          "elemento": "Competência",
-          "descricao": "Competência geral e específicas do curso/UC"
+          "etapa": 2,
+          "nome": "Detalhamento da Execução das Atividades",
+          "descricao": "Registro detalhado no Plano de Ensino"
         },
         {
-          "elemento": "Capacidades",
-          "descricao": "Capacidades técnicas, sociais, organizativas e metodológicas"
-        },
-        {
-          "elemento": "Conhecimentos",
-          "descricao": "Conteúdos a serem trabalhados"
-        },
-        {
-          "elemento": "Situações de Aprendizagem",
-          "descricao": "SAs que serão desenvolvidas"
-        },
-        {
-          "elemento": "Estratégias de Ensino",
-          "descricao": "Metodologias e técnicas de ensino"
-        },
-        {
-          "elemento": "Avaliação",
-          "descricao": "Instrumentos e critérios de avaliação"
-        },
-        {
-          "elemento": "Recursos",
-          "descricao": "Materiais, equipamentos e ambientes"
-        },
-        {
-          "elemento": "Bibliografia",
-          "descricao": "Referências bibliográficas"
+          "etapa": 3,
+          "nome": "Validação",
+          "descricao": "Validação do Plano em conjunto com as Coordenações Técnica e Pedagógica"
         }
+      ],
+      "elementos": [
+        {"elemento": "Título do Bloco", "descricao": "Título descritivo do tema principal"},
+        {"elemento": "Número de Aulas e Carga Horária", "descricao": "Formato: X aulas - XXh"},
+        {"elemento": "Capacidades a Serem Trabalhadas", "descricao": "Índices das capacidades que serão desenvolvidas no bloco"},
+        {"elemento": "Conhecimentos Relacionados", "descricao": "Conhecimentos da matriz curricular distribuídos entre os blocos"},
+        {"elemento": "Estratégias de Ensino e Descrição das Atividades", "descricao": "Descrição DETALHADA de cada aula do bloco"},
+        {"elemento": "Recursos e Ambientes Pedagógicos", "descricao": "Lista de recursos, ferramentas e ambientes utilizados"},
+        {"elemento": "Critérios de Avaliação", "descricao": "Perguntas no formato 'Verbo + complemento?' ou referência ao anexo"},
+        {"elemento": "Instrumentos de Avaliação da Aprendizagem", "descricao": "Instrumentos específicos do bloco"}
+      ],
+      "regras": [
+        "Cada bloco deve ter no MÍNIMO 20 horas",
+        "Dividir as capacidades de forma lógica entre os blocos",
+        "Cada capacidade deve aparecer em pelo menos um bloco",
+        "TODOS os conhecimentos da matriz curricular devem ser contemplados",
+        "Os blocos devem ter progressão lógica de complexidade",
+        "O último bloco pode ser 'Finalização e Projeto Integrador'",
+        "As estratégias de ensino devem ser DETALHADAS aula por aula"
       ]
     },
+    "desenhoCurricular": {
+      "definicao": "O Desenho Curricular é o resultado do processo de concepção de ofertas formativas que devem propiciar o desenvolvimento das capacidades referentes às competências de um Perfil Profissional.",
+      "etapas": [
+        {"etapa": 1, "nome": "Análise de Perfis Profissionais", "descricao": "Análise de Competências Específicas e Socioemocionais"},
+        {"etapa": 2, "nome": "Definição dos Módulos", "descricao": "Organização em módulos básico, introdutório e específicos"},
+        {"etapa": 3, "nome": "Estruturação de Unidades Curriculares", "descricao": "Definição das UCs que compõem cada módulo"},
+        {"etapa": 4, "nome": "Organização Interna da UC", "descricao": "Definição de capacidades, conhecimentos e carga horária"},
+        {"etapa": 5, "nome": "Estruturação de Itinerários Formativos", "descricao": "Organização das trajetórias formativas"}
+      ],
+      "modulos": {
+        "basico": "Desenvolve capacidades básicas e socioemocionais, de caráter mais geral, comuns a várias ofertas formativas",
+        "introdutorio": "Base diretamente relacionada às exigências específicas do Perfil Profissional, pré-requisito para módulos específicos",
+        "especifico": "Estruturado com base nas funções descritas no Perfil Profissional, contemplando capacidades técnicas e socioemocionais",
+        "integrador": "Composto por capacidades básicas comuns e introdutórias a ocupações de distintas áreas tecnológicas"
+      },
+      "unidadeCurricular": {
+        "definicao": "Unidade pedagógica que compõe o currículo, constituída numa visão interdisciplinar, considerando um conjunto coerente e significativo de capacidades básicas e/ou técnicas, acrescido de capacidades socioemocionais e de conhecimentos."
+      }
+    },
     "taxonomiaBloom": {
-      "descricao": "A Taxonomia de Bloom é utilizada para classificar objetivos educacionais e capacidades em níveis cognitivos.",
+      "descricao": "A Taxonomia de Bloom (revisada por Anderson e Krathwohl) é utilizada para classificar objetivos educacionais e capacidades em níveis cognitivos, psicomotores e afetivos.",
+      "dominios": {
+        "cognitivo": "Relacionado ao modo como os indivíduos aprendem o 'saber', como compreendem e analisam - raciocínio e processo intelectual",
+        "psicomotor": "Associado às habilidades do 'saber fazer', envolvendo órgãos do sentido e ativação neuromuscular - coordenação, controle, destreza e precisão",
+        "afetivo": "Abrange aspectos relacionados ao 'saber ser' e às atitudes - sentimentos, percepções, crenças, emoções, valores e interesses"
+      },
       "niveis": [
         {
           "nivel": 1,
-          "nome": "Lembrar",
-          "descricao": "Recordar informações, fatos e conceitos",
-          "verbos": ["listar", "definir", "identificar", "nomear", "reconhecer", "reproduzir"]
+          "nome": "Lembrar/Reconhecer",
+          "dificuldade": "Fácil",
+          "descricao": "Recordar informações, fatos e conceitos básicos",
+          "verbos": ["listar", "definir", "identificar", "nomear", "reconhecer", "reproduzir", "citar", "descrever"]
         },
         {
           "nivel": 2,
-          "nome": "Entender",
+          "nome": "Compreender/Entender",
+          "dificuldade": "Fácil",
           "descricao": "Compreender e interpretar significados",
-          "verbos": ["explicar", "descrever", "interpretar", "classificar", "comparar", "exemplificar"]
+          "verbos": ["explicar", "descrever", "interpretar", "classificar", "comparar", "exemplificar", "resumir"]
         },
         {
           "nivel": 3,
-          "nome": "Aplicar",
-          "descricao": "Usar conhecimento em situações novas",
-          "verbos": ["aplicar", "executar", "implementar", "resolver", "utilizar", "demonstrar"]
+          "nome": "Aplicar/Utilizar",
+          "dificuldade": "Médio",
+          "descricao": "Usar conhecimento em situações práticas novas",
+          "verbos": ["aplicar", "executar", "implementar", "resolver", "utilizar", "demonstrar", "calcular"]
         },
         {
           "nivel": 4,
-          "nome": "Analisar",
-          "descricao": "Dividir em partes e identificar relações",
-          "verbos": ["analisar", "diferenciar", "organizar", "relacionar", "comparar", "examinar"]
+          "nome": "Analisar/Diferenciar",
+          "dificuldade": "Médio",
+          "descricao": "Dividir em partes e identificar relações, examinar partes de um todo",
+          "verbos": ["analisar", "diferenciar", "organizar", "relacionar", "comparar", "examinar", "distinguir"]
         },
         {
           "nivel": 5,
-          "nome": "Avaliar",
-          "descricao": "Julgar com base em critérios e padrões",
-          "verbos": ["avaliar", "criticar", "julgar", "justificar", "argumentar", "validar"]
+          "nome": "Avaliar/Julgar",
+          "dificuldade": "Difícil",
+          "descricao": "Julgar com base em critérios e padrões, emitir parecer fundamentado",
+          "verbos": ["avaliar", "criticar", "julgar", "justificar", "argumentar", "validar", "propor"]
         },
         {
           "nivel": 6,
-          "nome": "Criar",
-          "descricao": "Produzir algo novo ou reorganizar elementos",
-          "verbos": ["criar", "desenvolver", "projetar", "elaborar", "construir", "planejar"]
+          "nome": "Criar/Desenvolver",
+          "dificuldade": "Difícil",
+          "descricao": "Produzir algo novo, elaborar de forma completa, desenvolver soluções",
+          "verbos": ["criar", "desenvolver", "projetar", "elaborar", "construir", "planejar", "formular"]
         }
-      ]
+      ],
+      "verbosAcaoPorNivel": {
+        "basico": {
+          "descricao": "Nível Básico (Conhecimento/Compreensão) - Dificuldade FÁCIL",
+          "verbos": {
+            "identificar": "Reconhecer elementos, conceitos ou características",
+            "reconhecer": "Distinguir entre opções apresentadas",
+            "descrever": "Relatar características ou processos",
+            "listar": "Enumerar elementos ou etapas",
+            "nomear": "Atribuir nome correto a elementos",
+            "definir": "Apresentar significado de termos",
+            "citar": "Mencionar exemplos ou casos"
+          }
+        },
+        "intermediario": {
+          "descricao": "Nível Intermediário (Aplicação/Análise) - Dificuldade MÉDIA",
+          "verbos": {
+            "aplicar": "Usar conhecimento em situação prática",
+            "utilizar": "Empregar ferramentas ou técnicas",
+            "demonstrar": "Mostrar como realizar procedimento",
+            "calcular": "Realizar operações matemáticas",
+            "resolver": "Encontrar solução para problema",
+            "analisar": "Examinar partes de um todo",
+            "comparar": "Identificar semelhanças e diferenças",
+            "diferenciar": "Distinguir características específicas"
+          }
+        },
+        "avancado": {
+          "descricao": "Nível Avançado (Síntese/Avaliação) - Dificuldade DIFÍCIL",
+          "verbos": {
+            "avaliar": "Julgar com base em critérios",
+            "julgar": "Emitir parecer fundamentado",
+            "propor": "Sugerir soluções ou alternativas",
+            "planejar": "Elaborar estratégias ou projetos",
+            "criar": "Desenvolver algo novo",
+            "desenvolver": "Elaborar de forma completa",
+            "criticar": "Analisar pontos fortes e fracos"
+          }
+        }
+      }
     },
     "estrategiasPedagogicas": [
       {
-        "nome": "Projeto",
-        "descricao": "Desenvolvimento de um produto ou solução ao longo de um período, integrando conhecimentos e capacidades.",
-        "quando_usar": "Para desenvolver competências complexas que exigem integração de conhecimentos e trabalho em equipe."
+        "nome": "Projeto Integrador",
+        "descricao": "Estratégia de aprendizagem de caráter interdisciplinar que tem como foco a inserção do Aluno no contexto da tecnologia e da ciência, da construção do conhecimento, da autoria, da curiosidade, da investigação, da descoberta e da motivação intelectual.",
+        "quando_usar": "Para desenvolver competências complexas que exigem integração de conhecimentos de distintas unidades curriculares e trabalho em equipe.",
+        "caracteristicas": ["Interdisciplinar", "Desafiador", "Contextualizado no mundo do trabalho"]
       },
       {
         "nome": "Estudo de Caso",
-        "descricao": "Análise de uma situação real ou simulada para identificar problemas e propor soluções.",
-        "quando_usar": "Para desenvolver capacidades de análise, tomada de decisão e resolução de problemas."
+        "descricao": "Estratégia caracterizada pela exposição de um fato ou conjunto de fatos, reais ou fictícios, compostos por circunstâncias complexas polêmicas, com suas respectivas soluções, de modo a propiciar a análise do contexto, da problemática e das soluções apresentadas.",
+        "quando_usar": "Para desenvolver capacidades de análise, tomada de decisão e resolução de problemas. Pode propiciar o desafio para que os Alunos apresentem soluções novas e diferentes.",
+        "caracteristicas": ["Analítico", "Reflexivo", "Baseado em situações reais ou fictícias"]
       },
       {
-        "nome": "Simulação",
-        "descricao": "Reprodução de situações reais do mundo do trabalho em ambiente controlado.",
-        "quando_usar": "Para praticar procedimentos e desenvolver habilidades técnicas sem riscos."
+        "nome": "Situação-Problema",
+        "descricao": "Estratégia de aprendizagem que se propõe a desafiar o Aluno a mobilizar capacidades na resolução de um problema relacionado à realidade da sua ocupação. Deve ser instigante e motivadora, apresentada de forma contextualizada.",
+        "quando_usar": "Para situações em que há necessidade de construir uma ou mais respostas para a solução de um problema real ou hipotético, de ordem teórica e prática.",
+        "caracteristicas": ["Desafiadora", "Contextualizada", "Promotora de autonomia"]
       },
       {
         "nome": "Pesquisa Aplicada",
-        "descricao": "Investigação de um tema ou problema com aplicação prática dos resultados.",
-        "quando_usar": "Para desenvolver autonomia, pensamento crítico e capacidade de investigação."
+        "descricao": "Prática voltada à busca, em fontes confiáveis, de conhecimentos e aprofundamentos de diferentes contribuições técnicas e científicas disponíveis sobre uma realidade ou cenário atual ou futuro do mundo do trabalho.",
+        "quando_usar": "Para desenvolver autonomia, pensamento crítico e capacidade de investigação. Pode favorecer o desenvolvimento industrial ao originar patentes ou aprimorar produtos, processos e serviços.",
+        "caracteristicas": ["Investigativa", "Baseada em fontes confiáveis", "Aplicável ao mundo do trabalho"]
       },
       {
-        "nome": "Oficina",
-        "descricao": "Atividade prática intensiva focada no desenvolvimento de habilidades específicas.",
-        "quando_usar": "Para desenvolver habilidades técnicas específicas de forma intensiva."
+        "nome": "Exposição Dialogada",
+        "descricao": "Exposição de conteúdos com participação ativa dos estudantes através de questionamentos e discussões, promovendo a construção compartilhada do conhecimento.",
+        "quando_usar": "Para introduzir conceitos teóricos e fundamentar conhecimentos, com interação ativa dos alunos.",
+        "caracteristicas": ["Interativa", "Participativa", "Fundamentadora"]
       },
       {
-        "nome": "Aula Expositiva Dialogada",
-        "descricao": "Exposição de conteúdos com participação ativa dos estudantes através de questionamentos e discussões.",
-        "quando_usar": "Para introduzir conceitos teóricos e fundamentar conhecimentos."
+        "nome": "Atividade Prática",
+        "descricao": "Atividade focada no desenvolvimento de habilidades técnicas específicas através da execução de procedimentos e operações.",
+        "quando_usar": "Para desenvolver habilidades técnicas específicas de forma intensiva e prática.",
+        "caracteristicas": ["Hands-on", "Técnica", "Procedimental"]
+      },
+      {
+        "nome": "Gamificação",
+        "descricao": "Uso de elementos de jogos em contextos educacionais para engajar e motivar os alunos no processo de aprendizagem.",
+        "quando_usar": "Para aumentar o engajamento e motivação dos alunos, especialmente em conteúdos que requerem prática repetitiva.",
+        "caracteristicas": ["Engajadora", "Motivacional", "Competitiva/Colaborativa"]
+      },
+      {
+        "nome": "Trabalho em Grupo",
+        "descricao": "Atividade colaborativa em que os alunos trabalham juntos para alcançar objetivos comuns, desenvolvendo capacidades socioemocionais.",
+        "quando_usar": "Para desenvolver capacidades de trabalho em equipe, comunicação e colaboração.",
+        "caracteristicas": ["Colaborativo", "Social", "Interdependente"]
+      },
+      {
+        "nome": "Sala de Aula Invertida",
+        "descricao": "Modelo em que o aluno estuda o conteúdo teórico previamente (em casa) e utiliza o tempo em sala para atividades práticas e discussões.",
+        "quando_usar": "Para otimizar o tempo presencial com atividades práticas e tirar dúvidas, promovendo autonomia no estudo.",
+        "caracteristicas": ["Autônoma", "Prática em sala", "Estudo prévio"]
+      },
+      {
+        "nome": "Simulação",
+        "descricao": "Reprodução de situações reais do mundo do trabalho em ambiente controlado, permitindo prática sem riscos.",
+        "quando_usar": "Para praticar procedimentos e desenvolver habilidades técnicas em ambiente seguro.",
+        "caracteristicas": ["Segura", "Realista", "Controlada"]
+      },
+      {
+        "nome": "Visita Técnica",
+        "descricao": "Visita a empresas ou ambientes profissionais reais para observação e aprendizado in loco.",
+        "quando_usar": "Para contextualizar o aprendizado no mundo do trabalho real e conhecer processos industriais.",
+        "caracteristicas": ["Contextualizada", "Real", "Observacional"]
+      },
+      {
+        "nome": "Workshop",
+        "descricao": "Atividade intensiva e prática focada em um tema específico, com participação ativa dos alunos.",
+        "quando_usar": "Para desenvolver habilidades específicas de forma intensiva em curto período.",
+        "caracteristicas": ["Intensivo", "Prático", "Focado"]
+      },
+      {
+        "nome": "Seminário",
+        "descricao": "Apresentação e discussão de temas pelos alunos, desenvolvendo capacidades de pesquisa, síntese e comunicação.",
+        "quando_usar": "Para desenvolver capacidades de pesquisa, apresentação e argumentação.",
+        "caracteristicas": ["Apresentativo", "Investigativo", "Comunicativo"]
+      },
+      {
+        "nome": "Design Thinking",
+        "descricao": "Metodologia centrada no ser humano para resolução de problemas complexos através de empatia, ideação e prototipagem.",
+        "quando_usar": "Para desenvolver soluções inovadoras centradas nas necessidades dos usuários.",
+        "caracteristicas": ["Inovador", "Centrado no usuário", "Iterativo"]
       }
     ],
     "boasPraticas": {
       "elaboracaoSA": [
-        "Contextualizar sempre no mundo do trabalho real",
+        "Contextualizar sempre no mundo do trabalho real, sem mencionar nomes de pessoas ou empresas",
         "Usar verbos de ação alinhados à Taxonomia de Bloom",
-        "Definir critérios de avaliação claros e mensuráveis",
+        "Definir critérios de avaliação claros e mensuráveis em formato de pergunta no pretérito",
         "Prever tempo adequado para cada etapa",
         "Considerar recursos disponíveis",
         "Promover autonomia e protagonismo do estudante",
-        "Integrar capacidades técnicas e socioemocionais"
+        "Integrar capacidades técnicas e socioemocionais",
+        "O desafio deve ser CURTO e objetivo, sem conter o desenvolvimento da atividade",
+        "O resultado deve indicar apenas a ENTREGA FINAL"
       ],
       "elaboracaoAvaliacao": [
         "Alinhar critérios às capacidades desenvolvidas",
         "Usar linguagem clara e objetiva",
-        "Definir indicadores observáveis",
+        "Definir indicadores observáveis (qualitativos ou quantitativos)",
         "Prever diferentes níveis de desempenho",
         "Considerar o contexto de aplicação",
-        "Permitir feedback formativo"
+        "Permitir feedback formativo",
+        "Formular critérios em formato de pergunta no pretérito perfeito",
+        "Associar cada critério a UMA capacidade específica"
+      ],
+      "mediacaoAprendizagem": [
+        "Fazer uso de exemplos, perguntas e reflexões",
+        "Incentivar o Aluno a fazer inferências e comparar elementos",
+        "Estimular a elaboração de hipóteses e compreensão de regras",
+        "Promover a formulação de conceitos",
+        "Assumir postura ativa e reflexiva diante dos desafios"
       ]
+    },
+    "saep": {
+      "nome": "Sistema de Avaliação da Educação Profissional",
+      "estruturaQuestao": {
+        "contexto": {
+          "descricao": "Situação-Problema que apresenta uma situação real do mundo do trabalho",
+          "requisitos": [
+            "Deve ser claro, objetivo e relevante para a área profissional",
+            "Fornece informações necessárias para a resolução",
+            "Não deve conter informações desnecessárias que confundam",
+            "Deve simular um ambiente profissional autêntico"
+          ]
+        },
+        "comando": {
+          "descricao": "A pergunta propriamente dita",
+          "requisitos": [
+            "Deve estar DIRETAMENTE relacionado ao contexto",
+            "O aluno NÃO deve conseguir responder apenas lendo o comando",
+            "Evitar comandos subjetivos como 'qual a melhor opção'",
+            "Usar verbos de ação: identificar, aplicar, analisar, avaliar"
+          ]
+        },
+        "alternativas": {
+          "descricao": "4 opções: a, b, c, d",
+          "requisitos": [
+            "Apenas UMA correta (gabarito)",
+            "Distratores (alternativas incorretas) devem ser PLAUSÍVEIS",
+            "Tamanhos SEMELHANTES entre as alternativas",
+            "A resposta correta NÃO pode ser maior que as outras",
+            "NÃO usar 'todas as anteriores' ou 'nenhuma das anteriores'",
+            "NÃO usar pegadinhas ou termos inexistentes",
+            "Todas devem ser relacionadas ao conteúdo avaliado"
+          ]
+        }
+      },
+      "regrasElaboracao": [
+        "Cada questão deve avaliar UMA capacidade específica",
+        "Usar situações REAIS do ambiente de trabalho",
+        "Incluir elementos técnicos da área profissional",
+        "Evitar situações genéricas ou acadêmicas demais",
+        "Linguagem clara e acessível",
+        "Evitar dupla interpretação",
+        "Não usar negativas duplas",
+        "Variar a posição da resposta correta",
+        "Cada questão deve ser independente"
+      ]
+    },
+    "glossario": {
+      "competencia": "Condição do indivíduo de mobilizar conhecimentos, habilidades e atitudes para desempenhar funções e/ou atividades típicas, segundo padrões de qualidade e produtividade requeridos pela natureza do trabalho.",
+      "capacidade": "Potenciais que as pessoas podem desenvolver ao longo da vida e que as tornam aptas a realizar determinadas ações, atividades ou funções. São transversais e expressam as potencialidades de uma pessoa.",
+      "situacaoAprendizagem": "Conjunto de ações educacionais, pedagogicamente planejadas para favorecer aprendizagens significativas por meio da utilização de estratégias de aprendizagem desafiadoras.",
+      "mediacaoAprendizagem": "Tipo especial de interação entre alguém que ensina (mediador) e alguém que aprende (mediado), caracterizando-se como uma interposição intencional e planejada do Docente.",
+      "aprendizagemSignificativa": "Relaciona-se ao fato de o Docente ancorar a Prática Pedagógica na realidade do mundo do trabalho, considerando as experiências prévias dos Alunos.",
+      "metodologiasAtivas": "Qualquer estratégia didática em que o Aluno é personagem principal e o maior responsável pelo processo de aprendizado.",
+      "interdisciplinaridade": "Abordagem integrada e contextualizada de diferentes campos de conhecimentos e de práticas profissionais, possibilitando o diálogo entre eles.",
+      "funcao": "Representa ou expressa cada uma das grandes etapas do processo de trabalho de uma ocupação.",
+      "subfuncao": "Representa cada uma das etapas ou processos de trabalho que constituem uma função.",
+      "perfilProfissional": "Descrição do que idealmente o trabalhador deve ser capaz de realizar no campo profissional correspondente à ocupação."
     }
   }
 }
