@@ -132,7 +132,6 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
 ```
 
-> ⚠️ **Importante:** Nunca compartilhe suas API Keys ou faça commit de arquivos `.env`
 
 ---
 
