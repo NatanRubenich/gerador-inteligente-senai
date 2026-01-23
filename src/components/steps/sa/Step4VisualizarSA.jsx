@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain, FileText, AlertTriangle, Award, Edit3, Save, X } from 'lucide-react';
+import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain, FileText, AlertTriangle, Award, Edit3, Save, X, Copy, Check } from 'lucide-react';
 import { useProva } from '../../../context/ProvaContext';
 
 export default function Step4VisualizarSA() {
@@ -8,10 +8,12 @@ export default function Step4VisualizarSA() {
   const [abaAtiva, setAbaAtiva] = useState('sa'); // 'sa' ou 'rubrica'
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [copiedSection, setCopiedSection] = useState(null);
 
   // Funções de edição
   const handleStartEdit = () => {
-    setEditData({ ...situacaoAprendizagemGerada });
+    // Deep clone para edição
+    setEditData(JSON.parse(JSON.stringify(situacaoAprendizagemGerada)));
     setEditMode(true);
   };
 
@@ -29,6 +31,114 @@ export default function Step4VisualizarSA() {
   const updateField = (field, value) => {
     setEditData(prev => ({ ...prev, [field]: value }));
   };
+
+  const updateNestedField = (path, value) => {
+    setEditData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      const keys = path.split('.');
+      let obj = newData;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!obj[keys[i]]) obj[keys[i]] = {};
+        obj = obj[keys[i]];
+      }
+      obj[keys[keys.length - 1]] = value;
+      return newData;
+    });
+  };
+
+  const updateArrayItem = (arrayName, index, field, value) => {
+    setEditData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      if (!newData[arrayName]) newData[arrayName] = [];
+      if (!newData[arrayName][index]) newData[arrayName][index] = {};
+      newData[arrayName][index][field] = value;
+      return newData;
+    });
+  };
+
+  const updateRubricaCriterio = (index, field, value) => {
+    setEditData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      if (!newData.rubrica) newData.rubrica = { criterios: [] };
+      if (!newData.rubrica.criterios) newData.rubrica.criterios = [];
+      if (!newData.rubrica.criterios[index]) newData.rubrica.criterios[index] = {};
+      
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.');
+        if (!newData.rubrica.criterios[index][parent]) newData.rubrica.criterios[index][parent] = {};
+        newData.rubrica.criterios[index][parent][child] = value;
+      } else {
+        newData.rubrica.criterios[index][field] = value;
+      }
+      return newData;
+    });
+  };
+
+  // Função para copiar seção
+  const copySection = async (sectionName, content) => {
+    try {
+      let textToCopy = '';
+      
+      switch (sectionName) {
+        case 'titulo':
+          textToCopy = situacaoAprendizagemGerada.titulo;
+          break;
+        case 'capacidades':
+          textToCopy = Object.entries(situacaoAprendizagemGerada.capacidades || {})
+            .map(([cod, cap]) => `${cod} - ${cap.codigo}: ${cap.descricao}`)
+            .join('\n');
+          break;
+        case 'contexto':
+          textToCopy = situacaoAprendizagemGerada.contexto || situacaoAprendizagemGerada.contextualizacao;
+          break;
+        case 'desafio':
+          textToCopy = situacaoAprendizagemGerada.desafio;
+          break;
+        case 'resultado':
+          textToCopy = situacaoAprendizagemGerada.resultado;
+          break;
+        case 'atividades':
+          textToCopy = situacaoAprendizagemGerada.atividades
+            ?.map((a, i) => `Atividade ${a.numero || i + 1}: ${a.titulo}\n${a.descricao}\nDuração: ${a.duracao}`)
+            .join('\n\n');
+          break;
+        case 'recursos':
+          textToCopy = situacaoAprendizagemGerada.recursosNecessarios?.join('\n');
+          break;
+        case 'conhecimentos':
+          textToCopy = situacaoAprendizagemGerada.conhecimentosMobilizados?.join('\n');
+          break;
+        case 'rubrica':
+          textToCopy = situacaoAprendizagemGerada.rubrica?.criterios
+            ?.map(c => `${c.criterio} (Peso: ${c.peso}) - ${c.capacidadeAssociada}`)
+            .join('\n');
+          break;
+        default:
+          textToCopy = content || '';
+      }
+      
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedSection(sectionName);
+      setTimeout(() => setCopiedSection(null), 2000);
+    } catch (err) {
+      console.error('Erro ao copiar:', err);
+    }
+  };
+
+  // Componente de botão copiar
+  const CopyButton = ({ section, className = '' }) => (
+    <button
+      onClick={() => copySection(section)}
+      className={`p-1 rounded hover:bg-white/20 transition-colors ${className}`}
+      title="Copiar seção"
+    >
+      {copiedSection === section ? (
+        <Check size={14} className="text-green-300" />
+      ) : (
+        <Copy size={14} />
+      )}
+    </button>
+  );
 
   if (!situacaoAprendizagemGerada) {
     return (
@@ -148,57 +258,202 @@ export default function Step4VisualizarSA() {
 
       {/* Formulário de Edição */}
       {editMode && editData && (
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 no-print">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 no-print max-h-[70vh] overflow-y-auto">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 sticky top-0 bg-white pb-2 border-b">
             <Edit3 size={20} className="text-blue-600" />
-            Editar Situação de Aprendizagem
+            Editar {abaAtiva === 'sa' ? 'Situação de Aprendizagem' : 'Rubrica de Avaliação'}
           </h3>
           
-          <div className="space-y-4">
-            {/* Título */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
-              <input
-                type="text"
-                value={editData.titulo || ''}
-                onChange={(e) => updateField('titulo', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              />
-            </div>
+          {abaAtiva === 'sa' ? (
+            <div className="space-y-4">
+              {/* Título */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                <input
+                  type="text"
+                  value={editData.titulo || ''}
+                  onChange={(e) => updateField('titulo', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
-            {/* Contextualização */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contextualização</label>
-              <textarea
-                value={editData.contextualizacao || ''}
-                onChange={(e) => updateField('contextualizacao', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                rows={4}
-              />
-            </div>
+              {/* Contexto */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contexto</label>
+                <textarea
+                  value={editData.contexto || editData.contextualizacao || ''}
+                  onChange={(e) => {
+                    updateField('contexto', e.target.value);
+                    updateField('contextualizacao', e.target.value);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={4}
+                />
+              </div>
 
-            {/* Desafio */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Desafio</label>
-              <textarea
-                value={editData.desafio || ''}
-                onChange={(e) => updateField('desafio', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                rows={4}
-              />
-            </div>
+              {/* Desafio */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Desafio</label>
+                <textarea
+                  value={editData.desafio || ''}
+                  onChange={(e) => updateField('desafio', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={4}
+                />
+              </div>
 
-            {/* Resultados Esperados */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Resultados Esperados</label>
-              <textarea
-                value={editData.resultados_esperados || ''}
-                onChange={(e) => updateField('resultados_esperados', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                rows={3}
-              />
+              {/* Resultado */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Resultado (Entrega Final)</label>
+                <textarea
+                  value={editData.resultado || ''}
+                  onChange={(e) => updateField('resultado', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                />
+              </div>
+
+              {/* Atividades */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Atividades</label>
+                <div className="space-y-3">
+                  {editData.atividades?.map((atividade, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          value={atividade.titulo || ''}
+                          onChange={(e) => updateArrayItem('atividades', index, 'titulo', e.target.value)}
+                          placeholder="Título da atividade"
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                        />
+                        <input
+                          type="text"
+                          value={atividade.duracao || ''}
+                          onChange={(e) => updateArrayItem('atividades', index, 'duracao', e.target.value)}
+                          placeholder="Duração"
+                          className="w-24 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <textarea
+                        value={atividade.descricao || ''}
+                        onChange={(e) => updateArrayItem('atividades', index, 'descricao', e.target.value)}
+                        placeholder="Descrição da atividade"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recursos Necessários */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recursos Necessários (um por linha)</label>
+                <textarea
+                  value={editData.recursosNecessarios?.join('\n') || ''}
+                  onChange={(e) => updateField('recursosNecessarios', e.target.value.split('\n').filter(r => r.trim()))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={4}
+                />
+              </div>
+
+              {/* Conhecimentos Mobilizados */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Conhecimentos Mobilizados (um por linha)</label>
+                <textarea
+                  value={editData.conhecimentosMobilizados?.join('\n') || ''}
+                  onChange={(e) => updateField('conhecimentosMobilizados', e.target.value.split('\n').filter(c => c.trim()))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={4}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Edição da Rubrica */
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Edite os critérios da rubrica abaixo. Cada critério está associado a uma capacidade.
+              </p>
+              
+              {editData.rubrica?.criterios?.map((criterio, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="bg-[#004b8d] text-white text-xs px-2 py-1 rounded">
+                      {criterio.capacidadeAssociada}
+                    </span>
+                    <span className="text-sm text-gray-500">Peso: {criterio.peso}</span>
+                  </div>
+                  
+                  {/* Critério */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Critério</label>
+                    <input
+                      type="text"
+                      value={criterio.criterio || ''}
+                      onChange={(e) => updateRubricaCriterio(index, 'criterio', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Descritores - Rubrica Gradual */}
+                  {editData.rubrica?.tipo === 'gradual' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Abaixo do Básico</label>
+                        <textarea
+                          value={criterio.descritores?.abaixoDoBasico || ''}
+                          onChange={(e) => updateRubricaCriterio(index, 'descritores.abaixoDoBasico', e.target.value)}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Básico</label>
+                        <textarea
+                          value={criterio.descritores?.basico || ''}
+                          onChange={(e) => updateRubricaCriterio(index, 'descritores.basico', e.target.value)}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Adequado</label>
+                        <textarea
+                          value={criterio.descritores?.adequado || ''}
+                          onChange={(e) => updateRubricaCriterio(index, 'descritores.adequado', e.target.value)}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Avançado</label>
+                        <textarea
+                          value={criterio.descritores?.avancado || ''}
+                          onChange={(e) => updateRubricaCriterio(index, 'descritores.avancado', e.target.value)}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Descritores - Rubrica Dicotômica */}
+                  {editData.rubrica?.tipo === 'dicotomica' && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Descritor (Atende)</label>
+                      <textarea
+                        value={criterio.descritores?.atende || ''}
+                        onChange={(e) => updateRubricaCriterio(index, 'descritores.atende', e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -252,15 +507,23 @@ export default function Step4VisualizarSA() {
           </table>
 
           {/* Título da SA */}
-          <div className="mt-4 bg-[#004b8d] text-white p-3 text-center">
+          <div className="mt-4 bg-[#004b8d] text-white p-3 text-center relative">
             <h1 className="text-lg font-bold">{sa.titulo}</h1>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 no-print">
+              <CopyButton section="titulo" />
+            </div>
           </div>
 
           {/* Capacidades a Desenvolver */}
           <div className="mt-4">
-            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-              <Target size={16} />
-              {termoCapacidade.toUpperCase()}S A DESENVOLVER
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target size={16} />
+                {termoCapacidade.toUpperCase()}S A DESENVOLVER
+              </div>
+              <div className="no-print">
+                <CopyButton section="capacidades" />
+              </div>
             </div>
             <div className="border border-black border-t-0 p-3">
               {sa.capacidades && Object.entries(sa.capacidades).map(([codigo, cap]) => (
@@ -274,9 +537,14 @@ export default function Step4VisualizarSA() {
 
           {/* CONTEXTO */}
           <div className="mt-4">
-            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-              <BookOpen size={16} />
-              CONTEXTO
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen size={16} />
+                CONTEXTO
+              </div>
+              <div className="no-print">
+                <CopyButton section="contexto" />
+              </div>
             </div>
             <div className="border border-black border-t-0 p-3">
               <p className="text-sm text-gray-700 text-justify leading-relaxed">
@@ -287,9 +555,14 @@ export default function Step4VisualizarSA() {
 
           {/* DESAFIO */}
           <div className="mt-4">
-            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-              <AlertTriangle size={16} />
-              DESAFIO
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={16} />
+                DESAFIO
+              </div>
+              <div className="no-print">
+                <CopyButton section="desafio" />
+              </div>
             </div>
             <div className="border border-black border-t-0 p-3">
               <p className="text-sm text-gray-700 text-justify leading-relaxed">
@@ -300,9 +573,14 @@ export default function Step4VisualizarSA() {
 
           {/* RESULTADO (Entrega Final) */}
           <div className="mt-4">
-            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-              <Award size={16} />
-              RESULTADO (ENTREGA FINAL)
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award size={16} />
+                RESULTADO (ENTREGA FINAL)
+              </div>
+              <div className="no-print">
+                <CopyButton section="resultado" />
+              </div>
             </div>
             <div className="border border-black border-t-0 p-3">
               <p className="text-sm text-gray-700 text-justify leading-relaxed">
@@ -313,9 +591,14 @@ export default function Step4VisualizarSA() {
 
           {/* Atividades */}
           <div className="mt-4">
-            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-              <Wrench size={16} />
-              ATIVIDADES
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wrench size={16} />
+                ATIVIDADES
+              </div>
+              <div className="no-print">
+                <CopyButton section="atividades" />
+              </div>
             </div>
             <div className="border border-black border-t-0">
               {sa.atividades?.map((atividade, index) => (
@@ -344,9 +627,14 @@ export default function Step4VisualizarSA() {
 
           {/* Recursos Necessários */}
           <div className="mt-4">
-            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-              <Wrench size={16} />
-              RECURSOS NECESSÁRIOS
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wrench size={16} />
+                RECURSOS NECESSÁRIOS
+              </div>
+              <div className="no-print">
+                <CopyButton section="recursos" />
+              </div>
             </div>
             <div className="border border-black border-t-0 p-3">
               <ul className="grid grid-cols-2 gap-1">
@@ -362,9 +650,14 @@ export default function Step4VisualizarSA() {
 
           {/* Conhecimentos Mobilizados */}
           <div className="mt-4 mb-4">
-            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center gap-2">
-              <Brain size={16} />
-              CONHECIMENTOS MOBILIZADOS
+            <div className="bg-[#004b8d] text-white font-bold py-2 px-3 text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Brain size={16} />
+                CONHECIMENTOS MOBILIZADOS
+              </div>
+              <div className="no-print">
+                <CopyButton section="conhecimentos" />
+              </div>
             </div>
             <div className="border border-black border-t-0 p-3">
               <ul className="grid grid-cols-2 gap-1">
@@ -381,12 +674,15 @@ export default function Step4VisualizarSA() {
       )}
 
       {/* Rubrica de Avaliação */}
-      {abaAtiva === 'rubrica' && (
+      {abaAtiva === 'rubrica' && !editMode && (
         <div className="bg-white rounded-xl shadow-lg prova-container" id="rubrica-print">
           {/* Cabeçalho da Rubrica */}
-          <div className="bg-[#004b8d] text-white p-4 rounded-t-xl">
+          <div className="bg-[#004b8d] text-white p-4 rounded-t-xl relative">
             <h1 className="text-lg font-bold text-center">FICHA DE AVALIAÇÃO - {sa.tipoRubrica === 'gradual' ? 'RUBRICA GRADUAL' : 'RUBRICA DICOTÔMICA'}</h1>
             <p className="text-center text-blue-200 text-sm mt-1">{sa.titulo}</p>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 no-print">
+              <CopyButton section="rubrica" />
+            </div>
           </div>
 
           {/* Info da SA */}
