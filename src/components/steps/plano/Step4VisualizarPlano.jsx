@@ -265,23 +265,99 @@ export default function Step4VisualizarPlano() {
             rows={3}
           />
 
-          {/* Capacidades */}
+          {/* Capacidades Separadas por Tipo */}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Target size={18} />
               {termoCapacidade}s Selecionadas
             </h3>
-            <ul className="space-y-2 text-sm">
-              {plano.capacidades?.map((cap, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <span className="bg-purple-600 text-white text-xs px-2 py-0.5 rounded font-medium flex-shrink-0">
-                    {cap.indice}
-                  </span>
-                  <span><strong>{cap.codigo}:</strong> {cap.descricao}</span>
-                </li>
-              ))}
-            </ul>
+            
+            {/* Capacidades Básicas */}
+            {plano.capacidadesBasicas?.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-blue-700 mb-2">Capacidades Básicas ({plano.capacidadesBasicas.length})</h4>
+                <ul className="space-y-1 text-sm">
+                  {plano.capacidadesBasicas.map((cap, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-medium flex-shrink-0">
+                        {cap.codigo}
+                      </span>
+                      <span>{cap.descricao}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {/* Capacidades Técnicas */}
+            {plano.capacidadesTecnicas?.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-purple-700 mb-2">Capacidades Técnicas ({plano.capacidadesTecnicas.length})</h4>
+                <ul className="space-y-1 text-sm">
+                  {plano.capacidadesTecnicas.map((cap, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="bg-purple-600 text-white text-xs px-2 py-0.5 rounded font-medium flex-shrink-0">
+                        {cap.codigo}
+                      </span>
+                      <span>{cap.descricao}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {/* Capacidades Socioemocionais */}
+            {plano.capacidadesSocioemocionais?.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-green-700 mb-2">Capacidades Socioemocionais ({plano.capacidadesSocioemocionais.length})</h4>
+                <ul className="space-y-1 text-sm">
+                  {plano.capacidadesSocioemocionais.map((cap, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded font-medium flex-shrink-0">
+                        {cap.codigo}
+                      </span>
+                      <span>{cap.descricao}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Fallback para capacidades não separadas */}
+            {!plano.capacidadesBasicas?.length && !plano.capacidadesTecnicas?.length && !plano.capacidadesSocioemocionais?.length && (
+              <ul className="space-y-2 text-sm">
+                {plano.capacidades?.map((cap, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="bg-purple-600 text-white text-xs px-2 py-0.5 rounded font-medium flex-shrink-0">
+                      {cap.codigo}
+                    </span>
+                    <span>{cap.descricao}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
+          {/* Informações de Avaliação */}
+          {plano.avaliacoes && (
+            <div className="mt-4 p-4 bg-orange-50 rounded-lg">
+              <h3 className="font-semibold text-orange-700 mb-2">Estrutura de Avaliações</h3>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="text-center p-2 bg-white rounded">
+                  <span className="block text-2xl font-bold text-orange-600">1</span>
+                  <span className="text-gray-600">Avaliação Diagnóstica</span>
+                </div>
+                <div className="text-center p-2 bg-white rounded">
+                  <span className="block text-2xl font-bold text-orange-600">{plano.avaliacoes.numAvaliacoesObjetivas}</span>
+                  <span className="text-gray-600">Avaliação(ões) Objetiva(s)</span>
+                </div>
+                <div className="text-center p-2 bg-white rounded">
+                  <span className="block text-2xl font-bold text-orange-600">1</span>
+                  <span className="text-gray-600">Avaliação Prática</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -311,11 +387,11 @@ export default function Step4VisualizarPlano() {
               <div className="bg-purple-600 text-white p-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-lg font-bold">
-                    {bloco.titulo}
+                    Bloco {bloco.numero || i + 1}: {bloco.titulo}
                   </h3>
                   <div className="flex items-center gap-3">
                     <span className="bg-purple-500 px-3 py-1 rounded text-sm">
-                      {bloco.numAulas} aulas - {bloco.cargaHoraria}h
+                      {bloco.cargaHoraria}h
                     </span>
                     <button
                       onClick={() => copyToClipboard(bloco.titulo, `bloco_titulo_${i}`)}

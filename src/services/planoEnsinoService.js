@@ -2,7 +2,8 @@
  * Serviço para geração de Plano de Ensino
  * Compatível com o sistema SGN do SENAI
  * Baseado na Metodologia SENAI de Educação Profissional (MSEP)
- * v2.0.0 - Chamadas via backend para segurança da API Key
+ * Seguindo o Guia Prático SENAI/SC para elaboração de Plano de Ensino
+ * v3.0.0 - Estrutura de blocos conforme guia SENAI
  */
 
 // URL da API do backend
@@ -12,7 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
  * Faz chamada à API do Google Gemini via BACKEND
  * A API Key fica APENAS no servidor (segurança)
  */
-async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 16384) {
   console.log('[Gemini] Chamando API via backend...');
 
   try {
@@ -39,9 +40,63 @@ async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
 /**
  * Faz chamada à API LLM (Gemini via backend)
  */
-async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 16384) {
   console.log('[Plano Ensino Service] Usando Gemini via backend');
   return callGeminiAPI(systemPrompt, userPrompt, maxTokens);
+}
+
+/**
+ * Calcula a estrutura de blocos conforme regras do guia SENAI
+ * - Cursos >= 40h: blocos de no máximo 20h
+ * - Cursos < 40h: blocos de no máximo 10h
+ * - Cursos muito curtos: múltiplos de 2h
+ */
+function calcularEstruturaBlocos(cargaHorariaTotal) {
+  let maxHorasPorBloco;
+  
+  if (cargaHorariaTotal >= 40) {
+    maxHorasPorBloco = 20;
+  } else if (cargaHorariaTotal >= 20) {
+    maxHorasPorBloco = 10;
+  } else {
+    // Para cursos muito curtos, usar múltiplos de 2h
+    maxHorasPorBloco = Math.max(2, Math.floor(cargaHorariaTotal / 2));
+  }
+  
+  const numBlocos = Math.ceil(cargaHorariaTotal / maxHorasPorBloco);
+  const horasPorBloco = Math.floor(cargaHorariaTotal / numBlocos);
+  const horasRestantes = cargaHorariaTotal % numBlocos;
+  
+  return {
+    numBlocos,
+    horasPorBloco,
+    horasRestantes,
+    maxHorasPorBloco
+  };
+}
+
+/**
+ * Determina quantidade de avaliações objetivas conforme carga horária
+ * - Até 70h: 1 avaliação objetiva
+ * - 71h a 120h: 2 avaliações objetivas
+ * - Acima de 120h: 3 ou mais avaliações objetivas
+ */
+function calcularAvaliacoes(cargaHorariaTotal) {
+  let numAvaliacoesObjetivas;
+  
+  if (cargaHorariaTotal <= 70) {
+    numAvaliacoesObjetivas = 1;
+  } else if (cargaHorariaTotal <= 120) {
+    numAvaliacoesObjetivas = 2;
+  } else {
+    numAvaliacoesObjetivas = Math.ceil(cargaHorariaTotal / 60);
+  }
+  
+  return {
+    numAvaliacoesObjetivas,
+    temAvaliacaoDiagnostica: true, // Sempre no primeiro bloco
+    temAvaliacaoPratica: true // Ao longo dos blocos
+  };
 }
 
 // Ambientes Pedagógicos comuns
@@ -163,9 +218,11 @@ function extrairConhecimentosPlanos(conhecimentos, resultado = []) {
 /**
  * Gera um Plano de Ensino completo usando IA
  * Compatível com os campos do sistema SGN
- * Inclui Planos de Aula (Blocos) conforme estrutura do SGN
- * Cada bloco tem no mínimo 20h de aula
- * Os conhecimentos relacionados vêm da matriz curricular
+ * Seguindo o Guia Prático SENAI/SC para elaboração de Plano de Ensino
+ * Estrutura de blocos conforme regras do guia:
+ * - Cursos >= 40h: blocos de no máximo 20h
+ * - Cursos < 40h: blocos de no máximo 10h
+ * - Cursos muito curtos: múltiplos de 2h
  */
 export async function gerarPlanoEnsino({
   curso,
@@ -182,21 +239,56 @@ export async function gerarPlanoEnsino({
   quantidadeBlocos = null,
   conhecimentosUC = [] // Conhecimentos da matriz curricular
 }) {
-  // Calcular quantidade de blocos automaticamente (mínimo 20h por bloco)
-  const numBlocos = quantidadeBlocos || Math.max(1, Math.floor(cargaHoraria / 20));
-  const chPorBloco = Math.floor(cargaHoraria / numBlocos);
-  const numAulasPorBloco = Math.floor(chPorBloco / 4); // 4h por aula
+  // Calcular estrutura de blocos conforme guia SENAI
+  const estrutura = calcularEstruturaBlocos(cargaHoraria);
+  const numBlocos = quantidadeBlocos || estrutura.numBlocos;
+  const maxHorasPorBloco = estrutura.maxHorasPorBloco;
+  
+  // Calcular avaliações conforme carga horária
+  const avaliacoes = calcularAvaliacoes(cargaHoraria);
 
-  // Formatar capacidades para o prompt
-  const capacidadesTexto = capacidades.map((cap, i) => 
+  // Separar capacidades por tipo
+  const capacidadesBasicas = capacidades.filter(c => 
+    c.codigo?.toLowerCase().includes('cb') || c.tipo === 'basica'
+  );
+  const capacidadesTecnicas = capacidades.filter(c => 
+    c.codigo?.toLowerCase().includes('ct') || c.tipo === 'tecnica'
+  );
+  const capacidadesSocioemocionais = capacidades.filter(c => 
+    c.codigo?.toLowerCase().includes('cse') || c.tipo === 'socioemocional'
+  );
+
+  // Formatar capacidades para o prompt com separação por tipo
+  let capacidadesTexto = '';
+  if (capacidadesBasicas.length > 0) {
+    capacidadesTexto += `\nCAPACIDADES BÁSICAS:\n`;
+    capacidadesBasicas.forEach((cap, i) => {
+      capacidadesTexto += `  ${cap.codigo} - ${cap.descricao}\n`;
+    });
+  }
+  if (capacidadesTecnicas.length > 0) {
+    capacidadesTexto += `\nCAPACIDADES TÉCNICAS:\n`;
+    capacidadesTecnicas.forEach((cap, i) => {
+      capacidadesTexto += `  ${cap.codigo} - ${cap.descricao}\n`;
+    });
+  }
+  if (capacidadesSocioemocionais.length > 0) {
+    capacidadesTexto += `\nCAPACIDADES SOCIOEMOCIONAIS:\n`;
+    capacidadesSocioemocionais.forEach((cap, i) => {
+      capacidadesTexto += `  ${cap.codigo} - ${cap.descricao}\n`;
+    });
+  }
+  
+  // Também criar lista indexada para referência nos blocos
+  const capacidadesIndexadas = capacidades.map((cap, i) => 
     `${i}. ${cap.codigo} - ${cap.descricao}`
   ).join('\n');
 
   // Formatar ambientes
-  const ambientesTexto = ambientesPedagogicos.join('\n');
+  const ambientesTexto = ambientesPedagogicos.join('; ');
 
   // Formatar instrumentos
-  const instrumentosTexto = instrumentosAvaliacao.join(';\n');
+  const instrumentosTexto = instrumentosAvaliacao.join('; ');
 
   // Formatar conhecimentos da matriz curricular
   const conhecimentosTexto = conhecimentosUC.length > 0 
@@ -206,7 +298,7 @@ export async function gerarPlanoEnsino({
   // Lista plana de conhecimentos para referência
   const conhecimentosPlanos = extrairConhecimentosPlanos(conhecimentosUC);
 
-  const prompt = `Você é um especialista em educação profissional do SENAI, seguindo a Metodologia SENAI de Educação Profissional (MSEP).
+  const prompt = `Você é um especialista em educação profissional do SENAI, seguindo a Metodologia SENAI de Educação Profissional (MSEP) e o Guia Prático SENAI/SC para elaboração de Plano de Ensino.
 
 REGRAS DE CONTEÚDO PROIBIDO (OBRIGATÓRIO):
 - JAMAIS aborde temas relacionados a pornografia, conteúdo sexual ou adulto
@@ -215,124 +307,142 @@ REGRAS DE CONTEÚDO PROIBIDO (OBRIGATÓRIO):
 - JAMAIS inclua conteúdo violento, que incite ódio ou seja ofensivo
 - Mantenha sempre um tom profissional e educacional adequado ao ambiente escolar
 
-Gere um PLANO DE ENSINO para preencher o sistema SGN do SENAI.
-
-DADOS DO CURSO:
+=== DADOS DO CURSO ===
 - Curso: ${curso}
 - Unidade Curricular: ${unidadeCurricular}
 - Carga Horária Total: ${cargaHoraria}h
 - Período: ${periodo}
 - Competência Geral do Curso: ${competenciaGeral}
 
-${termoCapacidade.toUpperCase()}S A DESENVOLVER (índice começa em 0):
+=== ${termoCapacidade.toUpperCase()}S A DESENVOLVER ===
+IMPORTANTE: Use APENAS estas capacidades que existem na UC. NÃO invente capacidades.
 ${capacidadesTexto}
 
-CONHECIMENTOS DA MATRIZ CURRICULAR (USE ESTES EXATAMENTE):
+Lista indexada para referência nos blocos (índice começa em 0):
+${capacidadesIndexadas}
+
+=== CONHECIMENTOS DA MATRIZ CURRICULAR ===
+IMPORTANTE: Use EXATAMENTE estes conhecimentos. NÃO invente conhecimentos.
 ${conhecimentosTexto}
 
-AMBIENTES PEDAGÓGICOS DISPONÍVEIS:
-${ambientesTexto}
+=== RECURSOS DISPONÍVEIS ===
+Ambientes Pedagógicos: ${ambientesTexto}
+Ferramentas/Softwares: ${ferramentas.join(', ')}
+Instrumentos de Avaliação: ${instrumentosTexto}
 
-FERRAMENTAS/SOFTWARES DISPONÍVEIS:
-${ferramentas.join(', ')}
-
-INSTRUMENTOS DE AVALIAÇÃO:
-${instrumentosTexto}
-
-${contextoAdicional ? `ORIENTAÇÕES ADICIONAIS DO DOCENTE: ${contextoAdicional}` : ''}
+${contextoAdicional ? `=== ORIENTAÇÕES ADICIONAIS DO DOCENTE ===\n${contextoAdicional}` : ''}
 
 === ESTRUTURA DO PLANO DE ENSINO ===
 
-1. INFORMAÇÕES GERAIS DO PLANO:
-   - Objetivo da UC (texto descritivo do objetivo geral)
-   - Número de capacidades básicas, técnicas e socioemocionais
+REGRAS DE DIVISÃO EM BLOCOS (OBRIGATÓRIO):
+- Carga horária total: ${cargaHoraria}h
+- Máximo de horas por bloco: ${maxHorasPorBloco}h
+- Número de blocos: ${numBlocos}
+- Cada bloco deve ter carga horária em múltiplos de 2h
 
-2. PLANOS DE AULA (BLOCOS):
-   Gere ${numBlocos} BLOCOS DE AULA para dividir a UC.
-   REGRA: Cada bloco deve ter no MÍNIMO 20 horas (${numAulasPorBloco} aulas de 4h).
-   Carga horária por bloco: aproximadamente ${chPorBloco}h.
+REGRAS DE AVALIAÇÃO (OBRIGATÓRIO):
+- 1 avaliação diagnóstica OBRIGATÓRIA no primeiro bloco (para aferir conhecimento prévio)
+- ${avaliacoes.numAvaliacoesObjetivas} avaliação(ões) objetiva(s) distribuída(s) ao longo dos blocos
+- 1 avaliação prática ao longo dos blocos
+- Entregas parciais da Situação de Aprendizagem entre os blocos
+- Entrega final da Situação de Aprendizagem no último bloco
+- Avaliações formativas em cada bloco para acompanhamento
 
-ESTRUTURA DE CADA BLOCO DE AULA:
+REGRAS DE CAPACIDADES (OBRIGATÓRIO):
+- Organizar em ordem CRESCENTE de complexidade (Taxonomia de Bloom)
+- Agrupar de forma coerente e exequível para a prática pedagógica
+- Separar por tipo: Básicas, Técnicas, Socioemocionais
+- TODAS as capacidades devem ser utilizadas em algum bloco
+- Capacidades podem ser repetidas em blocos diferentes se houver justificativa pedagógica
 
-1. TÍTULO DO BLOCO: Título descritivo do tema principal
-   Exemplo: "Fundamentos de Banco de Dados e Modelagem"
+REGRAS DE CONHECIMENTOS (OBRIGATÓRIO):
+- Devem estar associados DIRETAMENTE às capacidades
+- Seguir progressão CRESCENTE de complexidade
+- TODOS os conhecimentos devem ser utilizados em algum bloco
+- Podem ser repetidos se coerente com a prática pedagógica
 
-2. NÚMERO DE AULAS E CARGA HORÁRIA: 
-   Formato: "X aulas - XXh"
-   Exemplo: "5 aulas - 20 horas"
+REGRAS DE ESTRATÉGIAS DE ENSINO (OBRIGATÓRIO):
+- Devem ser DIVERSIFICADAS no mesmo bloco
+- Podem ser repetidas em blocos diferentes
+- Devem ser EXEQUÍVEIS em sala
+- Cada estratégia descrita em no máximo um parágrafo
+- Estratégias disponíveis: Exposição Dialogada, Atividade Prática, Trabalho em Grupo, Dinâmica de Grupo, Visita Técnica, Ensaio Tecnológico, Workshop, Seminário, Painel Temático, Gamificação, Sala de Aula Invertida, Design Thinking
 
-3. CAPACIDADES A SEREM TRABALHADAS: 
-   Índices das capacidades que serão desenvolvidas neste bloco
+REGRAS DE REFERÊNCIAS BIBLIOGRÁFICAS (OBRIGATÓRIO):
+- Referências Básicas: 2-3 livros REAIS e EXISTENTES relacionados ao tema
+- Referências Complementares: 2-3 livros/artigos REAIS e EXISTENTES
+- Formato ABNT: SOBRENOME, Nome. Título: subtítulo. Edição. Cidade: Editora, Ano.
+- NÃO invente livros ou autores. Use apenas referências que você tem certeza que existem.
 
-4. CONHECIMENTOS RELACIONADOS:
-   IMPORTANTE: Use EXATAMENTE os conhecimentos da matriz curricular fornecida acima.
-   Distribua os conhecimentos entre os blocos de forma lógica.
-   Use o formato "código - título" (ex: "3.1.1 - Definições")
-   TODOS os conhecimentos da matriz devem ser contemplados em algum bloco.
+=== ESTRUTURA DE CADA BLOCO (TABELA DE 6 LINHAS) ===
 
-5. ESTRATÉGIAS DE ENSINO E DESCRIÇÃO DAS ATIVIDADES:
-   Descrição DETALHADA de cada aula do bloco, incluindo:
-   - Número da aula e duração
-   - Estratégia utilizada (Exposição Dialogada, Atividade Prática, Gamificação, etc.)
-   - Descrição da atividade
-   - Atividades práticas ou entregas quando houver
-   
-   Exemplo:
-   "Aula 1 (4h): Apresentação da UC e introdução aos conceitos de banco de dados. Exposição dialogada sobre definições e tipos de SGBD.
-   Aula 2 (4h): Aula prática - Instalação e configuração do MySQL. Primeiros comandos DDL.
-   Aula 3-5 (12h): Modelagem conceitual - Criação de diagramas ER. Atividade prática em grupo."
+Cada bloco deve ter EXATAMENTE estas 6 categorias:
 
-6. RECURSOS E AMBIENTES PEDAGÓGICOS:
-   Lista de recursos, ferramentas e ambientes utilizados
+1. CAPACIDADES: Lista das capacidades trabalhadas neste bloco (usar códigos)
+2. CONHECIMENTOS: Lista dos conhecimentos relacionados às capacidades
+3. ESTRATÉGIAS DE ENSINO E DESCRIÇÃO DA ATIVIDADE: Descrição detalhada das atividades
+4. AMBIENTES PEDAGÓGICOS: Sala de aula, Laboratório, etc.
+5. INSTRUMENTOS DE AVALIAÇÃO (SOMATIVA): Avaliações formais do bloco
+6. INSTRUMENTOS DE AVALIAÇÃO (FORMATIVA): Acompanhamento contínuo
 
-7. CRITÉRIOS DE AVALIAÇÃO:
-   Perguntas no formato "Verbo + complemento ?" ou referência ao anexo
-   Exemplo: "Anexo ao formulário da Avaliação Prática 1"
+=== FORMATO DE RESPOSTA ===
 
-8. INSTRUMENTOS DE AVALIAÇÃO DA APRENDIZAGEM:
-   Instrumentos específicos do bloco
-   Exemplo: "Avaliação Prática 1: Modelagem de banco de dados"
-   Se não houver avaliação neste bloco: "Será avaliado no próximo bloco"
+Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois):
 
-REGRAS IMPORTANTES:
-- Cada bloco deve ter NO MÍNIMO 20 horas
-- Divida as ${termoCapacidade}s de forma lógica entre os blocos
-- Cada ${termoCapacidade} deve aparecer em pelo menos um bloco
-- TODOS os conhecimentos da matriz curricular devem ser contemplados
-- Os blocos devem ter progressão lógica de complexidade
-- O último bloco pode ser "Finalização e Projeto Integrador"
-- As estratégias de ensino devem ser DETALHADAS aula por aula
-- A soma das cargas horárias deve ser ${cargaHoraria}h
-- Use as ferramentas fornecidas nos recursos pedagógicos
-
-Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a estrutura:
 {
-  "objetivoUC": "Texto descritivo do objetivo da UC",
-  "numCapacidadesBasicas": 0,
-  "numCapacidadesTecnicas": 0,
-  "numCapacidadesSocioemocionais": 3,
-  "ambientesPedagogicos": "texto formatado para o campo do SGN",
-  "outrosInstrumentos": "texto formatado para o campo do SGN",
-  "referenciasBasicas": "texto formatado para o campo do SGN",
-  "referenciasComplementares": "texto formatado para o campo do SGN",
+  "objetivoUC": "Texto descritivo do objetivo geral da UC",
+  "numCapacidadesBasicas": ${capacidadesBasicas.length},
+  "numCapacidadesTecnicas": ${capacidadesTecnicas.length},
+  "numCapacidadesSocioemocionais": ${capacidadesSocioemocionais.length},
+  "ambientesPedagogicos": "${ambientesTexto}",
+  "referenciasBasicas": "SOBRENOME, Nome. Título do Livro Real. Edição. Cidade: Editora, Ano.\\nSOBRENOME, Nome. Outro Livro Real. Edição. Cidade: Editora, Ano.",
+  "referenciasComplementares": "SOBRENOME, Nome. Título Complementar Real. Edição. Cidade: Editora, Ano.\\nSOBRENOME, Nome. Artigo ou Livro Real. Edição. Cidade: Editora, Ano.",
   "observacoes": "",
+  "totalCapacidadesUtilizadas": ${capacidades.length},
+  "totalConhecimentosUtilizados": ${conhecimentosPlanos.length},
   "blocosAula": [
     {
+      "numero": 1,
       "titulo": "Título descritivo do bloco",
-      "numAulas": 5,
-      "cargaHoraria": 20,
+      "cargaHoraria": ${Math.floor(cargaHoraria / numBlocos)},
+      "capacidades": {
+        "basicas": ["CB1", "CB2"],
+        "tecnicas": ["CT1"],
+        "socioemocionais": ["CSE1"]
+      },
       "capacidadesIndices": [0, 1, 2],
-      "conhecimentosRelacionados": ["3.1.1 - Definições", "3.1.2 - Tipos", "3.1.3 - Características"],
-      "estrategiasDetalhadas": "Aula 1 (4h): Descrição detalhada...\\nAula 2 (4h): Descrição...",
-      "recursosPedagogicos": "Laboratório de informática; MySQL; DBeaver",
-      "criteriosAvaliacao": "Anexo ao formulário da Avaliação Prática 1",
-      "instrumentosAvaliacao": "Avaliação Prática 1: Descrição do instrumento"
+      "conhecimentos": ["1.1 - Conhecimento X", "1.2 - Conhecimento Y"],
+      "estrategiasEnsino": [
+        {
+          "estrategia": "Exposição Dialogada",
+          "descricao": "Apresentação dos conceitos fundamentais com discussão em sala."
+        },
+        {
+          "estrategia": "Atividade Prática",
+          "descricao": "Exercícios práticos de aplicação dos conceitos."
+        }
+      ],
+      "ambientesPedagogicos": "Sala de Aula; Laboratório de informática",
+      "avaliacaoSomativa": {
+        "diagnostica": "Questionário inicial para aferir conhecimentos prévios",
+        "objetiva": "",
+        "pratica": "",
+        "entregaParcial": "Entrega parcial 1: Descrição da entrega"
+      },
+      "avaliacaoFormativa": "Observação direta; Feedback contínuo; Autoavaliação"
     }
   ]
 }`;
 
   try {
-    const systemPrompt = 'Você é um especialista em educação profissional do SENAI. Gere conteúdo para preencher o sistema SGN. Responda APENAS com JSON válido, sem markdown ou texto adicional.';
+    const systemPrompt = `Você é um especialista em educação profissional do SENAI, seguindo a Metodologia SENAI de Educação Profissional (MSEP) e o Guia Prático SENAI/SC.
+
+REGRAS CRÍTICAS:
+1. Responda APENAS com JSON válido, sem markdown ou texto adicional
+2. Use APENAS as capacidades fornecidas - NÃO invente capacidades
+3. Use APENAS os conhecimentos fornecidos - NÃO invente conhecimentos
+4. Referências bibliográficas devem ser REAIS e EXISTENTES
+5. Siga a estrutura de blocos conforme especificado`;
     
     const content = await callLLMAPI(systemPrompt, prompt);
 
@@ -351,12 +461,31 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
 
     // Mapear índices de capacidades para os códigos reais nos Blocos de Aula
     if (planoEnsino.blocosAula) {
-      planoEnsino.blocosAula = planoEnsino.blocosAula.map(bloco => ({
-        ...bloco,
-        capacidadesTrabalhadas: (bloco.capacidadesIndices || []).map(idx => 
-          capacidades[idx] ? { codigo: capacidades[idx].codigo, descricao: capacidades[idx].descricao } : null
-        ).filter(Boolean)
-      }));
+      planoEnsino.blocosAula = planoEnsino.blocosAula.map((bloco, idx) => {
+        // Mapear capacidades por índice
+        const capacidadesTrabalhadas = (bloco.capacidadesIndices || []).map(i => 
+          capacidades[i] ? { codigo: capacidades[i].codigo, descricao: capacidades[i].descricao } : null
+        ).filter(Boolean);
+        
+        // Formatar estratégias para exibição
+        const estrategiasFormatadas = Array.isArray(bloco.estrategiasEnsino) 
+          ? bloco.estrategiasEnsino.map(e => `${e.estrategia}: ${e.descricao}`).join('\n')
+          : bloco.estrategiasEnsino || bloco.estrategiasDetalhadas || '';
+        
+        return {
+          ...bloco,
+          numero: bloco.numero || idx + 1,
+          capacidadesTrabalhadas,
+          estrategiasFormatadas,
+          // Compatibilidade com estrutura antiga
+          estrategiasDetalhadas: estrategiasFormatadas,
+          recursosPedagogicos: bloco.ambientesPedagogicos || bloco.recursosPedagogicos,
+          conhecimentosRelacionados: bloco.conhecimentos || bloco.conhecimentosRelacionados,
+          // Avaliações formatadas
+          instrumentosAvaliacao: formatarAvaliacoes(bloco.avaliacaoSomativa, bloco.avaliacaoFormativa),
+          criteriosAvaliacao: bloco.avaliacaoSomativa?.entregaParcial || bloco.criteriosAvaliacao || ''
+        };
+      });
     }
 
     // Adicionar metadados para o SGN
@@ -369,12 +498,23 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
       periodo,
       competenciaGeral,
       numBlocos,
-      // Capacidades originais
+      maxHorasPorBloco,
+      // Informações de avaliação
+      avaliacoes: {
+        numAvaliacoesObjetivas: avaliacoes.numAvaliacoesObjetivas,
+        temAvaliacaoDiagnostica: avaliacoes.temAvaliacaoDiagnostica,
+        temAvaliacaoPratica: avaliacoes.temAvaliacaoPratica
+      },
+      // Capacidades originais separadas por tipo
       capacidades: capacidades.map((cap, i) => ({
         indice: i,
         codigo: cap.codigo,
-        descricao: cap.descricao
+        descricao: cap.descricao,
+        tipo: cap.tipo || inferirTipoCapacidade(cap.codigo)
       })),
+      capacidadesBasicas: capacidadesBasicas.map(c => ({ codigo: c.codigo, descricao: c.descricao })),
+      capacidadesTecnicas: capacidadesTecnicas.map(c => ({ codigo: c.codigo, descricao: c.descricao })),
+      capacidadesSocioemocionais: capacidadesSocioemocionais.map(c => ({ codigo: c.codigo, descricao: c.descricao })),
       // Configurações usadas
       configAmbientes: ambientesPedagogicos,
       configInstrumentos: instrumentosAvaliacao,
@@ -387,6 +527,38 @@ Retorne APENAS um JSON válido (sem markdown, sem texto antes ou depois) com a e
     console.error('Erro ao gerar Plano de Ensino:', error);
     throw error;
   }
+}
+
+/**
+ * Formata as avaliações somativas e formativas para exibição
+ */
+function formatarAvaliacoes(somativa, formativa) {
+  let resultado = '';
+  
+  if (somativa) {
+    if (somativa.diagnostica) resultado += `Diagnóstica: ${somativa.diagnostica}\n`;
+    if (somativa.objetiva) resultado += `Objetiva: ${somativa.objetiva}\n`;
+    if (somativa.pratica) resultado += `Prática: ${somativa.pratica}\n`;
+    if (somativa.entregaParcial) resultado += `Entrega: ${somativa.entregaParcial}\n`;
+    if (somativa.entregaFinal) resultado += `Entrega Final: ${somativa.entregaFinal}\n`;
+  }
+  
+  if (formativa) {
+    resultado += `Formativa: ${formativa}`;
+  }
+  
+  return resultado.trim() || 'Avaliação contínua através de observação e feedback';
+}
+
+/**
+ * Infere o tipo de capacidade pelo código
+ */
+function inferirTipoCapacidade(codigo) {
+  if (!codigo) return 'tecnica';
+  const cod = codigo.toLowerCase();
+  if (cod.includes('cb')) return 'basica';
+  if (cod.includes('cse')) return 'socioemocional';
+  return 'tecnica';
 }
 
 export default {
