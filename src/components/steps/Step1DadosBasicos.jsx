@@ -81,14 +81,22 @@ export default function Step1DadosBasicos() {
     });
   };
 
+  // Verificar se precisa dos campos de turma/data/professor
+  const precisaDadosProva = tipoAvaliacao !== TIPO_AVALIACAO.PLANO_ENSINO;
+
   const validate = () => {
     const newErrors = {};
     
-    if (!dadosProva.turma.trim()) newErrors.turma = 'Campo obrigatório';
-    if (!dadosProva.professor.trim()) newErrors.professor = 'Campo obrigatório';
+    // Campos obrigatórios apenas para provas e avaliações (não para Plano de Ensino)
+    if (precisaDadosProva) {
+      if (!dadosProva.turma.trim()) newErrors.turma = 'Campo obrigatório';
+      if (!dadosProva.professor.trim()) newErrors.professor = 'Campo obrigatório';
+      if (!dadosProva.data) newErrors.data = 'Campo obrigatório';
+    }
+    
+    // Sempre obrigatórios
     if (!dadosProva.cursoId) newErrors.curso = 'Selecione um curso';
     if (!dadosProva.unidadeCurricular) newErrors.unidadeCurricular = 'Selecione uma unidade curricular';
-    if (!dadosProva.data) newErrors.data = 'Campo obrigatório';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -221,60 +229,65 @@ export default function Step1DadosBasicos() {
             {errors.unidadeCurricular && <p className="mt-1 text-sm text-red-500">{errors.unidadeCurricular}</p>}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Turma */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Turma <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={dadosProva.turma}
-                onChange={(e) => updateDadosProva({ turma: e.target.value })}
-                placeholder="Ex: T DESI 2024/1 M"
-                className={`
-                  w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
-                  ${errors.turma ? 'border-red-500' : 'border-gray-300'}
-                `}
-              />
-              {errors.turma && <p className="mt-1 text-sm text-red-500">{errors.turma}</p>}
-            </div>
+          {/* Campos de Turma, Data e Professor - apenas para provas/avaliações */}
+          {precisaDadosProva && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Turma */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Turma <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={dadosProva.turma}
+                    onChange={(e) => updateDadosProva({ turma: e.target.value })}
+                    placeholder="Ex: T DESI 2024/1 M"
+                    className={`
+                      w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
+                      ${errors.turma ? 'border-red-500' : 'border-gray-300'}
+                    `}
+                  />
+                  {errors.turma && <p className="mt-1 text-sm text-red-500">{errors.turma}</p>}
+                </div>
 
-            {/* Data */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Data <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={dadosProva.data}
-                onChange={(e) => updateDadosProva({ data: e.target.value })}
-                className={`
-                  w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
-                  ${errors.data ? 'border-red-500' : 'border-gray-300'}
-                `}
-              />
-              {errors.data && <p className="mt-1 text-sm text-red-500">{errors.data}</p>}
-            </div>
-          </div>
+                {/* Data */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Data <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dadosProva.data}
+                    onChange={(e) => updateDadosProva({ data: e.target.value })}
+                    className={`
+                      w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
+                      ${errors.data ? 'border-red-500' : 'border-gray-300'}
+                    `}
+                  />
+                  {errors.data && <p className="mt-1 text-sm text-red-500">{errors.data}</p>}
+                </div>
+              </div>
 
-          {/* Professor */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Professor(a) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={dadosProva.professor}
-              onChange={(e) => updateDadosProva({ professor: e.target.value })}
-              placeholder="Nome completo do professor"
-              className={`
-                w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
-                ${errors.professor ? 'border-red-500' : 'border-gray-300'}
-              `}
-            />
-            {errors.professor && <p className="mt-1 text-sm text-red-500">{errors.professor}</p>}
-          </div>
+              {/* Professor */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Professor(a) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={dadosProva.professor}
+                  onChange={(e) => updateDadosProva({ professor: e.target.value })}
+                  placeholder="Nome completo do professor"
+                  className={`
+                    w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
+                    ${errors.professor ? 'border-red-500' : 'border-gray-300'}
+                  `}
+                />
+                {errors.professor && <p className="mt-1 text-sm text-red-500">{errors.professor}</p>}
+              </div>
+            </>
+          )}
 
           {/* Info box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
