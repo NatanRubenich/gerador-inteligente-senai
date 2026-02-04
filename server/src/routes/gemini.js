@@ -283,7 +283,7 @@ Retorne APENAS JSON válido:
 // POST /api/gemini/generate - Rota genérica para geração de conteúdo (avaliações, planos, SA)
 router.post('/generate', async (req, res) => {
   try {
-    const { systemPrompt, userPrompt, maxTokens = 8192 } = req.body;
+    const { systemPrompt, userPrompt, maxTokens = 32768 } = req.body;
 
     if (!systemPrompt || !userPrompt) {
       return res.status(400).json({ success: false, error: 'systemPrompt e userPrompt são obrigatórios' });
