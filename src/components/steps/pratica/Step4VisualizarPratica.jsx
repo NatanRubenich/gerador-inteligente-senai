@@ -398,7 +398,7 @@ export default function Step4VisualizarPratica() {
 
           {/* Rodapé */}
           <div className="mt-6 p-4 text-center text-xs text-gray-500 border-t">
-            <p>Avaliação gerada pelo Sistema Gerador de Provas SENAI - Metodologia SENAI de Educação Profissional (MSEP)</p>
+            <p>Avaliação gerada pelo Sistema Gerador Inteligente SENAI - Metodologia SENAI de Educação Profissional (MSEP)</p>
           </div>
         </div>
       )}
@@ -497,7 +497,7 @@ export default function Step4VisualizarPratica() {
 
           {/* Rodapé */}
           <div className="mt-8 p-4 text-center text-xs text-gray-500 border-t">
-            <p>Lista de Verificação gerada pelo Sistema Gerador de Provas SENAI - MSEP</p>
+            <p>Lista de Verificação gerada pelo Sistema Gerador Inteligente SENAI - MSEP</p>
           </div>
         </div>
       )}

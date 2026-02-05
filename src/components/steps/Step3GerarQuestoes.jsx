@@ -463,12 +463,12 @@ Gere as questões no formato JSON.`;
             {isLoading ? (
               <>
                 <Loader2 className="animate-spin" size={24} />
-                Gerando questões com RAG + IA...
+                Gerando questões com IA...
               </>
             ) : (
               <>
                 <Sparkles size={24} />
-                Gerar Questões com RAG + IA
+                Gerar Questões com IA
               </>
             )}
           </button>

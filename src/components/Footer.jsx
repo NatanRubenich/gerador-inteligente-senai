@@ -7,7 +7,7 @@ export default function Footer() {
         {/* Informações do Sistema */}
         <div className="text-center mb-6">
           <p className="text-sm text-gray-300">
-            Gerador de Provas SENAI - Sistema de Avaliação da Educação Profissional
+            Gerador Inteligente SENAI - Sistema de Educação Profissional
           </p>
           <p className="text-xs mt-1">
             RAG Especialista + Metodologia SENAI de Educação Profissional (MSEP)

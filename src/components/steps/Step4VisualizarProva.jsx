@@ -389,7 +389,7 @@ export default function Step4VisualizarProva() {
 
           {/* Rodapé */}
           <div className="mt-6 p-4 text-center text-xs text-gray-500 border-t">
-            <p>Gabarito gerado pelo Sistema Gerador de Provas SENAI - Metodologia SENAI de Educação Profissional (MSEP)</p>
+            <p>Gabarito gerado pelo Sistema Gerador Inteligente SENAI - Metodologia SENAI de Educação Profissional (MSEP)</p>
           </div>
         </div>
       )}

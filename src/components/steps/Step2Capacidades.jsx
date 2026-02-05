@@ -319,12 +319,12 @@ export default function Step2Capacidades() {
                 {errors.assunto && <p className="mt-1 text-sm text-red-500">{errors.assunto}</p>}
               </div>
 
-              {/* Sugestões de Temas do RAG */}
+              {/* Sugestões de Temas */}
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-amber-800 flex items-center gap-2">
                     <Lightbulb size={18} />
-                    Sugestões de Temas (RAG SENAI)
+                    Sugestões de Temas
                   </h3>
                   <span className="text-xs text-amber-600">Clique para adicionar</span>
                 </div>
