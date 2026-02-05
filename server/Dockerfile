@@ -13,8 +13,8 @@ RUN npm ci --only=production
 # Copiar código fonte
 COPY src ./src
 
-# Expor porta (Cloud Run usa a variável PORT)
-EXPOSE 3001
+# Expor porta (Cloud Run usa a variável PORT, padrão 8080)
+EXPOSE 8080
 
 # Comando para iniciar o servidor
 CMD ["node", "src/index.js"]
