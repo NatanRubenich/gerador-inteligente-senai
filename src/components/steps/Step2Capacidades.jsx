@@ -115,9 +115,11 @@ export default function Step2Capacidades() {
       newErrors.assunto = 'Informe o assunto da prova';
     }
     
-    // Quantidade de questões só é obrigatória para avaliação objetiva
+    // Quantidade de questões só é obrigatória para avaliação objetiva (máximo 20)
     if (isAvaliacaoObjetiva && (!dadosProva.quantidade || dadosProva.quantidade < 1)) {
       newErrors.quantidade = 'Informe a quantidade de questões';
+    } else if (isAvaliacaoObjetiva && dadosProva.quantidade > 20) {
+      newErrors.quantidade = 'Máximo de 20 questões permitido';
     }
     
     // Pelo menos uma dificuldade deve ser selecionada (apenas para objetiva)
@@ -233,9 +235,12 @@ export default function Step2Capacidades() {
                   <input
                     type="number"
                     min="1"
-                    max="50"
+                    max="20"
                     value={dadosProva.quantidade}
-                    onChange={(e) => updateDadosProva({ quantidade: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const valor = parseInt(e.target.value) || 0;
+                      updateDadosProva({ quantidade: Math.min(valor, 20) });
+                    }}
                     className={`
                       w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none
                       ${errors.quantidade ? 'border-red-500' : 'border-gray-300'}
