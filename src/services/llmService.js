@@ -142,7 +142,7 @@ export function isApiConfigured() {
  * @param {number} maxTokens - Máximo de tokens na resposta
  * @returns {Promise<string>} - Conteúdo da resposta
  */
-async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 32768) {
   console.log('[Gemini] Chamando API via backend...');
 
   try {
@@ -173,7 +173,7 @@ async function callGeminiAPI(systemPrompt, userPrompt, maxTokens = 8192) {
  * @param {number} maxTokens - Máximo de tokens na resposta
  * @returns {Promise<string>} - Conteúdo da resposta
  */
-async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 8192) {
+async function callLLMAPI(systemPrompt, userPrompt, maxTokens = 32768) {
   console.log('[LLM] Usando Gemini via backend');
   return callGeminiAPI(systemPrompt, userPrompt, maxTokens);
 }
