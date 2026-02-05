@@ -22,7 +22,7 @@ jobs:
     - name: Build
       run: npm run build
       env:
-        VITE_API_URL: https://gerador-provas-api-531942819894.southamerica-east1.run.app
+        VITE_API_URL: https://gerador-senai-api-975461692786.southamerica-east1.run.app
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
