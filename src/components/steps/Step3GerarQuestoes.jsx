@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, Loader2, Copy, Check, Edit3, X, Save, Trash2, Plus, Image, Code, Upload, Link, Eye, EyeOff } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, Loader2, Check, Edit3, X, Save, Trash2, Plus, Image, Code, Upload, Link, Eye, EyeOff } from 'lucide-react';
 import { useProva } from '../../context/ProvaContext';
 import { gerarQuestoes, isApiConfigured } from '../../services/llmService';
 
@@ -17,9 +17,8 @@ export default function Step3GerarQuestoes() {
     setError
   } = useProva();
 
-  const [copied, setCopied] = useState(false);
-  const [showManualInput, setShowManualInput] = useState(false);
-  const [manualJson, setManualJson] = useState('');
+  const [quantidadeExtra, setQuantidadeExtra] = useState(1);
+  const [gerandoExtras, setGerandoExtras] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingQuestao, setEditingQuestao] = useState(null);
   
@@ -44,33 +43,6 @@ export default function Step3GerarQuestoes() {
     return `${dia}/${mes}/${ano}`;
   };
 
-  // Gerar prompt para copiar manualmente (fallback)
-  const gerarPromptTexto = () => {
-    const capacidadesFormatadas = dadosProva.capacidades
-      .map(c => `${c.codigo} - ${c.descricao}`)
-      .join('\n');
-
-    return `Turma: ${dadosProva.turma}
-Professor: ${dadosProva.professor}
-Unidade curricular: ${dadosProva.unidadeCurricular}
-Data: ${formatarData(dadosProva.data)}
-Curso Técnico em: ${dadosProva.curso}
-Dificuldade das questões: ${dadosProva.dificuldades?.join(', ') || 'Médio'}
-${termoCapacidade}s:
-${capacidadesFormatadas}
-Quantidade de questões: ${dadosProva.quantidade}
-Assuntos: ${dadosProva.assunto}
-
-As questões geradas devem seguir o padrão de provas SAEP do SENAI com contexto, comando e alternativas.
-Não pode ter pegadinhas nas alternativas (termos ou comandos que não existem, etc) e também não pode ter alternativas que chamem a atenção, pois devem ter tamanhos parecidos.
-No comando da questão não pode ter frases subjetivas como 'qual a alternativa melhor responde' ou 'qual a melhor opção', etc.
-A alternativa correta não pode ser maior (quantidade de caracteres) que as outras. Disfarce as alternativas.
-Nas alternativas usar somente do assunto da prova.
-O comando da questão está associado ao contexto, de forma que o aluno não deve conseguir responder lendo apenas o comando da questão.
-Distribua as respostas corretas entre as letras a, b, c, d de forma equilibrada.
-
-Gere as questões no formato JSON.`;
-  };
 
   const handleGerarComIA = async () => {
     if (!apiConfigurada) {
@@ -98,27 +70,46 @@ Gere as questões no formato JSON.`;
     }
   };
 
-  const handleCopiarPrompt = async () => {
-    try {
-      await navigator.clipboard.writeText(gerarPromptTexto());
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
-    }
-  };
+  // Gerar questões extras
+  const handleGerarMaisQuestoes = async () => {
+    if (!apiConfigurada || gerandoExtras) return;
 
-  const handleImportarJson = () => {
+    setGerandoExtras(true);
+    setError(null);
+
     try {
-      const dados = JSON.parse(manualJson);
-      if (!dados.prova) {
-        throw new Error('JSON inválido: deve conter o objeto "prova"');
+      const proximoNumero = questoesGeradas?.prova?.questoes?.length + 1 || 1;
+      
+      const dadosCompletos = {
+        ...dadosProva,
+        data: formatarData(dadosProva.data),
+        termoCapacidade,
+        quantidade: quantidadeExtra,
+        numeroInicial: proximoNumero
+      };
+
+      const resultado = await gerarQuestoes(dadosCompletos);
+      
+      if (resultado?.prova?.questoes) {
+        // Renumerar as novas questões
+        const novasQuestoes = resultado.prova.questoes.map((q, idx) => ({
+          ...q,
+          numero: proximoNumero + idx
+        }));
+        
+        // Adicionar às questões existentes
+        setQuestoesGeradas(prev => ({
+          ...prev,
+          prova: {
+            ...prev.prova,
+            questoes: [...prev.prova.questoes, ...novasQuestoes]
+          }
+        }));
       }
-      setQuestoesGeradas(dados);
-      setShowManualInput(false);
-      setManualJson('');
     } catch (err) {
-      setError('JSON inválido. Verifique o formato e tente novamente.');
+      setError(err.message || 'Erro ao gerar questões extras.');
+    } finally {
+      setGerandoExtras(false);
     }
   };
 
@@ -485,63 +476,6 @@ Gere as questões no formato JSON.`;
               <p className="text-amber-600 text-xs mt-2">
                 Obtenha sua chave gratuita em: console.groq.com/keys
               </p>
-            </div>
-          )}
-
-          {/* Divisor */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-gray-400 text-sm">ou</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
-          </div>
-
-          {/* Opções manuais */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Copiar prompt */}
-            <button
-              onClick={handleCopiarPrompt}
-              className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all"
-            >
-              {copied ? (
-                <>
-                  <Check className="text-green-500" size={20} />
-                  <span className="text-green-600">Copiado!</span>
-                </>
-              ) : (
-                <>
-                  <Copy size={20} className="text-gray-500" />
-                  <span className="text-gray-700">Copiar Prompt</span>
-                </>
-              )}
-            </button>
-
-            {/* Importar JSON */}
-            <button
-              onClick={() => setShowManualInput(!showManualInput)}
-              className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all"
-            >
-              <Edit3 size={20} className="text-gray-500" />
-              <span className="text-gray-700">Importar JSON Manualmente</span>
-            </button>
-          </div>
-
-          {/* Input manual de JSON */}
-          {showManualInput && (
-            <div className="mt-4 space-y-3">
-              <textarea
-                value={manualJson}
-                onChange={(e) => setManualJson(e.target.value)}
-                placeholder="Cole aqui o JSON gerado pela IA..."
-                rows={10}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
-              />
-              <button
-                onClick={handleImportarJson}
-                disabled={!manualJson.trim()}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Importar JSON
-              </button>
             </div>
           )}
 
@@ -1142,6 +1076,51 @@ Gere as questões no formato JSON.`;
               <p className="text-green-800">
                 ✓ {questoesGeradas.prova?.questoes?.length || 0} questões disponíveis. Revise e edite se necessário antes de prosseguir.
               </p>
+            </div>
+
+            {/* Gerar mais questões */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-blue-800 font-medium">Precisa de mais questões?</p>
+                  <p className="text-blue-600 text-sm">Gere até 5 questões extras com IA</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={quantidadeExtra}
+                    onChange={(e) => setQuantidadeExtra(parseInt(e.target.value))}
+                    className="px-3 py-2 border border-blue-300 rounded-lg text-sm bg-white"
+                    disabled={gerandoExtras}
+                  >
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <option key={n} value={n}>{n} questão{n > 1 ? 'ões' : ''}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleGerarMaisQuestoes}
+                    disabled={gerandoExtras || !apiConfigurada}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all
+                      ${apiConfigurada && !gerandoExtras
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      }
+                    `}
+                  >
+                    {gerandoExtras ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={18} />
+                        Gerar Mais
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">

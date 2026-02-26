@@ -62,27 +62,24 @@ router.get('/:id/capacidades', async (req, res) => {
   try {
     const db = getDb();
     
-    // Primeiro, tentar buscar na coleção CAPACIDADES separada
-    let capacidades = await db.collection(COLLECTIONS.CAPACIDADES)
-      .find({ unidadeCurricularId: req.params.id })
-      .project({ _id: 0 })
-      .toArray();
+    // Buscar capacidades SEMPRE da UC (fonte única de verdade)
+    const unidade = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
+      .findOne({ id: req.params.id }, { projection: { _id: 0 } });
     
-    // Se não encontrou, buscar capacidades embutidas na UC
-    if (capacidades.length === 0) {
-      const unidade = await db.collection(COLLECTIONS.UNIDADES_CURRICULARES)
-        .findOne({ id: req.params.id }, { projection: { _id: 0 } });
-      
-      if (unidade) {
-        // Verificar diferentes nomes de campo para capacidades
-        const caps = unidade.capacidades || unidade.capacidadesTecnicas || [];
-        capacidades = caps.map((cap, index) => ({
-          ...cap,
-          id: cap.id || `${req.params.id}-cap${index + 1}`,
-          unidadeCurricularId: req.params.id,
-          unidadeCurricularNome: unidade.nome
-        }));
-      }
+    let capacidades = [];
+    
+    if (unidade) {
+      // Buscar capacidades embutidas na UC
+      const caps = unidade.capacidades || unidade.capacidadesTecnicas || [];
+      capacidades = caps.map((cap, index) => ({
+        ...cap,
+        id: cap.id || `${req.params.id}-cap${index + 1}`,
+        unidadeCurricularId: req.params.id,
+        unidadeCurricularNome: unidade.nome,
+        cursoId: unidade.cursoId,
+        cursoNome: unidade.cursoNome,
+        modulo: unidade.modulo
+      }));
     }
     
     res.json({ success: true, data: capacidades, count: capacidades.length });
