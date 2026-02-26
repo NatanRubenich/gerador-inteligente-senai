@@ -23,7 +23,7 @@ export default function Header() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Gerador Inteligente <span className="text-xs font-normal text-blue-300 ml-1">v1.5.0</span></h1>
+              <h1 className="text-2xl font-bold">Gerador Inteligente <span className="text-xs font-normal text-blue-300 ml-1">v1.6.1</span></h1>
               <p className="text-blue-200 text-sm flex items-center gap-2">
                 <Brain size={14} />
                 IA Integrado
