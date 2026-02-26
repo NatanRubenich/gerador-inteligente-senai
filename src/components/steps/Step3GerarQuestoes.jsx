@@ -1050,78 +1050,55 @@ export default function Step3GerarQuestoes() {
           <div className="mt-8 border-t pt-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                <Check className="text-green-500" />
+                <Check className="text-green-500" size={20} />
                 Questões Geradas ({questoesGeradas.prova?.questoes?.length || 0})
               </h3>
-              <span className="text-sm text-gray-500">
-                Clique em uma questão para editar
-              </span>
-            </div>
-            
-            {/* Aviso de IA */}
-            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
-                <div>
-                  <p className="text-amber-800 font-medium">⚠️ Conteúdo gerado por Inteligência Artificial</p>
-                  <p className="text-amber-700 text-sm mt-1">
-                    As questões abaixo foram geradas por IA e podem conter erros, imprecisões ou informações desatualizadas. 
-                    <strong className="block mt-1">É fundamental revisar cada questão cuidadosamente antes de utilizá-la em avaliações.</strong>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <p className="text-green-800">
-                ✓ {questoesGeradas.prova?.questoes?.length || 0} questões disponíveis. Revise e edite se necessário antes de prosseguir.
-              </p>
-            </div>
-
-            {/* Gerar mais questões */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex-1">
-                  <p className="text-blue-800 font-medium">Precisa de mais questões?</p>
-                  <p className="text-blue-600 text-sm">Gere até 5 questões extras com IA</p>
-                </div>
-                <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
+                {/* Gerar mais questões - discreto */}
+                <div className="flex items-center gap-2">
                   <select
                     value={quantidadeExtra}
                     onChange={(e) => setQuantidadeExtra(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-blue-300 rounded-lg text-sm bg-white"
+                    className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
                     disabled={gerandoExtras}
                   >
                     {[1, 2, 3, 4, 5].map(n => (
-                      <option key={n} value={n}>{n} questão{n > 1 ? 'ões' : ''}</option>
+                      <option key={n} value={n}>+{n}</option>
                     ))}
                   </select>
                   <button
                     onClick={handleGerarMaisQuestoes}
                     disabled={gerandoExtras || !apiConfigurada}
                     className={`
-                      flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all
+                      flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-all
                       ${apiConfigurada && !gerandoExtras
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        ? 'text-blue-600 hover:bg-blue-50 border border-blue-200' 
+                        : 'text-gray-400 cursor-not-allowed border border-gray-200'
                       }
                     `}
+                    title="Gerar mais questões"
                   >
                     {gerandoExtras ? (
                       <>
-                        <Loader2 className="animate-spin" size={18} />
-                        Gerando...
+                        <Loader2 className="animate-spin" size={14} />
+                        <span>Gerando...</span>
                       </>
                     ) : (
                       <>
-                        <Plus size={18} />
-                        Gerar Mais
+                        <Plus size={14} />
+                        <span>Gerar mais</span>
                       </>
                     )}
                   </button>
                 </div>
               </div>
             </div>
+            
+            {/* Aviso de IA - discreto */}
+            <p className="text-xs text-amber-600 mb-3 flex items-center gap-1">
+              <AlertCircle size={12} />
+              Conteúdo gerado por IA. Revise antes de usar.
+            </p>
 
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
               {questoesGeradas.prova?.questoes?.map((q, index) => (
