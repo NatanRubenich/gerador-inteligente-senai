@@ -1107,7 +1107,7 @@ export default function Step3GerarQuestoes() {
                 `}
               >
                 <Sparkles size={16} />
-                Gerar mais com AI
+                Gerar + com AI
               </button>
             </div>
 
