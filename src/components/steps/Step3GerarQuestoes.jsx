@@ -19,6 +19,8 @@ export default function Step3GerarQuestoes() {
 
   const [quantidadeExtra, setQuantidadeExtra] = useState(1);
   const [gerandoExtras, setGerandoExtras] = useState(false);
+  const [capacidadesExtras, setCapacidadesExtras] = useState([]);
+  const [showGerarMaisModal, setShowGerarMaisModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingQuestao, setEditingQuestao] = useState(null);
   
@@ -70,9 +72,30 @@ export default function Step3GerarQuestoes() {
     }
   };
 
+  // Abrir modal de gerar mais questões
+  const handleAbrirGerarMais = () => {
+    setCapacidadesExtras([dadosProva.capacidades[0]?.codigo]);
+    setQuantidadeExtra(1);
+    setShowGerarMaisModal(true);
+  };
+
+  // Toggle capacidade extra
+  const handleToggleCapacidadeExtra = (codigo) => {
+    setCapacidadesExtras(prev => {
+      if (prev.includes(codigo)) {
+        return prev.filter(c => c !== codigo);
+      } else {
+        return [...prev, codigo];
+      }
+    });
+  };
+
+  // Verificar se pode gerar (quantidade >= capacidades selecionadas)
+  const podeGerarExtras = capacidadesExtras.length > 0 && quantidadeExtra >= capacidadesExtras.length;
+
   // Gerar questões extras
   const handleGerarMaisQuestoes = async () => {
-    if (!apiConfigurada || gerandoExtras) return;
+    if (!apiConfigurada || gerandoExtras || !podeGerarExtras) return;
 
     setGerandoExtras(true);
     setError(null);
@@ -80,11 +103,28 @@ export default function Step3GerarQuestoes() {
     try {
       const proximoNumero = questoesGeradas?.prova?.questoes?.length + 1 || 1;
       
+      // Filtrar capacidades selecionadas
+      const capacidadesSelecionadas = dadosProva.capacidades.filter(
+        cap => capacidadesExtras.includes(cap.codigo)
+      );
+
+      // Distribuir questões entre capacidades
+      const questoesPorCapacidade = Math.floor(quantidadeExtra / capacidadesSelecionadas.length);
+      const resto = quantidadeExtra % capacidadesSelecionadas.length;
+      
+      // Criar distribuição (primeiras capacidades recebem o resto)
+      const distribuicao = capacidadesSelecionadas.map((cap, idx) => ({
+        ...cap,
+        quantidade: questoesPorCapacidade + (idx < resto ? 1 : 0)
+      }));
+
       const dadosCompletos = {
         ...dadosProva,
         data: formatarData(dadosProva.data),
         termoCapacidade,
         quantidade: quantidadeExtra,
+        capacidades: capacidadesSelecionadas,
+        distribuicaoCapacidades: distribuicao,
         numeroInicial: proximoNumero
       };
 
@@ -105,6 +145,8 @@ export default function Step3GerarQuestoes() {
             questoes: [...prev.prova.questoes, ...novasQuestoes]
           }
         }));
+        
+        setShowGerarMaisModal(false);
       }
     } catch (err) {
       setError(err.message || 'Erro ao gerar questões extras.');
@@ -1053,46 +1095,135 @@ export default function Step3GerarQuestoes() {
                 <Check className="text-green-500" size={20} />
                 Questões Geradas ({questoesGeradas.prova?.questoes?.length || 0})
               </h3>
-              <div className="flex items-center gap-3">
-                {/* Gerar mais questões - discreto */}
-                <div className="flex items-center gap-2">
-                  <select
-                    value={quantidadeExtra}
-                    onChange={(e) => setQuantidadeExtra(parseInt(e.target.value))}
-                    className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
-                    disabled={gerandoExtras}
-                  >
-                    {[1, 2, 3, 4, 5].map(n => (
-                      <option key={n} value={n}>+{n}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleGerarMaisQuestoes}
-                    disabled={gerandoExtras || !apiConfigurada}
-                    className={`
-                      flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-all
-                      ${apiConfigurada && !gerandoExtras
-                        ? 'text-blue-600 hover:bg-blue-50 border border-blue-200' 
-                        : 'text-gray-400 cursor-not-allowed border border-gray-200'
-                      }
-                    `}
-                    title="Gerar mais questões"
-                  >
-                    {gerandoExtras ? (
-                      <>
-                        <Loader2 className="animate-spin" size={14} />
-                        <span>Gerando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Plus size={14} />
-                        <span>Gerar mais</span>
-                      </>
-                    )}
-                  </button>
+              <button
+                onClick={handleAbrirGerarMais}
+                disabled={!apiConfigurada}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all
+                  ${apiConfigurada
+                    ? 'bg-gradient-to-r from-[#004b8d] to-blue-600 text-white hover:from-blue-700 hover:to-blue-500 shadow-sm' 
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }
+                `}
+              >
+                <Sparkles size={16} />
+                Gerar mais com AI
+              </button>
+            </div>
+
+            {/* Modal Gerar Mais Questões */}
+            {showGerarMaisModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+                  <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Sparkles size={20} className="text-[#004b8d]" />
+                    Gerar mais questões com AI
+                  </h4>
+
+                  {/* Quantidade */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantidade de questões
+                    </label>
+                    <select
+                      value={quantidadeExtra}
+                      onChange={(e) => setQuantidadeExtra(parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <option key={n} value={n}>{n} questão{n > 1 ? 'ões' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Capacidades */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {termoCapacidade}s para as questões
+                    </label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                      {dadosProva.capacidades.map(cap => (
+                        <label 
+                          key={cap.codigo} 
+                          className={`flex items-start gap-2 p-2 rounded cursor-pointer transition-colors ${
+                            capacidadesExtras.includes(cap.codigo) ? 'bg-blue-50' : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={capacidadesExtras.includes(cap.codigo)}
+                            onChange={() => handleToggleCapacidadeExtra(cap.codigo)}
+                            className="mt-1"
+                          />
+                          <div>
+                            <span className="font-medium text-sm">{cap.codigo}</span>
+                            <p className="text-xs text-gray-600 line-clamp-2">{cap.descricao}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Selecione até {quantidadeExtra} {termoCapacidade.toLowerCase()}{quantidadeExtra > 1 ? 's' : ''}
+                    </p>
+                  </div>
+
+                  {/* Aviso de validação */}
+                  {!podeGerarExtras && capacidadesExtras.length > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                      <p className="text-amber-700 text-sm">
+                        Selecione no máximo {quantidadeExtra} {termoCapacidade.toLowerCase()}{quantidadeExtra > 1 ? 's' : ''}, ou aumente a quantidade de questões.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Distribuição */}
+                  {podeGerarExtras && capacidadesExtras.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                      <p className="text-blue-700 text-sm">
+                        {capacidadesExtras.length === 1 
+                          ? `${quantidadeExtra} questão${quantidadeExtra > 1 ? 'ões' : ''} de ${capacidadesExtras[0]}`
+                          : `Distribuição: ${Math.floor(quantidadeExtra / capacidadesExtras.length)} questão${Math.floor(quantidadeExtra / capacidadesExtras.length) > 1 ? 'ões' : ''} por ${termoCapacidade.toLowerCase()}`
+                        }
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Botões */}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setShowGerarMaisModal(false)}
+                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                      disabled={gerandoExtras}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleGerarMaisQuestoes}
+                      disabled={gerandoExtras || !podeGerarExtras}
+                      className={`
+                        flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
+                        ${podeGerarExtras && !gerandoExtras
+                          ? 'bg-gradient-to-r from-[#004b8d] to-blue-600 text-white hover:from-blue-700 hover:to-blue-500' 
+                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }
+                      `}
+                    >
+                      {gerandoExtras ? (
+                        <>
+                          <Loader2 className="animate-spin" size={16} />
+                          Gerando...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={16} />
+                          Gerar
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             
             {/* Aviso de IA - discreto */}
             <p className="text-xs text-amber-600 mb-3 flex items-center gap-1">
