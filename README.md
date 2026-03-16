@@ -39,6 +39,10 @@ A aplicação segue um fluxo de wizard em 4 etapas: o docente seleciona curso, u
 - **Administração de cursos** — Upload de PPC (PDF) e Matriz Curricular (Excel) com extração automática via IA
 - **Terminologia adaptável** — "Capacidade" para Ensino Técnico, "Habilidade" para Ensino Médio Integrado
 
+### Diagrama de Caso de Uso
+
+![Diagrama de Caso de Uso](docs/diagrama-caso-de-uso.png)
+
 ---
 
 ## Hospedagem

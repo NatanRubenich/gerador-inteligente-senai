@@ -38,6 +38,12 @@ O sistema atende docentes do SENAI na elaboração de:
 
 ## 2. Requisitos Funcionais
 
+### Diagrama de Caso de Uso
+
+O diagrama abaixo apresenta a visão geral dos casos de uso do sistema, seus atores (Usuário/Professor, IA Google Gemini e Moodle LMS) e os relacionamentos entre os casos de uso.
+
+![Diagrama de Caso de Uso](docs/diagrama-caso-de-uso.png)
+
 ### 2.1 Seleção de Tipo de Documento
 
 | ID | Requisito | Prioridade |
@@ -133,6 +139,8 @@ O sistema atende docentes do SENAI na elaboração de:
 | RF-47 | O sistema deve limpar o rascunho ao iniciar uma nova avaliação ou ao concluir o fluxo. | Essencial |
 
 ### 2.7 Administração de Cursos
+
+> **⚠️ MVP / Provisório:** O painel de administração e o fluxo de upload de documentos descritos nesta seção representam uma solução temporária para validação do MVP. Em versões futuras, este módulo será substituído por uma interface administrativa dedicada com autenticação, controle de acesso por perfil e integração direta com os sistemas institucionais do SENAI.
 
 | ID | Requisito | Prioridade |
 |----|-----------|------------|
