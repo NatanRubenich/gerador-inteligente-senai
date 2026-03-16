@@ -1,380 +1,322 @@
-# 📝 Gerador Inteligente SENAI
+# Gerador Inteligente SENAI
 
-Sistema completo para geração automatizada de **avaliações, planos de ensino e situações de aprendizagem** seguindo a Metodologia SENAI de Educação Profissional (MSEP) e o padrão SAEP.
+**v0.7.0** — Sistema de geração automatizada de avaliações e documentos pedagógicos com Inteligência Artificial, desenvolvido para o SENAI Santa Catarina.
 
 ![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-7.2-646CFF?logo=vite)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1-06B6D4?logo=tailwindcss)
 ![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js)
+![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)
-![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Run-4285F4?logo=googlecloud)
-![License](https://img.shields.io/badge/License-Educational-green)
+![Google Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?logo=googlegemini)
+![License](https://img.shields.io/badge/Licen%C3%A7a-Educacional-green)
 
 ---
 
-## 🌐 Acesso Online (Produção)
+## Sobre o Projeto
 
-| Componente | URL | Hospedagem |
-|------------|-----|------------|
+O **Gerador Inteligente** é uma aplicação web que utiliza IA generativa (Google Gemini 2.5 Flash) com técnicas de RAG (Retrieval-Augmented Generation) para gerar documentos pedagógicos alinhados à **Metodologia SENAI de Educação Profissional (MSEP)** e ao padrão **SAEP**.
+
+A aplicação segue um fluxo de wizard em 4 etapas: o docente seleciona curso, unidade curricular e capacidades; configura os parâmetros da geração; a IA gera o conteúdo com base na metodologia SENAI; e o resultado pode ser revisado, editado, impresso ou exportado.
+
+### O que pode ser gerado
+
+| Documento | Descrição |
+|-----------|-----------|
+| **Avaliação Objetiva** | Questões de múltipla escolha no padrão SAEP com gabarito e exportação Moodle XML |
+| **Avaliação Prática** | Situação-problema com critérios e lista de verificação (checklist) |
+| **Situação de Aprendizagem (SA)** | Projeto pedagógico completo com atividades, recursos e rubrica de avaliação |
+| **Plano de Ensino** | Planejamento completo da UC com blocos de aulas, estratégias e instrumentos |
+
+### Principais recursos
+
+- **IA Generativa** — Google Gemini 2.5 Flash gera conteúdo pedagógico contextualizado
+- **RAG** — Base de conhecimento da metodologia SENAI (MSEP, SAEP, Taxonomia de Bloom) integrada às gerações
+- **Exportação Moodle XML** — Questões objetivas exportáveis para importação direta no Moodle
+- **Impressão flexível** — Imprima apenas a avaliação, apenas o gabarito/rubrica, ou ambos
+- **Edição completa** — Todo conteúdo gerado pode ser revisado e editado antes de finalizar
+- **Rascunho automático** — O estado do wizard é salvo em `localStorage` para evitar perda de dados
+- **Administração de cursos** — Upload de PPC (PDF) e Matriz Curricular (Excel) com extração automática via IA
+- **Terminologia adaptável** — "Capacidade" para Ensino Técnico, "Habilidade" para Ensino Médio Integrado
+
+---
+
+## Hospedagem
+
+| Componente | URL | Serviço |
+|------------|-----|---------|
 | **Frontend** | [natanrubenich.github.io/gerador-inteligente-senai](https://natanrubenich.github.io/gerador-inteligente-senai/) | GitHub Pages |
 | **Backend API** | [gerador-provas-api-531942819894.southamerica-east1.run.app](https://gerador-provas-api-531942819894.southamerica-east1.run.app) | Google Cloud Run (São Paulo) |
-| **Banco de Dados** | MongoDB Atlas | AWS (Cluster M0 - Gratuito) |
+| **Banco de Dados** | MongoDB Atlas | AWS (Cluster M0) |
 
-> ⚠️ **Nota:** A hospedagem atual é para fins de desenvolvimento/demonstração.
-
----
-
-## ✨ Funcionalidades
-
-### 📋 Tipos de Documentos Gerados
-
-| Tipo | Descrição | Status |
-|------|-----------|--------|
-| **Avaliação Objetiva** | Questões de múltipla escolha no padrão SAEP | ✅ Disponível |
-| **Avaliação Prática** | Situação-problema com critérios de avaliação | ✅ Disponível |
-| **Situação de Aprendizagem (SA)** | Projeto pedagógico completo com desafio, atividades e avaliação | ✅ Disponível |
-| **Plano de Ensino** | Planejamento completo da UC compatível com SGN | ✅ Disponível |
-
-### 🚀 Recursos Principais
-
-- **🤖 IA Generativa (Google Gemini)**: Geração inteligente de conteúdo pedagógico
-- **📚 RAG (Retrieval-Augmented Generation)**: Base de conhecimento SENAI integrada
-- **📤 Exportação Moodle XML**: Exporte questões diretamente para o Moodle
-- **🎯 Níveis de Dificuldade**: Fácil, Médio e Difícil com distribuição automática
-- **✏️ Edição Completa**: Revise e edite todo conteúdo antes de finalizar
-- **🖨️ Impressão Profissional**: Templates formatados no padrão SENAI
-- **📊 Gabarito Separado**: Visualize e imprima gabaritos independentemente
-- **📁 Administração de Cursos**: Adicione novos cursos via upload de PPC (PDF) e Matriz Curricular (Excel)
-- **🔄 Extração com IA**: Extrai automaticamente UCs e capacidades de documentos PDF
-
-### 🎓 Suporte a Terminologia
-
-| Tipo de Ensino | Terminologia |
-|----------------|--------------|
-| Ensino Técnico | Capacidade Técnica (CT) / Capacidade Básica (CB) |
-| Ensino Médio Integrado (SESI/SENAI) | Habilidade (H) |
+O deploy do **frontend** é feito via `npm run deploy` (gh-pages). O deploy do **backend** é automático via push no branch `main` (Google Cloud Run).
 
 ---
 
-## 🚀 Início Rápido
+## Tecnologias
+
+### Frontend
+
+| Tecnologia | Versão | Finalidade |
+|------------|--------|------------|
+| React | 19.2 | Biblioteca UI (SPA) |
+| Vite | 7.2 | Build tool e dev server |
+| TailwindCSS | 4.1 | Framework CSS utilitário |
+| Lucide React | 0.561 | Biblioteca de ícones |
+| React Router DOM | 7.10 | Roteamento SPA |
+| pdfjs-dist | 5.4 | Leitura e extração de PDFs |
+| xlsx | 0.18 | Leitura de planilhas Excel |
+| gh-pages | 6.3 | Deploy para GitHub Pages |
+| ESLint | 9.39 | Linting de código |
+
+### Backend
+
+| Tecnologia | Versão | Finalidade |
+|------------|--------|------------|
+| Node.js | 20 LTS | Runtime JavaScript |
+| Express | 4.21 | Framework HTTP |
+| MongoDB (driver) | 6.10 | Conexão com MongoDB Atlas |
+| Helmet | 8.1 | Segurança HTTP headers |
+| CORS | 2.8 | Cross-origin requests |
+| express-rate-limit | 8.3 | Rate limiting |
+| express-validator | 7.3 | Validação de dados |
+| dotenv | 16.4 | Variáveis de ambiente |
+
+### IA e Infraestrutura
+
+| Serviço | Finalidade |
+|---------|------------|
+| Google Gemini 2.5 Flash | Modelo de IA para geração de conteúdo |
+| MongoDB Atlas | Banco de dados na nuvem |
+| Google Cloud Run | Hospedagem do backend (container) |
+| GitHub Pages | Hospedagem do frontend (estático) |
+| GitHub Actions | CI/CD para deploy automático do backend |
+
+---
+
+## Como Rodar o Projeto
 
 ### Pré-requisitos
 
-- **Node.js** 18+ ([download](https://nodejs.org/))
-- **npm** ou **yarn**
-- **API Key do Google Gemini** ([obter aqui](https://aistudio.google.com/app/apikey))
+- **Node.js** 18 ou superior — [download](https://nodejs.org/)
+- **npm** (incluído com Node.js)
+- **API Key do Google Gemini** — [obter aqui](https://aistudio.google.com/app/apikey)
+- **MongoDB Atlas** (para o backend) — [criar cluster gratuito](https://www.mongodb.com/atlas)
 
-### Instalação Local
+### 1. Clonar o repositório
 
 ```bash
-# 1. Clone o repositório
 git clone https://github.com/NatanRubenich/gerador-inteligente-senai.git
-
-# 2. Entre na pasta do projeto
 cd gerador-inteligente-senai
-
-# 3. Instale as dependências do frontend
-npm install
-
-# 4. Configure as variáveis de ambiente
-cp .env.example .env
-# Edite o .env com sua chave Gemini
-
-# 5. Inicie o servidor de desenvolvimento
-npm run dev
 ```
 
-O sistema estará disponível em: **http://localhost:5173**
-
-### Executar Backend Local (opcional)
+### 2. Configurar e rodar o Frontend
 
 ```bash
-# Entre na pasta do servidor
-cd server
-
-# Instale as dependências
+# Instalar dependências
 npm install
 
-# Configure as variáveis de ambiente
+# Criar arquivo de configuração
 cp .env.example .env
-# Edite com suas credenciais MongoDB
-
-# Inicie o servidor
-npm run dev
 ```
 
-O backend estará disponível em: **http://localhost:3001**
-
----
-
-## 🔑 Configuração das Variáveis de Ambiente
-
-### Frontend (`.env`)
+Edite o arquivo `.env` na raiz do projeto:
 
 ```env
-# API Key do Google Gemini (obrigatório)
 VITE_GEMINI_API_KEY=sua_chave_gemini_aqui
-
-# URL do Backend (opcional - usa localhost:3001 por padrão)
 VITE_API_URL=http://localhost:3001
 ```
 
-### Backend (`server/.env`)
+```bash
+# Iniciar servidor de desenvolvimento
+npm run dev
+```
+
+O frontend estará disponível em **http://localhost:5173/gerador-inteligente-senai/**
+
+### 3. Configurar e rodar o Backend
+
+```bash
+# Entrar na pasta do servidor
+cd server
+
+# Instalar dependências
+npm install
+
+# Criar arquivo de configuração
+cp .env.example .env
+```
+
+Edite o arquivo `server/.env`:
 
 ```env
-# MongoDB Atlas
 MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/
 MONGODB_DB_NAME=gerador_provas_senai
-
-# Servidor
 PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173
+GEMINI_API_KEY=sua_chave_gemini_aqui
 ```
 
+```bash
+# Iniciar servidor
+npm run dev
+```
+
+O backend estará disponível em **http://localhost:3001**
+
+### 4. Acessar o sistema
+
+Abra o navegador em **http://localhost:5173/gerador-inteligente-senai/** e comece a usar.
 
 ---
 
-## 📋 Scripts Disponíveis
+## Scripts Disponíveis
 
-### Frontend
+### Frontend (`/`)
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção |
-| `npm run preview` | Visualiza build localmente |
-| `npm run lint` | Verifica código com ESLint |
+| `npm run dev` | Inicia servidor de desenvolvimento (Vite) |
+| `npm run build` | Gera build de produção em `/dist` |
+| `npm run preview` | Visualiza build de produção localmente |
+| `npm run lint` | Executa ESLint no código |
+| `npm run deploy` | Build + deploy para GitHub Pages |
 
-### Backend
+### Backend (`/server`)
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm start` | Inicia o servidor |
-| `npm run dev` | Servidor com hot-reload |
-| `npm run migrate` | Executa migrações |
+| `npm start` | Inicia o servidor em produção |
+| `npm run dev` | Inicia com hot-reload (--watch) |
+| `npm run migrate` | Executa migrações do banco de dados |
 
 ---
 
-## 🎓 Como Usar
-
-### 1. Selecionar Tipo de Documento
-Escolha entre:
-- **Avaliação Objetiva** - Questões de múltipla escolha
-- **Avaliação Prática** - Situação-problema com critérios
-- **Situação de Aprendizagem** - Projeto pedagógico completo
-- **Plano de Ensino** - Planejamento da UC
-
-### 2. Dados Básicos (Passo 1)
-- Selecione o tipo de ensino (Técnico ou Integrado)
-- Escolha o curso e unidade curricular
-- Preencha turma, data e professor
-
-### 3. Capacidades (Passo 2)
-- Selecione as capacidades/habilidades a serem trabalhadas
-- Configure parâmetros específicos do tipo de documento
-
-### 4. Gerar com IA (Passo 3)
-- Clique em **"Gerar com IA"**
-- Aguarde a geração (usa Google Gemini + RAG)
-- Revise e edite o conteúdo gerado
-
-### 5. Visualizar e Exportar (Passo 4)
-- Visualize o documento completo
-- Imprima ou exporte (Moodle XML para questões)
-
-### 🔐 Painel de Administração
-Acesse com **Ctrl+Shift+A** para:
-- Adicionar novos cursos via upload de PPC (PDF)
-- Importar matriz curricular (Excel)
-- Gerenciar UCs e capacidades
-
----
-
-## 🛠️ Tecnologias
-
-### Frontend
-
-| Tecnologia | Versão | Uso |
-|------------|--------|-----|
-| React | 19.2 | Framework UI |
-| Vite | 7.2 | Build tool |
-| TailwindCSS | 4.1 | Estilização |
-| Lucide React | 0.561 | Ícones |
-| React Router | 7.10 | Navegação |
-| pdfjs-dist | 5.4 | Leitura de PDFs |
-| xlsx | 0.18 | Leitura de Excel |
-
-### Backend
-
-| Tecnologia | Versão | Uso |
-|------------|--------|-----|
-| Node.js | 20 LTS | Runtime |
-| Express | 4.21 | Framework API |
-| MongoDB | 6.10 | Driver do banco |
-| CORS | 2.8 | Cross-origin |
-
-### IA & Infraestrutura
-
-| Serviço | Uso |
-|---------|-----|
-| Google Gemini 2.5 Flash | Geração de conteúdo |
-| MongoDB Atlas | Banco de dados (cluster gratuito) |
-| Google Cloud Run | Hospedagem do backend |
-| GitHub Pages | Hospedagem do frontend |
-
----
-
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 gerador-inteligente-senai/
 ├── public/
-│   └── senai.png                    # Logo SENAI
-├── src/
-│   ├── components/
-│   │   ├── Header.jsx
-│   │   ├── Footer.jsx
-│   │   ├── StepIndicator.jsx
-│   │   ├── TipoAvaliacaoSelector.jsx
-│   │   ├── admin/
-│   │   │   └── AdminCursos.jsx      # Painel de administração
-│   │   └── steps/
-│   │       ├── Step1DadosBasicos.jsx
-│   │       ├── Step2Capacidades.jsx
-│   │       ├── Step3GerarQuestoes.jsx
-│   │       ├── Step4VisualizarProva.jsx
-│   │       ├── pratica/             # Avaliação Prática
-│   │       ├── sa/                  # Situação de Aprendizagem
-│   │       └── plano/               # Plano de Ensino
-│   ├── context/
-│   │   └── ProvaContext.jsx         # Estado global
-│   ├── data/
-│   │   └── cursos.js                # Cursos pré-cadastrados
-│   ├── services/
-│   │   ├── llmService.js            # Integração Gemini/Groq
-│   │   ├── ragService.js            # Base de conhecimento SENAI
-│   │   ├── apiService.js            # Comunicação com backend
-│   │   ├── planoEnsinoService.js    # Geração de planos
-│   │   ├── saService.js             # Geração de SAs
-│   │   ├── moodleExportService.js   # Exportação Moodle XML
-│   │   └── cursoAIExtractionService.js  # Extração de PDFs
+│   └── senai.png                         # Logo SENAI (impressão)
+├── src/                                  # === FRONTEND ===
+│   ├── main.jsx                          # Entry point React
+│   ├── App.jsx                           # Roteamento do wizard por tipo de avaliação
+│   ├── index.css                         # TailwindCSS + estilos de impressão
 │   ├── config/
-│   │   └── api.js                   # Configurações de API
-│   ├── App.jsx
-│   └── main.jsx
-├── server/                          # Backend API
+│   │   └── api.js                        # URL da API e modelo LLM
+│   ├── context/
+│   │   └── ProvaContext.jsx              # Estado global + persistência localStorage
+│   ├── components/
+│   │   ├── Header.jsx                    # Cabeçalho com versão e status da API
+│   │   ├── Footer.jsx                    # Rodapé com créditos
+│   │   ├── StepIndicator.jsx             # Indicador de progresso (4 etapas)
+│   │   ├── TipoAvaliacaoSelector.jsx     # Seletor de tipo de avaliação
+│   │   ├── admin/
+│   │   │   └── AdminCursos.jsx           # Painel admin (Ctrl+Shift+A)
+│   │   └── steps/
+│   │       ├── Step1DadosBasicos.jsx      # Etapa 1: Curso, UC, turma, data
+│   │       ├── Step2Capacidades.jsx       # Etapa 2: Seleção de capacidades
+│   │       ├── Step3GerarQuestoes.jsx     # Etapa 3: Geração com IA (objetiva)
+│   │       ├── Step4VisualizarProva.jsx   # Etapa 4: Visualização/impressão (objetiva)
+│   │       ├── pratica/                   # Steps da avaliação prática
+│   │       │   ├── Step3GerarPratica.jsx
+│   │       │   └── Step4VisualizarPratica.jsx
+│   │       ├── sa/                        # Steps da situação de aprendizagem
+│   │       │   ├── Step3GerarSA.jsx
+│   │       │   └── Step4VisualizarSA.jsx
+│   │       └── plano/                     # Steps do plano de ensino
+│   │           ├── Step3GerarPlano.jsx
+│   │           └── Step4VisualizarPlano.jsx
+│   ├── services/
+│   │   ├── apiService.js                 # Cliente da API backend (CRUD cursos/UCs)
+│   │   ├── llmService.js                 # Integração com Google Gemini
+│   │   ├── ragService.js                 # Motor RAG (TF-IDF + base de conhecimento)
+│   │   ├── saService.js                  # Geração de situações de aprendizagem
+│   │   ├── planoEnsinoService.js         # Geração de planos de ensino
+│   │   ├── moodleExportService.js        # Exportação para Moodle XML
+│   │   ├── cursoExtractionService.js     # Extração de texto de PDFs
+│   │   └── cursoAIExtractionService.js   # Extração com IA de PDFs/Excel
+│   └── data/
+│       ├── cursos.js                     # Dados de cursos (fallback local)
+│       └── knowledge-base/              # Base de conhecimento SENAI
+│           └── metodologia-senai.json    # MSEP, SAEP, Bloom, estratégias
+├── server/                               # === BACKEND ===
 │   ├── src/
-│   │   ├── index.js                 # Entry point
+│   │   ├── index.js                      # Entry point Express
 │   │   ├── config/
+│   │   │   └── database.js              # Conexão MongoDB Atlas
+│   │   ├── middleware/
+│   │   │   ├── security.js              # Helmet, rate limiting
+│   │   │   └── validation.js            # Validação de requests
 │   │   ├── models/
-│   │   └── routes/
-│   ├── Dockerfile                   # Container para Cloud Run
+│   │   │   └── schemas.js               # Schemas MongoDB + índices
+│   │   ├── routes/
+│   │   │   ├── cursos.js                # CRUD de cursos
+│   │   │   ├── unidades.js              # CRUD de UCs e capacidades
+│   │   │   ├── capacidades.js           # Listagem/busca de capacidades
+│   │   │   ├── conhecimentos.js         # Listagem/busca de conhecimentos
+│   │   │   └── gemini.js               # Proxy para Gemini API
+│   │   └── scripts/
+│   │       └── migrate.js               # Script de migração
+│   ├── Dockerfile                        # Container para Cloud Run
 │   └── package.json
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml               # CI/CD GitHub Actions
-├── .env.example
+│       └── deploy.yml                    # CI/CD deploy backend
+├── .env.example                          # Template de variáveis de ambiente
 ├── package.json
-└── vite.config.js
+├── vite.config.js
+├── eslint.config.js
+└── requirements.txt                      # Lista de tecnologias e versões
 ```
 
 ---
 
-## 📚 Cursos Pré-cadastrados
+## Deploy
 
-- Técnico em Desenvolvimento de Sistemas
-- Técnico em Desenvolvimento de Sistemas (Integrado ao Ensino Médio)
-- Técnico em Informática para Internet
-- Técnico em Multimídia
+### Frontend — GitHub Pages
 
-> 💡 Novos cursos podem ser adicionados via painel de administração (Ctrl+Shift+A)
-
----
-
-## 📐 Metodologia SAEP
-
-As questões objetivas seguem o padrão SAEP:
-
-| Elemento | Descrição |
-|----------|-----------|
-| **Contexto** | Situação-problema real do mundo do trabalho |
-| **Comando** | Pergunta diretamente relacionada ao contexto |
-| **Alternativas** | 4 opções (a, b, c, d) com tamanhos semelhantes |
-
-### Regras de Elaboração
-
-- ✅ Sem pegadinhas nas alternativas
-- ✅ Alternativa correta com tamanho similar às outras
-- ✅ Comando sem frases subjetivas
-- ✅ Distratores plausíveis
-- ✅ Respostas distribuídas equilibradamente
-
----
-
-## 🐛 Solução de Problemas
-
-### "API não configurada"
-- Verifique se o arquivo `.env` existe na raiz do projeto
-- Confirme que a chave Gemini começa com `AIza`
-- Reinicie o servidor após criar/editar o `.env`
-
-### "Erro ao gerar questões"
-- Verifique sua conexão com a internet
-- Confirme que a API Key é válida em [Google AI Studio](https://aistudio.google.com/app/apikey)
-- Tente novamente (pode ser limite de rate)
-
-### "Erro de conexão com backend"
-- Verifique se o backend está rodando (`npm run dev` na pasta `server/`)
-- Confirme que `VITE_API_URL` está correto no `.env`
-
-### Build falha
 ```bash
-# Limpe o cache e reinstale
-rm -rf node_modules package-lock.json
-npm install
+npm run deploy
 ```
 
----
+Executa `vite build` e publica o conteúdo de `/dist` no branch `gh-pages`.
 
-## � Deploy
+### Backend — Google Cloud Run
 
-### Frontend (GitHub Pages)
+O deploy é automático via GitHub Actions ao fazer push na branch `main`. O workflow está em `.github/workflows/deploy.yml`.
 
-O deploy é automático via GitHub Actions ao fazer push na branch `main`.
-
-### Backend (Google Cloud Run)
+Deploy manual (se necessário):
 
 ```bash
 cd server
-
-# Deploy via gcloud CLI
 gcloud run deploy gerador-provas-api \
   --source . \
   --region southamerica-east1 \
   --allow-unauthenticated \
-  --set-env-vars "MONGODB_URI=...,MONGODB_DB_NAME=...,FRONTEND_URL=..."
+  --set-env-vars "MONGODB_URI=...,MONGODB_DB_NAME=...,FRONTEND_URL=...,GEMINI_API_KEY=..."
 ```
 
 ---
 
-## �📄 Licença
+## Solução de Problemas
+
+| Problema | Solução |
+|----------|---------|
+| "API não configurada" | Verifique se `.env` existe e se `VITE_GEMINI_API_KEY` começa com `AIza`. Reinicie o dev server. |
+| "Erro ao gerar questões" | Verifique conexão com internet e valide a API Key em [Google AI Studio](https://aistudio.google.com/app/apikey). |
+| "Erro de conexão com backend" | Confirme que o backend está rodando e que `VITE_API_URL` aponta para a URL correta. |
+| Build falha | Execute `rm -rf node_modules package-lock.json && npm install` para limpar o cache. |
+
+---
+
+## Licença
 
 Desenvolvido para uso educacional no **SENAI Santa Catarina**.
 
 ---
 
-## 👤 Autor
+## Autor
 
-**Natan Rubenich**
-- GitHub: [@NatanRubenich](https://github.com/NatanRubenich)
-
----
-
-## 👥 Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+**Natan Rubenich** — [@NatanRubenich](https://github.com/NatanRubenich)

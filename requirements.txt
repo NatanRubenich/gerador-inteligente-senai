@@ -1,0 +1,72 @@
+# ============================================
+# Gerador Inteligente SENAI - Tecnologias
+# v0.7.0
+# ============================================
+
+# ---- FRONTEND (/) ----
+
+# Framework & Build
+react==19.2.0
+react-dom==19.2.0
+vite==7.2.4
+@vitejs/plugin-react==5.1.1
+
+# Estilização
+tailwindcss==4.1.18
+@tailwindcss/vite==4.1.18
+
+# Ícones
+lucide-react==0.561.0
+
+# Roteamento
+react-router-dom==7.10.1
+
+# Leitura de arquivos
+pdfjs-dist==5.4.449
+xlsx==0.18.5
+
+# Deploy
+gh-pages==6.3.0
+
+# Linting
+eslint==9.39.1
+@eslint/js==9.39.1
+eslint-plugin-react-hooks==7.0.1
+eslint-plugin-react-refresh==0.4.24
+globals==16.5.0
+
+# Tipagem
+@types/react==19.2.5
+@types/react-dom==19.2.3
+
+# ---- BACKEND (/server) ----
+
+# Framework
+express==4.21.0
+
+# Banco de dados
+mongodb==6.10.0
+
+# Segurança
+helmet==8.1.0
+cors==2.8.5
+express-rate-limit==8.3.1
+
+# Validação
+express-validator==7.3.1
+
+# Configuração
+dotenv==16.4.5
+
+# ---- IA & INFRAESTRUTURA ----
+
+# Google Gemini 2.5 Flash  (API externa, sem pacote npm)
+# MongoDB Atlas             (serviço cloud)
+# Google Cloud Run          (hospedagem backend)
+# GitHub Pages              (hospedagem frontend)
+# GitHub Actions            (CI/CD)
+
+# ---- RUNTIME ----
+
+# Node.js >= 18.0.0
+# npm (incluído com Node.js)
