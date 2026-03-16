@@ -304,4 +304,4 @@ O diagrama abaixo apresenta a visão geral dos casos de uso do sistema, seus ato
 
 ---
 
-*Documento gerado para o projeto Gerador Inteligente SENAI v0.7.0 — SENAI Santa Catarina.*
+*Projeto idealizado, desenvolvido e mantido integralmente por Natan Rubenich — Gerador Inteligente SENAI v0.7.0 — SENAI Santa Catarina.*

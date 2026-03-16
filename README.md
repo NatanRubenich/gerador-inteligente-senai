@@ -317,7 +317,7 @@ gcloud run deploy gerador-provas-api \
 
 ## Licença
 
-Desenvolvido para uso educacional no **SENAI Santa Catarina**.
+Projeto idealizado, desenvolvido e mantido integralmente por **Natan Rubenich** para uso educacional no **SENAI Santa Catarina**.
 
 ---
 
