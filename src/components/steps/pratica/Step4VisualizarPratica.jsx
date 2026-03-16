@@ -8,7 +8,9 @@ import {
   AlertCircle,
   Edit3,
   Save,
-  X
+  X,
+  Info,
+  RotateCcw
 } from 'lucide-react';
 
 export default function Step4VisualizarPratica() {
@@ -100,86 +102,117 @@ export default function Step4VisualizarPratica() {
       </div>
 
       {/* Toolbar */}
-      <div className="bg-white rounded-xl shadow-lg p-4 no-print">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Toggle Prova/Lista de Verificação */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+      <div className="bg-white rounded-xl shadow-lg no-print overflow-hidden">
+        {/* Linha 1: Visualização */}
+        <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-[#004b8d] to-[#0066bf]">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-blue-200">Visualizar:</span>
+            <div className="flex bg-white/15 rounded-lg p-0.5">
+              <button
+                onClick={() => setViewMode('prova')}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'prova'
+                    ? 'bg-white text-[#004b8d] shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Eye size={16} />
+                Prova
+              </button>
+              <button
+                onClick={() => setViewMode('checklist')}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  viewMode === 'checklist'
+                    ? 'bg-white text-[#004b8d] shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <ClipboardList size={16} />
+                Lista de Verificação
+              </button>
+            </div>
+          </div>
+          {!editMode ? (
             <button
-              onClick={() => setViewMode('prova')}
-              className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
-                viewMode === 'prova'
-                  ? 'bg-white text-[#004b8d] shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
+              onClick={handleStartEdit}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/90 hover:text-white border border-white/30 rounded-lg hover:bg-white/10 transition-colors"
             >
-              <Eye size={18} className="inline mr-1" />
-              Prova
+              <Edit3 size={16} />
+              Editar
             </button>
-            <button
-              onClick={() => setViewMode('checklist')}
-              className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
-                viewMode === 'checklist'
-                  ? 'bg-white text-[#004b8d] shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <ClipboardList size={18} className="inline mr-1" />
-              Lista de Verificação
-            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveEdit}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                <Save size={16} />
+                Salvar
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/90 hover:text-white border border-white/30 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X size={16} />
+                Cancelar
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Linha 2: Ações */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 bg-gray-50 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Grupo Imprimir */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Imprimir</span>
+              <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1 shadow-sm">
+                <Printer size={16} className="text-[#004b8d]" />
+                <select
+                  value={printMode}
+                  onChange={(e) => setPrintMode(e.target.value)}
+                  className="px-1 py-1 text-sm bg-transparent border-none focus:ring-0 outline-none cursor-pointer text-gray-700"
+                  disabled={editMode}
+                >
+                  <option value="prova">Apenas Avaliação</option>
+                  <option value="checklist">Apenas Lista de Verificação</option>
+                  <option value="ambos">Avaliação + Lista</option>
+                </select>
+                <div className="w-px h-5 bg-gray-200"></div>
+                <button
+                  onClick={handlePrint}
+                  disabled={editMode}
+                  className="px-3 py-1 bg-[#004b8d] text-white rounded-md hover:bg-[#003a6d] transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  Imprimir
+                </button>
+                <div className="relative group">
+                  <Info size={14} className="text-gray-400 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    Escolha o que deseja imprimir: somente a avaliação, somente a lista de verificação ou ambos em um único documento.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Ações */}
+          {/* Navegação */}
           <div className="flex items-center gap-2">
-            {!editMode ? (
-              <button
-                onClick={handleStartEdit}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Edit3 size={18} />
-                Editar
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Save size={18} />
-                  Salvar
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  <X size={18} />
-                  Cancelar
-                </button>
-              </>
-            )}
-            <select
-              value={printMode}
-              onChange={(e) => setPrintMode(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-              disabled={editMode}
-            >
-              <option value="prova">Apenas Avaliação</option>
-              <option value="checklist">Apenas Lista de Verificação</option>
-              <option value="ambos">Avaliação + Lista</option>
-            </select>
             <button
-              onClick={handlePrint}
+              onClick={prevStep}
               disabled={editMode}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
-              <Printer size={18} />
-              Imprimir
+              <ArrowLeft size={16} />
+              Voltar
             </button>
             <button
               onClick={resetProva}
               disabled={editMode}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
-              <ArrowLeft size={18} />
+              <RotateCcw size={16} />
               Nova Avaliação
             </button>
           </div>

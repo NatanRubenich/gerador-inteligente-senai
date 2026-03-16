@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain, FileText, AlertTriangle, Award, Edit3, Save, X, Copy, Check } from 'lucide-react';
+import { ChevronLeft, Printer, RotateCcw, Clock, Target, CheckSquare, BookOpen, Wrench, Brain, FileText, AlertTriangle, Award, Edit3, Save, X, Copy, Check, Info } from 'lucide-react';
 import { useProva } from '../../../context/ProvaContext';
 
 export default function Step4VisualizarSA() {
@@ -191,88 +191,113 @@ export default function Step4VisualizarSA() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Controles - não aparecem na impressão */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 no-print">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <BookOpen className="text-[#004b8d]" />
-            Situação de Aprendizagem
-          </h2>
-
+      <div className="bg-white rounded-xl shadow-lg mb-6 no-print overflow-hidden">
+        {/* Linha 1: Visualização */}
+        <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-[#004b8d] to-[#0066bf]">
           <div className="flex items-center gap-3">
-            {/* Abas */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <span className="text-sm font-medium text-blue-200">Visualizar:</span>
+            <div className="flex bg-white/15 rounded-lg p-0.5">
               <button
                 onClick={() => setAbaAtiva('sa')}
-                className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
-                  abaAtiva === 'sa' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  abaAtiva === 'sa' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <FileText size={18} className="inline mr-1" />
+                <FileText size={16} />
                 SA
               </button>
               <button
                 onClick={() => setAbaAtiva('rubrica')}
-                className={`px-4 py-2 rounded-md text-base font-semibold transition-colors ${
-                  abaAtiva === 'rubrica' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-gray-600 hover:text-gray-800'
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  abaAtiva === 'rubrica' ? 'bg-white text-[#004b8d] shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <CheckSquare size={18} className="inline mr-1" />
+                <CheckSquare size={16} />
                 Rubrica
               </button>
             </div>
-
-            {!editMode ? (
-              <button
-                onClick={handleStartEdit}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Edit3 size={18} />
-                Editar
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Save size={18} />
-                  Salvar
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  <X size={18} />
-                  Cancelar
-                </button>
-              </>
-            )}
-
-            <select
-              value={printMode}
-              onChange={(e) => setPrintMode(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-              disabled={editMode}
-            >
-              <option value="sa">Apenas SA</option>
-              <option value="rubrica">Apenas Rubrica</option>
-              <option value="ambos">SA + Rubrica</option>
-            </select>
+          </div>
+          {!editMode ? (
             <button
-              onClick={handlePrint}
-              disabled={editMode}
-              className="flex items-center gap-2 px-4 py-2 bg-[#004b8d] text-white rounded-lg hover:bg-[#003a6d] transition-colors disabled:opacity-50"
+              onClick={handleStartEdit}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/90 hover:text-white border border-white/30 rounded-lg hover:bg-white/10 transition-colors"
             >
-              <Printer size={18} />
-              Imprimir
+              <Edit3 size={16} />
+              Editar
             </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveEdit}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                <Save size={16} />
+                Salvar
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/90 hover:text-white border border-white/30 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X size={16} />
+                Cancelar
+              </button>
+            </div>
+          )}
+        </div>
 
+        {/* Linha 2: Ações */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 bg-gray-50 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Grupo Imprimir */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Imprimir</span>
+              <div className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2 py-1 shadow-sm">
+                <Printer size={16} className="text-[#004b8d]" />
+                <select
+                  value={printMode}
+                  onChange={(e) => setPrintMode(e.target.value)}
+                  className="px-1 py-1 text-sm bg-transparent border-none focus:ring-0 outline-none cursor-pointer text-gray-700"
+                  disabled={editMode}
+                >
+                  <option value="sa">Apenas SA</option>
+                  <option value="rubrica">Apenas Rubrica</option>
+                  <option value="ambos">SA + Rubrica</option>
+                </select>
+                <div className="w-px h-5 bg-gray-200"></div>
+                <button
+                  onClick={handlePrint}
+                  disabled={editMode}
+                  className="px-3 py-1 bg-[#004b8d] text-white rounded-md hover:bg-[#003a6d] transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  Imprimir
+                </button>
+                <div className="relative group">
+                  <Info size={14} className="text-gray-400 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    Escolha o que deseja imprimir: somente a SA, somente a rubrica ou ambos em um único documento.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navegação */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={prevStep}
+              disabled={editMode}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+            >
+              <ChevronLeft size={16} />
+              Voltar
+            </button>
             <button
               onClick={resetProva}
               disabled={editMode}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
-              <RotateCcw size={18} />
+              <RotateCcw size={16} />
               Nova SA
             </button>
           </div>
