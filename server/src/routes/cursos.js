@@ -5,22 +5,16 @@
 import { Router } from 'express';
 import { getDb } from '../config/database.js';
 import { COLLECTIONS } from '../models/schemas.js';
+import { validateCreateCurso, validateUpdateCurso } from '../middleware/validation.js';
+import { writeLimiter } from '../middleware/security.js';
 
 const router = Router();
 
 // POST /api/cursos - Criar novo curso
-router.post('/', async (req, res) => {
+router.post('/', writeLimiter, validateCreateCurso, async (req, res) => {
   try {
     const db = getDb();
     const courseData = req.body;
-
-    // Validar dados mínimos
-    if (!courseData.id || !courseData.nome) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ID e nome do curso são obrigatórios' 
-      });
-    }
 
     // Verificar se curso já existe
     const existing = await db.collection(COLLECTIONS.CURSOS).findOne({ id: courseData.id });
@@ -104,7 +98,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/cursos/:id - Atualizar curso (apenas dados do curso, não UCs)
-router.put('/:id', async (req, res) => {
+router.put('/:id', writeLimiter, validateUpdateCurso, async (req, res) => {
   try {
     const db = getDb();
     const { id } = req.params;
@@ -145,7 +139,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/cursos/:id - Deletar curso
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', writeLimiter, async (req, res) => {
   try {
     const db = getDb();
     const { id } = req.params;

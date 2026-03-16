@@ -5,11 +5,13 @@
 import { Router } from 'express';
 import { getDb } from '../config/database.js';
 import { COLLECTIONS } from '../models/schemas.js';
+import { validateCreateUC, validateUpdateUC, validateSearch, validateListQuery } from '../middleware/validation.js';
+import { writeLimiter } from '../middleware/security.js';
 
 const router = Router();
 
 // GET /api/unidades - Listar todas as UCs (com filtros opcionais)
-router.get('/', async (req, res) => {
+router.get('/', validateListQuery, async (req, res) => {
   try {
     const db = getDb();
     const { cursoId, modulo, periodo, limit = 50, skip = 0 } = req.query;
@@ -121,7 +123,7 @@ router.get('/:id/conhecimentos', async (req, res) => {
 });
 
 // PUT /api/unidades/:id - Atualizar UC
-router.put('/:id', async (req, res) => {
+router.put('/:id', writeLimiter, validateUpdateUC, async (req, res) => {
   try {
     const db = getDb();
     const ucId = req.params.id;
@@ -159,18 +161,10 @@ router.put('/:id', async (req, res) => {
 });
 
 // POST /api/unidades - Criar nova UC
-router.post('/', async (req, res) => {
+router.post('/', writeLimiter, validateCreateUC, async (req, res) => {
   try {
     const db = getDb();
     const ucData = req.body;
-
-    // Validar dados mínimos
-    if (!ucData.nome || !ucData.cursoId) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Nome e cursoId são obrigatórios' 
-      });
-    }
 
     // Gerar ID se não existir
     if (!ucData.id) {
@@ -211,7 +205,7 @@ router.post('/', async (req, res) => {
 });
 
 // DELETE /api/unidades/:id - Deletar UC
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', writeLimiter, async (req, res) => {
   try {
     const db = getDb();
     const ucId = req.params.id;
@@ -243,14 +237,10 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/unidades/busca - Busca textual (para RAG)
-router.post('/busca', async (req, res) => {
+router.post('/busca', validateSearch, async (req, res) => {
   try {
     const db = getDb();
     const { query, cursoId, limit = 10 } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ success: false, error: 'Query é obrigatória' });
-    }
     
     const filter = { $text: { $search: query } };
     if (cursoId) filter.cursoId = cursoId;

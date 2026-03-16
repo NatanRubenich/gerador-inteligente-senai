@@ -7,6 +7,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { connectToDatabase, closeConnection } from './config/database.js';
+import { helmetMiddleware, globalLimiter, geminiLimiter, writeLimiter } from './middleware/security.js';
 
 // Rotas
 import cursosRouter from './routes/cursos.js';
@@ -18,9 +19,22 @@ import geminiRouter from './routes/gemini.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middlewares
+// Validação de variáveis de ambiente obrigatórias
+const requiredEnvVars = ['GEMINI_API_KEY', 'MONGODB_URI'];
+const missingEnvVars = requiredEnvVars.filter(v => !process.env[v]);
+if (missingEnvVars.length > 0) {
+  console.error(`❌ Variáveis de ambiente obrigatórias não definidas: ${missingEnvVars.join(', ')}`);
+  console.error('Configure-as no arquivo .env antes de iniciar o servidor.');
+  process.exit(1);
+}
+
+// Middlewares de segurança
+app.use(helmetMiddleware);
+app.use(globalLimiter);
+
+// CORS
 app.use(cors({
-  origin: true, // Permitir qualquer origem em desenvolvimento
+  origin: process.env.CORS_ORIGIN || true,
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -40,7 +54,7 @@ app.use('/api/cursos', cursosRouter);
 app.use('/api/unidades', unidadesRouter);
 app.use('/api/capacidades', capacidadesRouter);
 app.use('/api/conhecimentos', conhecimentosRouter);
-app.use('/api/gemini', geminiRouter);
+app.use('/api/gemini', geminiLimiter, geminiRouter);
 
 // Rota 404
 app.use((req, res) => {

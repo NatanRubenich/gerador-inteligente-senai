@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+import { validateGeminiExtract, validateGeminiExtractWithUCs, validateGeminiGenerate } from '../middleware/validation.js';
 
 const router = Router();
 
@@ -116,13 +117,9 @@ function tryRecoverTruncatedJSON(jsonStr) {
 }
 
 // POST /api/gemini/extract-course - Extrair dados gerais do curso
-router.post('/extract-course', async (req, res) => {
+router.post('/extract-course', validateGeminiExtract, async (req, res) => {
   try {
     const { pdfBase64, ucsFromExcel } = req.body;
-
-    if (!pdfBase64) {
-      return res.status(400).json({ success: false, error: 'PDF não fornecido' });
-    }
 
     const ucListText = (ucsFromExcel || []).map((uc, i) => 
       `${i + 1}. ${uc.nome} (${uc.cargaHoraria}h - ${uc.modulo || 'Módulo não identificado'})`
@@ -164,13 +161,9 @@ Retorne APENAS JSON válido:
 });
 
 // POST /api/gemini/extract-capacidades - Extrair capacidades das UCs
-router.post('/extract-capacidades', async (req, res) => {
+router.post('/extract-capacidades', validateGeminiExtractWithUCs, async (req, res) => {
   try {
     const { pdfBase64, ucs } = req.body;
-
-    if (!pdfBase64 || !ucs || ucs.length === 0) {
-      return res.status(400).json({ success: false, error: 'PDF e UCs são obrigatórios' });
-    }
 
     const prompt = `Analise o documento PDF (PPC/Itinerário Nacional do SENAI) e extraia as CAPACIDADES das seguintes Unidades Curriculares:
 
@@ -230,13 +223,9 @@ NOTA: Inclua apenas os arrays que existem para cada UC. Se uma UC só tem Capaci
 });
 
 // POST /api/gemini/extract-conhecimentos - Extrair conhecimentos das UCs
-router.post('/extract-conhecimentos', async (req, res) => {
+router.post('/extract-conhecimentos', validateGeminiExtractWithUCs, async (req, res) => {
   try {
     const { pdfBase64, ucs } = req.body;
-
-    if (!pdfBase64 || !ucs || ucs.length === 0) {
-      return res.status(400).json({ success: false, error: 'PDF e UCs são obrigatórios' });
-    }
 
     const prompt = `Analise o documento PDF (PPC/Itinerário Nacional do SENAI) e extraia os CONHECIMENTOS das seguintes Unidades Curriculares:
 
@@ -281,13 +270,9 @@ Retorne APENAS JSON válido:
 });
 
 // POST /api/gemini/generate - Rota genérica para geração de conteúdo (avaliações, planos, SA)
-router.post('/generate', async (req, res) => {
+router.post('/generate', validateGeminiGenerate, async (req, res) => {
   try {
     const { systemPrompt, userPrompt, maxTokens = 32768 } = req.body;
-
-    if (!systemPrompt || !userPrompt) {
-      return res.status(400).json({ success: false, error: 'systemPrompt e userPrompt são obrigatórios' });
-    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {

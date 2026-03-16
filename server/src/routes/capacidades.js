@@ -5,11 +5,12 @@
 import { Router } from 'express';
 import { getDb } from '../config/database.js';
 import { COLLECTIONS } from '../models/schemas.js';
+import { validateSearch, validateListQuery } from '../middleware/validation.js';
 
 const router = Router();
 
 // GET /api/capacidades - Listar todas as capacidades (com filtros)
-router.get('/', async (req, res) => {
+router.get('/', validateListQuery, async (req, res) => {
   try {
     const db = getDb();
     const { cursoId, unidadeCurricularId, tipo, limit = 100, skip = 0 } = req.query;
@@ -40,14 +41,10 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/capacidades/busca - Busca textual em capacidades
-router.post('/busca', async (req, res) => {
+router.post('/busca', validateSearch, async (req, res) => {
   try {
     const db = getDb();
     const { query, cursoId, tipo, limit = 20 } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ success: false, error: 'Query é obrigatória' });
-    }
     
     const filter = { $text: { $search: query } };
     if (cursoId) filter.cursoId = cursoId;
