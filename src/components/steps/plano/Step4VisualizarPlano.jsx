@@ -97,7 +97,8 @@ export default function Step4VisualizarPlano() {
       <div className="flex items-center justify-between mb-2">
         <label className="text-sm font-semibold text-gray-700">{label}</label>
         <button
-          onClick={() => copyToClipboard(value, fieldName)}
+          type="button"
+          onClick={(e) => { e.preventDefault(); copyToClipboard(value, fieldName); }}
           className={`flex items-center gap-1 px-3 py-1 text-xs rounded-lg transition-colors ${
             copiedField === fieldName
               ? 'bg-green-100 text-green-700'
@@ -394,7 +395,8 @@ export default function Step4VisualizarPlano() {
                       {bloco.cargaHoraria}h
                     </span>
                     <button
-                      onClick={() => copyToClipboard(bloco.titulo, `bloco_titulo_${i}`)}
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); copyToClipboard(bloco.titulo, `bloco_titulo_${i}`); }}
                       className={`px-3 py-1 rounded text-sm transition-colors ${
                         copiedField === `bloco_titulo_${i}` ? 'bg-green-500' : 'bg-purple-500 hover:bg-purple-400'
                       }`}
@@ -414,10 +416,11 @@ export default function Step4VisualizarPlano() {
                         {termoCapacidade}s a serem trabalhadas:
                       </h4>
                       <button
-                        onClick={() => copyToClipboard(
+                        type="button"
+                      onClick={(e) => { e.preventDefault(); copyToClipboard(
                           bloco.capacidadesTrabalhadas.map(c => `${c.codigo} - ${c.descricao}`).join('\n'), 
                           `bloco_caps_${i}`
-                        )}
+                        ); }}
                         className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
                           copiedField === `bloco_caps_${i}` ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                         }`}

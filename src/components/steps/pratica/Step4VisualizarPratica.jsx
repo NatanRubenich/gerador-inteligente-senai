@@ -42,8 +42,21 @@ export default function Step4VisualizarPratica() {
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
+  const [printMode, setPrintMode] = useState('ambos'); // 'prova', 'checklist', 'ambos'
+
   const handlePrint = () => {
-    window.print();
+    const previousViewMode = viewMode;
+    if (printMode === 'prova') {
+      setViewMode('prova');
+    } else if (printMode === 'checklist') {
+      setViewMode('checklist');
+    } else {
+      setViewMode('ambos');
+    }
+    setTimeout(() => {
+      window.print();
+      setViewMode(previousViewMode);
+    }, 150);
   };
 
   // Formatar data para Dia/Mês/Ano
@@ -143,6 +156,16 @@ export default function Step4VisualizarPratica() {
                 </button>
               </>
             )}
+            <select
+              value={printMode}
+              onChange={(e) => setPrintMode(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+              disabled={editMode}
+            >
+              <option value="prova">Apenas Avaliação</option>
+              <option value="checklist">Apenas Lista de Verificação</option>
+              <option value="ambos">Avaliação + Lista</option>
+            </select>
             <button
               onClick={handlePrint}
               disabled={editMode}
@@ -244,7 +267,7 @@ export default function Step4VisualizarPratica() {
       )}
 
       {/* Visualização da Prova Prática! */}
-      {viewMode === 'prova' && !editMode && (
+      {(viewMode === 'prova' || viewMode === 'ambos') && !editMode && (
         <div className="bg-white rounded-xl shadow-lg prova-container" id="prova-print" ref={printRef}>
           {/* Cabeçalho */}
           <table className="w-full border-collapse border border-black">
@@ -404,7 +427,8 @@ export default function Step4VisualizarPratica() {
       )}
 
       {/* Lista de Verificação (Checklist do Professor) */}
-      {viewMode === 'checklist' && (
+      {(viewMode === 'checklist' || viewMode === 'ambos') && (
+        <div className={viewMode === 'ambos' ? 'print-page-break' : ''}>
         <div className="bg-white rounded-xl shadow-lg p-8 prova-container" id="checklist-print">
           <div className="text-center mb-6">
             <img 
@@ -499,6 +523,7 @@ export default function Step4VisualizarPratica() {
           <div className="mt-8 p-4 text-center text-xs text-gray-500 border-t">
             <p>Lista de Verificação gerada pelo Sistema Gerador Inteligente SENAI - MSEP</p>
           </div>
+        </div>
         </div>
       )}
 

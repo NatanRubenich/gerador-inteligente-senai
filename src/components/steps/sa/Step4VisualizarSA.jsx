@@ -158,8 +158,21 @@ export default function Step4VisualizarSA() {
 
   const sa = situacaoAprendizagemGerada;
 
+  const [printMode, setPrintMode] = useState('ambos'); // 'sa', 'rubrica', 'ambos'
+
   const handlePrint = () => {
-    window.print();
+    const previousAba = abaAtiva;
+    if (printMode === 'sa') {
+      setAbaAtiva('sa');
+    } else if (printMode === 'rubrica') {
+      setAbaAtiva('rubrica');
+    } else {
+      setAbaAtiva('ambos');
+    }
+    setTimeout(() => {
+      window.print();
+      setAbaAtiva(previousAba);
+    }, 150);
   };
 
   // Formatar data
@@ -235,6 +248,16 @@ export default function Step4VisualizarSA() {
               </>
             )}
 
+            <select
+              value={printMode}
+              onChange={(e) => setPrintMode(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+              disabled={editMode}
+            >
+              <option value="sa">Apenas SA</option>
+              <option value="rubrica">Apenas Rubrica</option>
+              <option value="ambos">SA + Rubrica</option>
+            </select>
             <button
               onClick={handlePrint}
               disabled={editMode}
@@ -458,7 +481,7 @@ export default function Step4VisualizarSA() {
       )}
 
       {/* Documento da SA */}
-      {abaAtiva === 'sa' && !editMode && (
+      {(abaAtiva === 'sa' || abaAtiva === 'ambos') && !editMode && (
         <div ref={printRef} className="bg-white rounded-xl shadow-lg prova-container" id="sa-print">
           {/* Cabeçalho */}
           <table className="w-full border-collapse border border-black text-sm">
@@ -674,7 +697,8 @@ export default function Step4VisualizarSA() {
       )}
 
       {/* Rubrica de Avaliação */}
-      {abaAtiva === 'rubrica' && !editMode && (
+      {(abaAtiva === 'rubrica' || abaAtiva === 'ambos') && !editMode && (
+        <div className={abaAtiva === 'ambos' ? 'print-page-break' : ''}>
         <div className="bg-white rounded-xl shadow-lg prova-container" id="rubrica-print">
           {/* Cabeçalho da Rubrica */}
           <div className="bg-[#004b8d] text-white p-4 rounded-t-xl relative">
@@ -814,6 +838,7 @@ export default function Step4VisualizarSA() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       )}
 

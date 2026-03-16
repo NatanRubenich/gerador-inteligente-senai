@@ -20,6 +20,7 @@ export default function Step3GerarQuestoes() {
   const [quantidadeExtra, setQuantidadeExtra] = useState(1);
   const [gerandoExtras, setGerandoExtras] = useState(false);
   const [capacidadesExtras, setCapacidadesExtras] = useState([]);
+  const [contextosExtras, setContextosExtras] = useState({});
   const [showGerarMaisModal, setShowGerarMaisModal] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingQuestao, setEditingQuestao] = useState(null);
@@ -76,6 +77,7 @@ export default function Step3GerarQuestoes() {
   const handleAbrirGerarMais = () => {
     setCapacidadesExtras([dadosProva.capacidades[0]?.codigo]);
     setQuantidadeExtra(1);
+    setContextosExtras({});
     setShowGerarMaisModal(true);
   };
 
@@ -118,14 +120,21 @@ export default function Step3GerarQuestoes() {
         quantidade: questoesPorCapacidade + (idx < resto ? 1 : 0)
       }));
 
+      // Adicionar contextos por capacidade
+      const distribuicaoComContexto = distribuicao.map(cap => ({
+        ...cap,
+        contextoSugerido: contextosExtras[cap.codigo] || ''
+      }));
+
       const dadosCompletos = {
         ...dadosProva,
         data: formatarData(dadosProva.data),
         termoCapacidade,
         quantidade: quantidadeExtra,
         capacidades: capacidadesSelecionadas,
-        distribuicaoCapacidades: distribuicao,
-        numeroInicial: proximoNumero
+        distribuicaoCapacidades: distribuicaoComContexto,
+        numeroInicial: proximoNumero,
+        contextosCapacidades: contextosExtras
       };
 
       const resultado = await gerarQuestoes(dadosCompletos);
@@ -1141,25 +1150,37 @@ export default function Step3GerarQuestoes() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {termoCapacidade}s para as questões
                     </label>
-                    <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                    <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                       {dadosProva.capacidades.map(cap => (
-                        <label 
-                          key={cap.codigo} 
-                          className={`flex items-start gap-2 p-2 rounded cursor-pointer transition-colors ${
-                            capacidadesExtras.includes(cap.codigo) ? 'bg-blue-50' : 'hover:bg-gray-50'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={capacidadesExtras.includes(cap.codigo)}
-                            onChange={() => handleToggleCapacidadeExtra(cap.codigo)}
-                            className="mt-1"
-                          />
-                          <div>
-                            <span className="font-medium text-sm">{cap.codigo}</span>
-                            <p className="text-xs text-gray-600 line-clamp-2">{cap.descricao}</p>
-                          </div>
-                        </label>
+                        <div key={cap.codigo}>
+                          <label 
+                            className={`flex items-start gap-2 p-2 rounded cursor-pointer transition-colors ${
+                              capacidadesExtras.includes(cap.codigo) ? 'bg-blue-50' : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={capacidadesExtras.includes(cap.codigo)}
+                              onChange={() => handleToggleCapacidadeExtra(cap.codigo)}
+                              className="mt-1"
+                            />
+                            <div>
+                              <span className="font-medium text-sm">{cap.codigo}</span>
+                              <p className="text-xs text-gray-600 line-clamp-2">{cap.descricao}</p>
+                            </div>
+                          </label>
+                          {capacidadesExtras.includes(cap.codigo) && (
+                            <div className="ml-7 mt-1 mb-2">
+                              <input
+                                type="text"
+                                value={contextosExtras[cap.codigo] || ''}
+                                onChange={(e) => setContextosExtras(prev => ({ ...prev, [cap.codigo]: e.target.value }))}
+                                placeholder="Contexto/tema para as questões desta capacidade (opcional)"
+                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white placeholder:text-gray-400"
+                              />
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                     <p className="text-xs text-gray-500 mt-2">

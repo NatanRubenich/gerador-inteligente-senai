@@ -36,19 +36,21 @@ export default function Step4VisualizarProva() {
     return prova[`${termoCapacidade.toLowerCase()}s`] || prova.capacidades || prova.habilidades || {};
   };
 
-  const handlePrint = () => {
-    setViewMode('prova');
-    setTimeout(() => {
-      window.print();
-    }, 100);
-  };
+  const [printMode, setPrintMode] = useState('ambos'); // 'prova', 'gabarito', 'ambos'
 
-  const handlePrintGabarito = () => {
-    setViewMode('gabarito');
+  const handlePrint = () => {
+    const previousViewMode = viewMode;
+    if (printMode === 'prova') {
+      setViewMode('prova');
+    } else if (printMode === 'gabarito') {
+      setViewMode('gabarito');
+    } else {
+      setViewMode('ambos');
+    }
     setTimeout(() => {
       window.print();
-      setViewMode('prova');
-    }, 100);
+      setViewMode(previousViewMode);
+    }, 150);
   };
 
   const handleExportMoodle = () => {
@@ -106,21 +108,22 @@ export default function Step4VisualizarProva() {
 
         {/* Linha 2: Ações */}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-gray-600">Ações:</span>
+          <span className="text-sm font-medium text-gray-600">Imprimir:</span>
+          <select
+            value={printMode}
+            onChange={(e) => setPrintMode(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+          >
+            <option value="prova">Apenas Avaliação</option>
+            <option value="gabarito">Apenas Gabarito</option>
+            <option value="ambos">Avaliação + Gabarito</option>
+          </select>
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Printer size={18} />
-            Imprimir Prova
-          </button>
-
-          <button
-            onClick={handlePrintGabarito}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-          >
-            <Printer size={18} />
-            Imprimir Gabarito
+            Imprimir
           </button>
 
           <button
@@ -135,7 +138,7 @@ export default function Step4VisualizarProva() {
       </div>
 
       {/* Visualização da Prova */}
-      {viewMode === 'prova' && (
+      {(viewMode === 'prova' || viewMode === 'ambos') && (
         <div className="bg-white rounded-xl shadow-lg prova-container" id="prova-print">
           {/* Cabeçalho da Prova - Compacto */}
           <table className="w-full border-collapse border border-black text-sm">
@@ -303,7 +306,8 @@ export default function Step4VisualizarProva() {
       )}
 
       {/* Visualização do Gabarito */}
-      {viewMode === 'gabarito' && (
+      {(viewMode === 'gabarito' || viewMode === 'ambos') && (
+        <div className={viewMode === 'ambos' ? 'print-page-break mt-6' : ''}>
         <div className="bg-white rounded-xl shadow-lg prova-container" id="gabarito-print">
           {/* Cabeçalho no mesmo padrão das outras avaliações */}
           <table className="w-full border-collapse border border-black">
@@ -391,6 +395,7 @@ export default function Step4VisualizarProva() {
           <div className="mt-6 p-4 text-center text-xs text-gray-500 border-t">
             <p>Gabarito gerado pelo Sistema Gerador Inteligente SENAI - Metodologia SENAI de Educação Profissional (MSEP)</p>
           </div>
+        </div>
         </div>
       )}
 

@@ -1,6 +1,6 @@
 {
   "name": "gerador-provas-senai-server",
-  "version": "1.0.0",
+  "version": "0.7.0",
   "description": "Backend API para o Gerador de Provas SENAI com MongoDB Atlas",
   "main": "src/index.js",
   "type": "module",

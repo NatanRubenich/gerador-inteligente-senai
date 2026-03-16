@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, CheckSquare, Square, Lightbulb, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckSquare, Square, Loader2 } from 'lucide-react';
 import { useProva, TIPO_AVALIACAO } from '../../context/ProvaContext';
 import { getCapacidadesByUnidade } from '../../services/apiService';
-import { getSugestoesTemas } from '../../services/ragService';
 
 export default function Step2Capacidades() {
   const { 
@@ -36,7 +35,6 @@ export default function Step2Capacidades() {
   };
   
   const [errors, setErrors] = useState({});
-  const [sugestoes, setSugestoes] = useState([]);
   const [capacidadesDisponiveis, setCapacidadesDisponiveis] = useState([]);
   const [loadingCapacidades, setLoadingCapacidades] = useState(false);
 
@@ -60,14 +58,6 @@ export default function Step2Capacidades() {
     }
     loadCapacidades();
   }, [dadosProva.unidadeCurricularId]);
-
-  // Buscar sugestões de temas do RAG baseado na UC
-  useEffect(() => {
-    if (dadosProva.unidadeCurricular) {
-      const sugestoesRAG = getSugestoesTemas(dadosProva.unidadeCurricular);
-      setSugestoes(sugestoesRAG);
-    }
-  }, [dadosProva.unidadeCurricular]);
 
   const toggleCapacidade = (capacidade) => {
     // Usar ID único para identificar capacidades (evita problemas com códigos duplicados)
@@ -317,38 +307,6 @@ export default function Step2Capacidades() {
                   `}
                 />
                 {errors.assunto && <p className="mt-1 text-sm text-red-500">{errors.assunto}</p>}
-              </div>
-
-              {/* Sugestões de Temas */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-amber-800 flex items-center gap-2">
-                    <Lightbulb size={18} />
-                    Sugestões de Temas
-                  </h3>
-                  <span className="text-xs text-amber-600">Clique para adicionar</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {sugestoes.map((sugestao, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        const novoAssunto = dadosProva.assunto 
-                          ? `${dadosProva.assunto}, ${sugestao}`
-                          : sugestao;
-                        updateDadosProva({ assunto: novoAssunto });
-                      }}
-                      className="px-3 py-1 bg-white border border-amber-300 rounded-full text-sm text-amber-800 hover:bg-amber-100 transition-colors"
-                    >
-                      + {sugestao}
-                    </button>
-                  ))}
-                </div>
-                {sugestoes.length === 0 && (
-                  <p className="text-sm text-amber-600 italic">
-                    Selecione uma unidade curricular para ver sugestões de temas.
-                  </p>
-                )}
               </div>
             </>
           )}
